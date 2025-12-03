@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/widgets/fade_in_slide.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -23,26 +24,28 @@ class ProfileScreen extends StatelessWidget {
           // Header
           Padding(
             padding: const EdgeInsets.only(top: 60.0, left: 20.0, right: 20.0, bottom: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Profile',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+            child: FadeInSlide(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Profile',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.settings, color: Colors.white),
                   ),
-                  child: const Icon(Icons.settings, color: Colors.white),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           
@@ -51,53 +54,66 @@ class ProfileScreen extends StatelessWidget {
               child: Column(
                 children: [
                   // Avatar
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/images/user_avatar.png'), // Placeholder
-                        fit: BoxFit.cover,
+                  FadeInSlide(
+                    delay: 0.1,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 4),
+                        image: const DecorationImage(
+                          image: AssetImage('assets/images/profile img.png'), // Placeholder
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 15),
                   
                   // Name & Email
-                  const Text(
-                    'Aland Raed',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    'aland.surchi@gmail.com',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.7),
+                  FadeInSlide(
+                    delay: 0.2,
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Aland Raed',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          'aland.surchi@gmail.com',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   
                   const SizedBox(height: 20),
                   
                   // Get Verified Button
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE0E0E0),
-                      borderRadius: BorderRadius.circular(25),
-                      border: Border.all(color: const Color(0xFFFF8C42), width: 1.5),
-                    ),
-                    child: const Text(
-                      'Get Verified',
-                      style: TextStyle(
-                        color: Color(0xFFFF8C42),
-                        fontWeight: FontWeight.bold,
+                  FadeInSlide(
+                    delay: 0.3,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E0E0),
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(color: const Color(0xFFFF8C42), width: 1.5),
+                      ),
+                      child: const Text(
+                        'Get Verified',
+                        style: TextStyle(
+                          color: Color(0xFFFF8C42),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -106,14 +122,26 @@ class ProfileScreen extends StatelessWidget {
                   
                   // Stats
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildStatItem('1', 'Posts'),
-                        _buildStatItem('0', 'Items Found'),
-                        _buildStatItem('2025', 'Member Since'),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: FadeInSlide(
+                      delay: 0.4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStatItem('1', 'Posts'),
+                            Container(height: 30, width: 1, color: Colors.white.withOpacity(0.2)),
+                            _buildStatItem('0', 'Items Found'),
+                            Container(height: 30, width: 1, color: Colors.white.withOpacity(0.2)),
+                            _buildStatItem('2025', 'Member Since'),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   
@@ -122,14 +150,17 @@ class ProfileScreen extends StatelessWidget {
                   // Menu List
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(
-                      children: [
-                        _buildMenuItem(Icons.description_outlined, 'My Posts'),
-                        _buildMenuItem(Icons.bookmark_outline, 'Saved Items'),
-                        _buildMenuItem(Icons.notifications_none, 'Notification Settings'),
-                        _buildMenuItem(Icons.help_outline, 'Help & Support'),
-                        _buildMenuItem(Icons.info_outline, 'About'),
-                      ],
+                    child: FadeInSlide(
+                      delay: 0.5,
+                      child: Column(
+                        children: [
+                          _buildMenuItem(Icons.description_outlined, 'My Posts'),
+                          _buildMenuItem(Icons.bookmark_outline, 'Saved Items'),
+                          _buildMenuItem(Icons.notifications_none, 'Notification Settings'),
+                          _buildMenuItem(Icons.help_outline, 'Help & Support'),
+                          _buildMenuItem(Icons.info_outline, 'About'),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 100), // Bottom padding for nav bar
@@ -150,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF0F2045),
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 5),
@@ -158,7 +189,7 @@ class ProfileScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: Colors.white.withOpacity(0.7),
           ),
         ),
       ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/screens/notifications_screen.dart';
 
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({Key? key}) : super(key: key);
@@ -20,12 +21,11 @@ class HomeAppBar extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: Colors.grey[300],
                   image: const DecorationImage(
-                    image: AssetImage('assets/images/user_avatar.png'), // Placeholder path
+                    image: AssetImage('assets/images/profile img.png'), // Placeholder path
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: const Icon(Icons.person, color: Colors.grey), // Fallback
-              ),
+                ),
               const SizedBox(width: 15),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,17 +59,25 @@ class HomeAppBar extends StatelessWidget {
               ),
             ],
           ),
-          Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.1),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
-            ),
-            child: const Icon(
-              Icons.notifications_none,
-              color: Colors.white,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+              );
+            },
+            child: Container(
+              width: 45,
+              height: 45,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.1),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
+              ),
+              child: const Icon(
+                Icons.notifications_none,
+                color: Colors.white,
+              ),
             ),
           ),
         ],

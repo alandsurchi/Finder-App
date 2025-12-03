@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:finder/screens/chat_screen.dart';
+import 'package:finder/widgets/fade_in_slide.dart';
 
 class MessagesScreen extends StatelessWidget {
   const MessagesScreen({Key? key}) : super(key: key);
@@ -26,12 +27,14 @@ class MessagesScreen extends StatelessWidget {
             padding: const EdgeInsets.only(top: 60.0, left: 20.0, right: 20.0, bottom: 20.0),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: const Text(
-                'Messages',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              child: const FadeInSlide(
+                child: Text(
+                  'Messages',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -39,21 +42,24 @@ class MessagesScreen extends StatelessWidget {
           // Search Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
-              ),
-              child: TextField(
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Search conversations...',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-                  prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.6)),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 15),
+            child: FadeInSlide(
+              delay: 0.1,
+              child: Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                ),
+                child: TextField(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Search conversations...',
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                    prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.6)),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
                 ),
               ),
             ),
@@ -61,46 +67,53 @@ class MessagesScreen extends StatelessWidget {
           const SizedBox(height: 20),
           // Messages List
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
-              children: const [
-                MessageCard(
-                  name: 'Sarah Johnson',
-                  message: 'Yes, I found it near the park',
-                  timeAgo: '2m ago',
-                  unreadCount: 2,
-                  itemName: 'Black Wallet',
-                  itemIcon: Icons.account_balance_wallet,
-                  isOnline: true,
-                ),
-                MessageCard(
-                  name: 'Mike Chen',
-                  message: 'Can we meet tomorrow at 3pm?',
-                  timeAgo: '1h ago',
-                  unreadCount: 0,
-                  itemName: 'iPhone 14',
-                  itemIcon: Icons.phone_iphone,
-                  isOnline: true,
-                ),
-                MessageCard(
-                  name: 'Emily Davis',
-                  message: 'Thank you so much for finding it!',
-                  timeAgo: '3h ago',
-                  unreadCount: 0,
-                  itemName: 'House Keys',
-                  itemIcon: Icons.vpn_key,
-                  isOnline: false,
-                ),
-                MessageCard(
-                  name: 'James Wilson',
-                  message: 'Is the reward still available?',
-                  timeAgo: '1d ago',
-                  unreadCount: 1,
-                  itemName: 'Backpack',
-                  itemIcon: Icons.backpack,
-                  isOnline: false,
-                ),
-              ],
+            child: FadeInSlide(
+              delay: 0.2,
+              child: ListView(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
+                children: const [
+                  MessageCard(
+                    name: 'Sarah Johnson',
+                    message: 'Yes, I found it near the park',
+                    timeAgo: '2m ago',
+                    unreadCount: 2,
+                    itemName: 'Black Wallet',
+                    itemIcon: Icons.account_balance_wallet,
+                    isOnline: true,
+                    imagePath: 'assets/images/sarah.png',
+                  ),
+                  MessageCard(
+                    name: 'Mike Chen',
+                    message: 'Can we meet tomorrow at 3pm?',
+                    timeAgo: '1h ago',
+                    unreadCount: 0,
+                    itemName: 'iPhone 14',
+                    itemIcon: Icons.phone_iphone,
+                    isOnline: true,
+                    imagePath: 'assets/images/mike.png',
+                  ),
+                  MessageCard(
+                    name: 'Emily Davis',
+                    message: 'Thank you so much for finding it!',
+                    timeAgo: '3h ago',
+                    unreadCount: 0,
+                    itemName: 'House Keys',
+                    itemIcon: Icons.vpn_key,
+                    isOnline: false,
+                    imagePath: 'assets/images/emily.png',
+                  ),
+                  MessageCard(
+                    name: 'James Wilson',
+                    message: 'Is the reward still available?',
+                    timeAgo: '1d ago',
+                    unreadCount: 1,
+                    itemName: 'Backpack',
+                    itemIcon: Icons.backpack,
+                    isOnline: false,
+                    imagePath: 'assets/images/james.png',
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -117,6 +130,7 @@ class MessageCard extends StatelessWidget {
   final String itemName;
   final IconData itemIcon;
   final bool isOnline;
+  final String imagePath;
 
   const MessageCard({
     Key? key,
@@ -127,6 +141,7 @@ class MessageCard extends StatelessWidget {
     required this.itemName,
     required this.itemIcon,
     required this.isOnline,
+    required this.imagePath,
   }) : super(key: key);
 
   @override
@@ -169,8 +184,11 @@ class MessageCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.grey[300],
+                    image: DecorationImage(
+                      image: AssetImage(imagePath),
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 30),
                 ),
                 if (isOnline)
                   Positioned(
