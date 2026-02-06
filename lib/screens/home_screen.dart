@@ -18,17 +18,20 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  String _selectedCategory = 'All items';
 
-  final List<String> _categories = ['All items', 'Lost', 'Found'];
+  final List<Widget> _pages = const [
+    HomeContent(),
+    SearchScreen(),
+    CreatePostScreen(),
+    MessagesScreen(),
+    ProfileScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Main Content
-          // Main Content
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             transitionBuilder: (Widget child, Animation<double> animation) {
@@ -40,29 +43,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-            child: _getPage(_currentIndex),
+            child: _pages[_currentIndex],
           ),
-          
-          // Bottom Nav Bar
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: CustomBottomNavBar(
               currentIndex: _currentIndex,
-              onTap: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
+              onTap: (index) => setState(() => _currentIndex = index),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildHomeContent() {
+class HomeContent extends StatefulWidget {
+  const HomeContent({Key? key}) : super(key: key);
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  String _selectedCategory = 'All items';
+  final List<String> _categories = ['All items', 'Lost', 'Found'];
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -96,11 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     final isSelected = _selectedCategory == category;
                     return Expanded(
                       child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedCategory = category;
-                          });
-                        },
+                        onTap: () => setState(() => _selectedCategory = category),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -135,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
                 children: const [
                   ItemCard(
-                    title: 'Black iPhone 15 Pro',
+                    title: 'Pink iPhone 15 Pro',
                     description:
                         'Lost my black iPhone 15 Pro near Central Park. Has a clear case with a small scratch on the corner. Please if found.',
                     location: 'Central Park, NYC',
@@ -159,24 +165,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
-  }
-  Widget _getPage(int index) {
-    switch (index) {
-      case 0:
-        return Container(
-          key: const ValueKey<int>(0),
-          child: _buildHomeContent(),
-        );
-      case 1:
-        return const SearchScreen(key: ValueKey<int>(1));
-      case 2:
-        return const CreatePostScreen(key: ValueKey<int>(2));
-      case 3:
-        return const MessagesScreen(key: ValueKey<int>(3));
-      case 4:
-        return const ProfileScreen(key: ValueKey<int>(4));
-      default:
-        return Container(key: const ValueKey<int>(-1));
-    }
   }
 }

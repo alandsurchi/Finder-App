@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:finder/screens/notifications_screen.dart';
+import 'package:finder/routes.dart';
 
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({Key? key}) : super(key: key);
@@ -61,10 +61,7 @@ class HomeAppBar extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-              );
+              Navigator.pushNamed(context, AppRoutes.notifications);
             },
             child: Container(
               width: 45,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:finder/widgets/custom_text_field.dart';
 import 'package:finder/widgets/social_button.dart';
-import 'package:finder/screens/login_screen.dart';
-import 'package:finder/screens/home_screen.dart';
+import 'package:finder/widgets/social_button.dart';
+import 'package:finder/routes.dart';
 
 class SignupScreen extends StatelessWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -120,10 +120,7 @@ class SignupScreen extends StatelessWidget {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const HomeScreen()),
-                      );
+                      Navigator.pushReplacementNamed(context, AppRoutes.home);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF5334F5), // Purple/Blue accent
@@ -182,10 +179,7 @@ class SignupScreen extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        );
+                        Navigator.pushNamed(context, AppRoutes.login);
                       },
                       child: const Text(
                         'Log in',

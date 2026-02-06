@@ -23,7 +23,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           children: [
             Text(
               'Create Post',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             SizedBox(height: 4),
             Text(
@@ -48,72 +48,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
+                  child: _buildToggleButton(
+                    title: 'Lost Item',
+                    isSelected: _isLostItem,
+                    color: const Color(0xFFFF4C4C),
                     onTap: () => setState(() => _isLostItem = true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _isLostItem ? const Color(0xFFFF4C4C) : Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          if (!_isLostItem)
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 5,
-                              offset: const Offset(0, 2),
-                            ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.circle, size: 12, color: _isLostItem ? Colors.white : const Color(0xFFFF4C4C)),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Lost Item',
-                            style: TextStyle(
-                              color: _isLostItem ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
-                  child: GestureDetector(
+                  child: _buildToggleButton(
+                    title: 'Found Item',
+                    isSelected: !_isLostItem,
+                    color: const Color(0xFF4E9F3D),
                     onTap: () => setState(() => _isLostItem = false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: !_isLostItem ? const Color(0xFF4E9F3D) : Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          if (_isLostItem)
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 5,
-                              offset: const Offset(0, 2),
-                            ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.circle, size: 12, color: !_isLostItem ? Colors.white : const Color(0xFF4E9F3D)),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Found Item',
-                            style: TextStyle(
-                              color: !_isLostItem ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -251,7 +199,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               height: 55,
               child: ElevatedButton(
                 onPressed: () {
-                  // TODO: Implement post logic
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Post functionality to be implemented')),
                   );
@@ -315,6 +263,46 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           hintStyle: const TextStyle(color: Colors.grey),
           border: InputBorder.none,
           icon: icon != null ? Icon(icon, color: const Color(0xFF5334F5), size: 20) : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToggleButton({
+    required String title,
+    required bool isSelected,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            if (!isSelected)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.circle, size: 12, color: isSelected ? Colors.white : color),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );

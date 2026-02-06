@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:finder/screens/chat_screen.dart';
+import 'package:finder/routes.dart';
 import 'package:finder/widgets/fade_in_slide.dart';
 
 class MessagesScreen extends StatelessWidget {
@@ -148,14 +148,13 @@ class MessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) => ChatScreen(
-              userName: name,
-              itemName: itemName,
-            ),
-          ),
+          AppRoutes.chat,
+          arguments: {
+            'userName': name,
+            'itemName': itemName,
+          },
         );
       },
       child: Container(

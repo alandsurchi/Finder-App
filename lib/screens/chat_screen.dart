@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 
 class ChatScreen extends StatelessWidget {
-  final String userName;
-  final String itemName;
-
-  const ChatScreen({
-    Key? key,
-    required this.userName,
-    required this.itemName,
-  }) : super(key: key);
+  const ChatScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final userName = args['userName'];
+    final itemName = args['itemName'];
+
     return Scaffold(
       backgroundColor: const Color(0xFFD0DEE8), // Light background
       appBar: AppBar(
