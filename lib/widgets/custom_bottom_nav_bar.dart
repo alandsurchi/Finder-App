@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/theme/app_color_tokens.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
   final int currentIndex;
@@ -56,6 +57,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
     final double itemWidth = size.width / 5;
+    final t = AppColorTokens.of(context);
 
     return SizedBox(
       height: 100, // Total height including the floating part
@@ -74,8 +76,8 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
                   painter: NavBarPainter(
                     position: _animation.value,
                     itemWidth: itemWidth,
-                    color: Colors.white,
-                    borderColor: const Color(0xFF2D8CFF),
+                    color: t.surface,
+                    borderColor: t.divider,
                   ),
                   size: Size(size.width, 80),
                 );
@@ -89,7 +91,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
               children: List.generate(5, (index) {
                 return SizedBox(
                   width: itemWidth,
-                  child: _buildNavItem(index, itemWidth),
+                  child: _buildNavItem(index, itemWidth, t),
                 );
               }),
             ),
@@ -99,7 +101,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
     );
   }
 
-  Widget _buildNavItem(int index, double itemWidth) {
+  Widget _buildNavItem(int index, double itemWidth, AppColorTokens t) {
     final bool isSelected = widget.currentIndex == index;
     
     // Items data
@@ -131,16 +133,16 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: t.surface,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? const Color(0xFF2D8CFF) : Colors.transparent,
+                    color: isSelected ? t.primary : Colors.transparent,
                     width: 2,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: Colors.blue.withOpacity(0.2),
+                            color: t.primary.withOpacity(0.2),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -149,7 +151,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
                 ),
                 child: Icon(
                   isSelected ? item['activeIcon'] : item['icon'],
-                  color: isSelected ? const Color(0xFF2D8CFF) : Colors.grey,
+                  color: isSelected ? t.primary : t.onSurfaceMuted,
                   size: 30,
                 ),
               ),
@@ -160,7 +162,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
               child: AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 300),
                 style: TextStyle(
-                  color: isSelected ? Colors.black87 : Colors.grey,
+                  color: isSelected ? t.primary : t.onSurfaceMuted,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12,
                   fontFamily: 'Poppins', // Assuming Poppins is used

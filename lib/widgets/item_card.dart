@@ -1,4 +1,5 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:finder/theme/app_color_tokens.dart';
 
 class ItemCard extends StatelessWidget {
   final String title;
@@ -20,14 +21,15 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppColorTokens.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: t.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -49,9 +51,9 @@ class ItemCard extends StatelessWidget {
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       height: 180,
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(Icons.image_not_supported, color: Colors.white, size: 50),
+                      color: t.surfaceHigh,
+                      child: Center(
+                        child: Icon(Icons.image_not_supported, color: t.onSurfaceMuted, size: 50),
                       ),
                     );
                   },
@@ -63,7 +65,7 @@ class ItemCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isLost ? const Color(0xFFFF4C4C) : const Color(0xFF4E9F3D),
+                    color: isLost ? t.warning : t.success,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -86,10 +88,10 @@ class ItemCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: t.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -97,7 +99,7 @@ class ItemCard extends StatelessWidget {
                   description,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: t.onSurfaceVar,
                     height: 1.5,
                   ),
                 ),
@@ -107,13 +109,13 @@ class ItemCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.location_on, size: 16, color: Colors.grey[500]),
+                        Icon(Icons.location_on, size: 16, color: t.onSurfaceMuted),
                         const SizedBox(width: 4),
                         Text(
                           location,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: t.onSurfaceMuted,
                           ),
                         ),
                       ],
@@ -122,7 +124,7 @@ class ItemCard extends StatelessWidget {
                       timeAgo,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[500],
+                        color: t.onSurfaceMuted,
                       ),
                     ),
                   ],

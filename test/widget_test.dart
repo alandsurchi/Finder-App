@@ -8,12 +8,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:finder/main.dart';
+import 'package:finder/screens/onboarding_screen.dart';
 
 void main() {
   testWidgets('Onboarding screen smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    // Build onboarding directly to keep this test independent from Firebase init.
+    await tester.pumpWidget(const MaterialApp(home: OnboardingScreen()));
 
     // Verify that our onboarding screen starts with the first page.
     expect(find.text('Lost Something?'), findsOneWidget);

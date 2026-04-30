@@ -1,11 +1,11 @@
 {
-    "name": "finder",
-    "short_name": "finder",
+    "name": "Finder",
+    "short_name": "Finder",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "the real project",
+    "description": "Finder - The ultimate lost & found application.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

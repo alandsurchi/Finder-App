@@ -1,175 +1,134 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/theme/app_color_tokens.dart';
+import 'package:finder/widgets/items/notification_item.dart';
+import 'package:finder/features/notifications/presentation/notifications_controller.dart';
+import 'package:finder/features/notifications/presentation/notification_style_resolver.dart';
+import 'package:finder/widgets/state/empty_widget.dart';
+import 'package:finder/widgets/state/error_widget.dart';
+import 'package:finder/widgets/state/loading_widget.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppColorTokens.of(context);
+    final notificationsState = ref.watch(notificationsControllerProvider);
+
+    final unreadCount = notificationsState.value
+            ?.where((n) => n.isUnread)
+            .length ??
+        0;
+
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0F2045), // Dark Blue
-              Color(0xFF1A3B70), // Mid Blue
-              Color(0xFFD0DEE8), // Light Blue/Whiteish at bottom
-            ],
-            stops: [0.0, 0.4, 1.0],
-          ),
-        ),
-        child: ListView(
-          padding: const EdgeInsets.only(top: 100, left: 20, right: 20, bottom: 20),
+        title: Row(
           children: [
-            NotificationItem(
-              title: 'Item Found Match',
-              message: 'Someone found a "Black Wallet" that matches your lost item report.',
-              timeAgo: '2m ago',
-              isUnread: true,
-              icon: Icons.check_circle_outline,
-              iconColor: Color(0xFF4E9F3D),
-            ),
-            NotificationItem(
-              title: 'New Message',
-              message: 'Sarah sent you a message regarding "iPhone 15".',
-              timeAgo: '1h ago',
-              isUnread: true,
-              icon: Icons.chat_bubble_outline,
-              iconColor: Color(0xFF2D8CFF),
-            ),
-            NotificationItem(
-              title: 'Post Approved',
-              message: 'Your post "Lost Keys" has been approved and is now visible.',
-              timeAgo: '5h ago',
-              isUnread: false,
-              icon: Icons.verified_outlined,
-              iconColor: Colors.orange,
-            ),
-            NotificationItem(
-              title: 'System Update',
-              message: 'We have updated our privacy policy. Please review the changes.',
-              timeAgo: '1d ago',
-              isUnread: false,
-              icon: Icons.info_outline,
-              iconColor: Colors.grey,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class NotificationItem extends StatelessWidget {
-  final String title;
-  final String message;
-  final String timeAgo;
-  final bool isUnread;
-  final IconData icon;
-  final Color iconColor;
-
-  const NotificationItem({
-    Key? key,
-    required this.title,
-    required this.message,
-    required this.timeAgo,
-    required this.isUnread,
-    required this.icon,
-    required this.iconColor,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: isUnread ? Colors.white.withOpacity(0.95) : Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: isUnread ? Border.all(color: const Color(0xFF2D8CFF).withOpacity(0.5), width: 1) : null,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: iconColor, size: 24),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0F2045),
-                      ),
-                    ),
-                    Text(
-                      timeAgo,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  message,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[800],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (isUnread)
-            Container(
-              margin: const EdgeInsets.only(left: 10, top: 5),
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: Color(0xFF2D8CFF),
-                shape: BoxShape.circle,
+            const Text(
+              'Notifications',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
+            if (unreadCount > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2D8CFF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$unreadCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          if (unreadCount > 0)
+            TextButton(
+              onPressed: () {
+                final notifs = ref
+                    .read(notificationsControllerProvider)
+                    .value ?? [];
+                for (var i = 0; i < notifs.length; i++) {
+                  if (notifs[i].isUnread) {
+                    ref
+                        .read(notificationsControllerProvider.notifier)
+                        .markAsRead(i);
+                  }
+                }
+              },
+              child: const Text(
+                'Mark all read',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ),
+          // Refresh button
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded,
+                color: Colors.white, size: 20),
+            onPressed: () => ref
+                .read(notificationsControllerProvider.notifier)
+                .loadNotifications(),
+          ),
         ],
+      ),
+      body: notificationsState.when(
+        loading: () =>
+            const LoadingWidget(message: 'Loading notifications...'),
+        error: (err, _) => ErrorStateWidget(message: err.toString()),
+        data: (notifications) {
+          if (notifications.isEmpty) {
+            return const EmptyWidget(
+              title: 'No notifications yet',
+              subtitle:
+                  'You will receive notifications here when:\n• Someone messages you\n• Your post gets activity\n• A post is resolved',
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 30),
+            itemCount: notifications.length,
+            itemBuilder: (context, index) {
+              final n = notifications[index];
+              final displayColor =
+                  NotificationStyleResolver.resolveIconColor(n, t);
+              final icon = NotificationStyleResolver.resolveIcon(n);
+
+              return GestureDetector(
+                onTap: () => ref
+                    .read(notificationsControllerProvider.notifier)
+                    .markAsRead(index),
+                child: NotificationItem(
+                  title: n.title,
+                  message: n.message,
+                  timeAgo: n.timeAgo,
+                  isUnread: n.isUnread,
+                  icon: icon,
+                  iconColor: displayColor,
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

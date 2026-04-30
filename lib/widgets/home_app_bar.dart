@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/routes.dart';
+import 'package:finder/theme/app_color_tokens.dart';
+import 'package:finder/features/profile/presentation/profile_controller.dart';
+import 'package:finder/models/user_model.dart';
 
-class HomeAppBar extends StatelessWidget {
+class HomeAppBar extends ConsumerWidget {
   const HomeAppBar({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppColorTokens.of(context);
+    final profileState = ref.watch(profileControllerProvider);
+    final profile = profileState.value ?? UserModel.empty();
+
     return Padding(
       padding: const EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0, bottom: 20.0),
       child: Row(
@@ -13,44 +21,41 @@ class HomeAppBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              // User Avatar Placeholder
+              // User Avatar
               Container(
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.grey[300],
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/profile img.png'), // Placeholder path
-                    fit: BoxFit.cover,
-                  ),
+                  color: t.surfaceHigh,
                 ),
-                ),
+                child: Icon(Icons.person, color: t.onSurfaceVar),
+              ),
               const SizedBox(width: 15),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Welcome back.',
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: t.onSurfaceMuted,
                       fontSize: 14,
                     ),
                   ),
                   Row(
-                    children: const [
+                    children: [
                       Text(
-                        'Aland Raed',
+                        profile.fullName.isEmpty ? 'Guest' : profile.fullName,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: t.onSurface,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(width: 5),
+                      const SizedBox(width: 5),
                       Icon(
                         Icons.verified,
-                        color: Colors.blue,
+                        color: t.primary,
                         size: 18,
                       ),
                     ],
@@ -68,12 +73,12 @@ class HomeAppBar extends StatelessWidget {
               height: 45,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                color: t.primary.withOpacity(0.1),
+                border: Border.all(color: t.primary.withOpacity(0.2)),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.notifications_none,
-                color: Colors.white,
+                color: t.onSurface,
               ),
             ),
           ),

@@ -1,6 +1,6 @@
-# finder
+# Finder
 
-the real project
+A premium lost and found application for reporting and recovering missing items.
 
 ## Getting Started
 
