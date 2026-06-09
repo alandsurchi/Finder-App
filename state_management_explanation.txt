@@ -1,0 +1,85 @@
+STATE MANAGEMENT IN FINDER APP (RIVERPOD)
+
+1) What we use
+- Riverpod (flutter_riverpod) is the state-management and dependency-injection tool used across the app.
+- riverpod_annotation + riverpod_generator are used for codegen-based providers (example: theme provider).
+- State is stored in providers, and UI widgets read it with ref.watch/ref.read.
+- AsyncValue is used to represent loading, error, and data states consistently.
+
+2) What Riverpod is (short definition)
+Riverpod is a Flutter/Dart state-management library that stores state in providers rather than inside widgets.
+Providers are globally accessible, type-safe, and can be composed. This makes it easier to keep business
+logic away from UI and to share state across screens.
+
+3) Do we use only that?
+- For shared application state and feature logic, yes: Riverpod is the only state-management package
+  listed in pubspec.yaml. There is no Provider, BLoC, GetX, MobX, Redux, or similar package used.
+- For small, local UI state (like toggles, tab index, or text input state inside a single screen),
+  Flutter setState is used. This is normal and complements Riverpod rather than replacing it.
+
+4) Why we chose Riverpod (and not other options)
+- One tool for state + dependency injection. We do not need a separate DI library.
+- No BuildContext dependency; controllers can access dependencies without widget context.
+- AsyncValue standardizes loading/error/data UI patterns across screens.
+- Provider families (Provider.family, StateNotifierProvider.family) make parameterized state clean
+  (example: chat state per chatId).
+- Strong type safety and good testability (providers can be overridden in tests).
+- Codegen support reduces boilerplate for simple state (example: theme).
+
+5) Where it is used (key files)
+Root scope
+- lib/main.dart (ProviderScope wraps the app and enables Riverpod everywhere)
+
+Dependency injection (services, repositories, usecases)
+- lib/app/di/app_providers.dart (Provider<T> registrations)
+
+Auth state
+- lib/features/auth/presentation/auth_state_provider.dart
+- lib/features/auth/presentation/auth_controller.dart
+
+Posts state
+- lib/features/posts/presentation/posts_controller.dart
+- lib/features/posts/presentation/posts_filter.dart
+- lib/features/posts/presentation/saved_items_controller.dart
+- lib/features/posts/presentation/similar_items_provider.dart
+
+Chat state
+- lib/features/chat/presentation/conversations_controller.dart
+- lib/features/chat/presentation/chat_messages_controller.dart
+
+Profile + privacy state
+- lib/features/profile/presentation/profile_controller.dart
+- lib/features/profile/presentation/privacy_settings_controller.dart
+- lib/features/profile/presentation/blocked_users_controller.dart
+
+Notifications state
+- lib/features/notifications/presentation/notifications_controller.dart
+
+Theme state (codegen)
+- lib/theme/theme_provider.dart
+- lib/theme/theme_provider.g.dart
+
+UI consumers (examples of ref.watch/ref.read)
+- lib/screens/home_screen.dart
+- lib/widgets/home_app_bar.dart
+- lib/screens/login_screen.dart
+- lib/screens/signup_screen.dart
+- lib/screens/messages_screen.dart
+- lib/screens/chat_screen.dart
+- lib/screens/profile_screen.dart
+- lib/screens/privacy_settings_screen.dart
+- lib/screens/notifications_screen.dart
+- lib/screens/saved_items_screen.dart
+- lib/screens/item_details_screen.dart
+
+Local UI state (setState examples)
+- lib/screens/create_post_screen.dart
+- lib/screens/manage_post_screen.dart
+- lib/screens/get_verified_screen.dart
+- lib/screens/search_screen.dart
+
+6) Typical data flow in this project
+UI Widget -> ref.watch(provider) -> Controller (StateNotifier) -> Usecase/Repository -> Service
+Controller updates state (AsyncValue) -> UI rebuilds via ref.watch
+
+This keeps business logic in controllers, keeps UI thin, and gives consistent loading/error handling.
