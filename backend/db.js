@@ -10,11 +10,10 @@ let sqliteDb = null;
 
 if (isPostgres) {
   console.log('Connecting to PostgreSQL database at:', databaseUrl);
+  const useSsl = databaseUrl.includes('sslmode=disable') ? false : { rejectUnauthorized: false };
   pgPool = new Pool({
     connectionString: databaseUrl,
-    ssl: {
-      rejectUnauthorized: false
-    }
+    ssl: useSsl
   });
 } else {
   const dbPath = path.resolve(__dirname, 'database.sqlite');
