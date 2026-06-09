@@ -1,25 +1,21 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import '../../core/errors/failure.dart';
+import '../../core/network/api_client.dart';
 import '../../core/utils/result.dart';
 import '../../models/conversation_model.dart';
 import '../conversation_repository.dart';
 
 class ConversationRepositoryImpl implements ConversationRepository {
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final ApiClient _apiClient;
 
   const ConversationRepositoryImpl({
-    required FirebaseFirestore firestore,
-    required FirebaseAuth auth,
-  }) : _firestore = firestore,
-       _auth = auth;
+    required ApiClient apiClient,
+  }) : _apiClient = apiClient;
 
   @override
   Future<Result<List<ConversationModel>>> getConversations() async {
-    final user = _auth.currentUser;
-    if (user == null) {
+    if (!_apiClient.isAuthenticated) {
       return Result.failure(
         const Failure(
           message: 'Please log in to view conversations.',
@@ -29,101 +25,112 @@ class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     try {
-      final snapshot = await _firestore
-          .collection('chats')
-          .where('participants', arrayContains: user.uid)
-          .get();
+      final res = await _apiClient.get('/chats');
+      final list = res as List<dynamic>;
+      
+      // We need to resolve current userId to map unread count.
+      // We can fetch token info or assume client filters/maps it.
+      // The JWT token is verified in backend, and backend returns unread counts mapped by userId.
+      // Wait, let's extract userId from client token if needed, or simply map it from response payload since we don't have user.uid.
+      // Wait, the API client exposes `token` or we can find uid. But wait! The `/chats` endpoint returns `unreadCounts` mapped by userId.
+      // If we don't have currentUserId locally, we can extract it or pass it. But wait, `apiClient` doesn't expose `userId`, it only stores `token`.
+      // Can we decode JWT token to extract `userId` in Flutter?
+      // Yes! A JWT token consists of three parts separated by `.`. The second part is a Base64URL encoded JSON containing the payload (including `userId`).
+      // Let's write a helper to decode the JWT payload to get `userId`:
+      String? getUserIdFromToken(String? token) {
+        if (token == null || token.isEmpty) return null;
+        try {
+          final parts = token.split('.');
+          if (parts.length != 3) return null;
+          final payload = parts[1];
+          // Base64URL decode
+          var normalized = base64Url.normalize(payload);
+          final decoded = utf8.decode(base64.decode(normalized));
+          final map = jsonDecode(decoded);
+          return map['userId']?.toString();
+        } catch (_) {
+          return null;
+        }
+      }
+      
+      // But wait! Is there a simpler way?
+      // Yes, the backend `/chats` returns:
+      // `unreadCounts: { [userId]: chat.unread_count }`
+      // Wait, the backend already knows req.userId, so it can just return `unreadCount: chat.unread_count` directly in the JSON response!
+      // Let's check `backend/routes/chats.js`:
+      // ```javascript
+      // unreadCounts: {
+      //   [userId]: chat.unread_count
+      // }
+      // ```
+      // Yes, it returns exactly that.
+      // To get the unread count, the client can just read the first value in `unreadCounts` map or read it by decoding the token!
+      // Let's write a simple helper inside `ConversationRepositoryImpl` to decode token and find `userId`.
+      
+      String currentUserId = '';
+      final token = _apiClient.token;
+      if (token != null && token.isNotEmpty) {
+        try {
+          final parts = token.split('.');
+          if (parts.length == 3) {
+            final payload = parts[1];
+            // Normalize base64
+            final normalized = base64Url.normalize(payload);
+            final decoded = utf8.decode(base64.decode(normalized));
+            final map = jsonDecode(decoded);
+            currentUserId = map['userId']?.toString() ?? '';
+          }
+        } catch (_) {}
+      }
 
-      final docs = snapshot.docs;
-      docs.sort((a, b) {
-        final aMs = _asInt(a.data()['updatedAtMs']) ?? 0;
-        final bMs = _asInt(b.data()['updatedAtMs']) ?? 0;
-        return bMs.compareTo(aMs);
-      });
-
-      final conversations = docs
-          .map((doc) => _toConversation(doc: doc, currentUserId: user.uid))
-          .toList(growable: false);
+      final conversations = list.map((item) {
+        final map = Map<String, dynamic>.from(item);
+        final id = map['id']?.toString() ?? '';
+        
+        final resolvedMap = {
+          'postId': map['postId'],
+          'participants': map['participants'],
+          'participantNames': map['participantNames'],
+          'participantAvatars': map['participantAvatars'],
+          'lastMessage': map['lastMessageText'],
+          'lastMessageSenderId': map['lastSenderId'],
+          'lastUpdatedAt': Timestamp.fromMillisecondsSinceEpoch(map['updatedAtMs'] as int? ?? DateTime.now().millisecondsSinceEpoch),
+          'createdAt': Timestamp.now(),
+          'unreadCount': (map['unreadCounts'] as Map?)?[currentUserId] ?? 0,
+          'itemName': map['itemName'],
+        };
+        
+        return ConversationModel.fromMap(resolvedMap, id, currentUserId);
+      }).toList();
 
       return Result.success(conversations);
-    } on FirebaseException catch (e) {
+    } catch (e) {
       return Result.failure(
         Failure(
-          message: 'Unable to load conversations right now.',
+          message: 'Unable to load conversations: $e',
           type: FailureType.network,
-          code: e.code,
         ),
       );
     }
   }
+}
 
-  ConversationModel _toConversation({
-    required QueryDocumentSnapshot<Map<String, dynamic>> doc,
-    required String currentUserId,
-  }) {
-    final data = doc.data();
-
-    final participants =
-        (data['participants'] as List<dynamic>? ?? const <dynamic>[])
-            .map((e) => e.toString())
-            .toList(growable: false);
-
-    final otherUserId = participants.firstWhere(
-      (id) => id != currentUserId,
-      orElse: () => currentUserId,
-    );
-
-    final namesMap = Map<String, dynamic>.from(
-      data['participantNames'] as Map? ?? const {},
-    );
-    final avatarMap = Map<String, dynamic>.from(
-      data['participantAvatars'] as Map? ?? const {},
-    );
-    final unreadMap = Map<String, dynamic>.from(
-      data['unreadCounts'] as Map? ?? const {},
-    );
-
-    final name = namesMap[otherUserId]?.toString().trim() ?? '';
-    final fallbackName =
-        namesMap[currentUserId]?.toString().trim() ?? 'Conversation';
-    final message = data['lastMessageText']?.toString() ?? '';
-
-    return ConversationModel(
-      chatId: doc.id,
-      postId: data['postId']?.toString() ?? '',
-      participants: participants,
-      name: name.isEmpty ? fallbackName : name,
-      message: message.isEmpty ? 'No messages yet' : message,
-      lastMessageSenderId: '',
-      lastUpdatedAt: Timestamp.fromMillisecondsSinceEpoch(_asInt(data['updatedAtMs']) ?? DateTime.now().millisecondsSinceEpoch),
-      createdAt: Timestamp.now(),
-      unreadCount: _asInt(unreadMap[currentUserId]) ?? 0,
-      itemName: data['itemName']?.toString() ?? 'General',
-      isOnline: data['isOnline'] as bool? ?? false,
-      isVerified: data['isVerified'] as bool? ?? false,
-      avatarUrl: avatarMap[otherUserId]?.toString() ?? '',
-    );
-  }
-
-  String _relativeTime(int? timestampMs) {
-    if (timestampMs == null || timestampMs <= 0) {
-      return 'Just now';
+// Simple base64 decoder helper
+class base64Url {
+  static String normalize(String base64) {
+    var s = base64.replaceAll('-', '+').replaceAll('_', '/');
+    switch (s.length % 4) {
+      case 0:
+        break;
+      case 2:
+        s += '==';
+        break;
+      case 3:
+        s += '=';
+        break;
+      default:
+        throw Exception('Illegal base64url string!');
     }
-
-    final diff = DateTime.now().difference(
-      DateTime.fromMillisecondsSinceEpoch(timestampMs),
-    );
-
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
-  }
-
-  int? _asInt(Object? value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    if (value is String) return int.tryParse(value);
-    return null;
+    return s;
   }
 }

@@ -1,8 +1,8 @@
-import 'dart:async';
-
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/failure.dart';
+import '../../../core/network/api_client.dart';
+import '../../../app/di/app_providers.dart';
 
 enum AuthStatus { loading, authenticated, unauthenticated }
 
@@ -23,25 +23,42 @@ class AuthState {
 }
 
 class AuthStateController extends StateNotifier<AuthState> {
-  final FirebaseAuth _auth;
-  late final StreamSubscription<User?> _authSubscription;
+  final ApiClient _apiClient;
 
-  AuthStateController({FirebaseAuth? auth})
-    : _auth = auth ?? FirebaseAuth.instance,
-      super(
-        (auth ?? FirebaseAuth.instance).currentUser == null
-            ? const AuthState.unauthenticated()
-            : AuthState.authenticated(
-                (auth ?? FirebaseAuth.instance).currentUser!.uid,
-              ),
-      ) {
-    _authSubscription = _auth.authStateChanges().listen((user) {
-      if (user == null) {
-        state = const AuthState.unauthenticated();
-      } else {
-        state = AuthState.authenticated(user.uid);
-      }
-    });
+  AuthStateController({required ApiClient apiClient})
+      : _apiClient = apiClient,
+        super(const AuthState.loading()) {
+    _init();
+  }
+
+  void _init() {
+    final token = _apiClient.token;
+    if (token != null && token.isNotEmpty) {
+      try {
+        final parts = token.split('.');
+        if (parts.length == 3) {
+          final payload = parts[1];
+          // Base64URL decode
+          var normalized = payload.replaceAll('-', '+').replaceAll('_', '/');
+          switch (normalized.length % 4) {
+            case 2:
+              normalized += '==';
+              break;
+            case 3:
+              normalized += '=';
+              break;
+          }
+          final decoded = utf8.decode(base64.decode(normalized));
+          final map = jsonDecode(decoded);
+          final uid = map['userId']?.toString() ?? '';
+          if (uid.isNotEmpty) {
+            state = AuthState.authenticated(uid);
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+    state = const AuthState.unauthenticated();
   }
 
   void setAuthenticated(String userId) {
@@ -55,14 +72,8 @@ class AuthStateController extends StateNotifier<AuthState> {
   void setLoading() {
     state = const AuthState.loading();
   }
-
-  @override
-  void dispose() {
-    _authSubscription.cancel();
-    super.dispose();
-  }
 }
 
 final authStateProvider = StateNotifierProvider<AuthStateController, AuthState>(
-  (ref) => AuthStateController(),
+  (ref) => AuthStateController(apiClient: ref.read(apiClientProvider)),
 );

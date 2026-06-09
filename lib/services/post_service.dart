@@ -1,48 +1,83 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/network/api_client.dart';
 import '../models/item_model.dart';
 
 class PostService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ApiClient _apiClient;
 
-  // Real-time stream of all posts
-  Stream<List<ItemModel>> getPostsStream() {
-    return _firestore
-        .collection('posts')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => ItemModel.fromMap(doc.data(), doc.id))
-            .toList());
+  PostService({required ApiClient apiClient}) : _apiClient = apiClient;
+
+  // Real-time stream of all posts (polling fallback)
+  Stream<List<ItemModel>> getPostsStream() async* {
+    yield await _fetchItems();
+    yield* Stream.periodic(const Duration(seconds: 5)).asyncMap((_) => _fetchItems());
+  }
+
+  Future<List<ItemModel>> _fetchItems() async {
+    try {
+      final res = await _apiClient.get('/posts?limit=50');
+      final itemsList = res['items'] as List<dynamic>;
+      return itemsList.map((item) {
+        final map = Map<String, dynamic>.from(item);
+        final createdAtMs = map['createdAtMs'] as int? ?? DateTime.now().millisecondsSinceEpoch;
+        map['createdAt'] = Timestamp.fromMillisecondsSinceEpoch(createdAtMs);
+        return ItemModel.fromMap(map, map['id']?.toString() ?? '');
+      }).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   // Create a new post
   Future<void> createPost(ItemModel post) async {
-    await _firestore.collection('posts').doc(post.id).set(post.toMap());
+    try {
+      final map = post.toMap();
+      map['id'] = post.id;
+      map['createdAtMs'] = post.createdAt.millisecondsSinceEpoch;
+      map.remove('createdAt'); // Not JSON-serializable
+      
+      await _apiClient.post('/posts', map);
+    } catch (e) {
+      throw Exception('Failed to create post: $e');
+    }
   }
 
   // Update a post
   Future<void> updatePost(String id, Map<String, dynamic> data) async {
-    await _firestore.collection('posts').doc(id).update(data);
+    try {
+      await _apiClient.put('/posts/$id', data);
+    } catch (e) {
+      throw Exception('Failed to update post: $e');
+    }
   }
 
   // Delete a post
   Future<void> deletePost(String id) async {
-    await _firestore.collection('posts').doc(id).delete();
+    try {
+      await _apiClient.delete('/posts/$id');
+    } catch (e) {
+      throw Exception('Failed to delete post: $e');
+    }
   }
 
   // Mark post as resolved
   Future<void> markAsResolved(String id) async {
-    await _firestore.collection('posts').doc(id).update({'isResolved': true});
+    try {
+      await _apiClient.put('/posts/$id', {'status': 'resolved'});
+    } catch (e) {
+      throw Exception('Failed to resolve post: $e');
+    }
   }
 
   // Report post
   Future<void> reportPost(String postId, String reporterId, String reason) async {
-    await _firestore.collection('reports').add({
-      'postId': postId,
-      'reporterId': reporterId,
-      'reason': reason,
-      'createdAt': FieldValue.serverTimestamp(),
-      'status': 'pending',
-    });
+    try {
+      await _apiClient.post('/posts/$postId/report', {
+        'reporterId': reporterId,
+        'reason': reason,
+      });
+    } catch (e) {
+      throw Exception('Failed to report post: $e');
+    }
   }
 }

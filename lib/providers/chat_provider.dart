@@ -3,9 +3,10 @@ import 'package:finder/services/chat_service.dart';
 import 'package:finder/models/conversation_model.dart';
 import 'package:finder/features/chat/domain/message.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
+import '../app/di/app_providers.dart';
 
 final chatServiceProvider = Provider<ChatService>((ref) {
-  return ChatService();
+  return ChatService(apiClient: ref.read(apiClientProvider));
 });
 
 final conversationsStreamProvider = StreamProvider<List<ConversationModel>>((ref) {

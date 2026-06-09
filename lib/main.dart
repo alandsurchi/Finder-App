@@ -8,13 +8,31 @@ import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
+import 'core/network/api_client.dart';
+import 'app/di/app_providers.dart';
+import 'features/auth/presentation/auth_state_provider.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const ProviderScope(child: FinderApp()));
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (e) {
+    debugPrint('Firebase initialization ignored or failed: $e');
+  }
+  
+  final apiClient = ApiClient();
+  await apiClient.init();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        apiClientProvider.overrideWithValue(apiClient),
+      ],
+      child: const FinderApp(),
+    ),
+  );
 }
 
 class FinderApp extends ConsumerWidget {
@@ -30,7 +48,7 @@ class FinderApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeControllerProvider);
-    final authState = ref.watch(authUserStreamProvider);
+    final authState = ref.watch(authStateProvider);
 
     return MaterialApp(
       title: 'Finder',
@@ -58,22 +76,19 @@ class FinderApp extends ConsumerWidget {
 }
 
 class _AuthGate extends StatelessWidget {
-  final AsyncValue<User?> state;
+  final AuthState state;
 
   const _AuthGate({required this.state});
 
   @override
   Widget build(BuildContext context) {
-    return state.when(
-      data: (user) {
-        if (user != null) {
-          return const HomeScreen();
-        } else {
-          return const OnboardingScreen();
-        }
-      },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, trace) => Scaffold(body: Center(child: Text('Error: $e'))),
-    );
+    switch (state.status) {
+      case AuthStatus.loading:
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      case AuthStatus.authenticated:
+        return const HomeScreen();
+      case AuthStatus.unauthenticated:
+        return const OnboardingScreen();
+    }
   }
 }

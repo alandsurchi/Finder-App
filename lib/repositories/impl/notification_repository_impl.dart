@@ -1,46 +1,48 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import '../../core/errors/failure.dart';
+import '../../core/network/api_client.dart';
 import '../../core/utils/result.dart';
 import '../../models/notification_model.dart';
 import '../notification_repository.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final ApiClient _apiClient;
   final List<NotificationModel> _items = [];
 
   NotificationRepositoryImpl({
-    required FirebaseFirestore firestore,
-    required FirebaseAuth auth,
-  }) : _firestore = firestore,
-       _auth = auth;
+    required ApiClient apiClient,
+  }) : _apiClient = apiClient;
 
   @override
   Future<Result<List<NotificationModel>>> getNotifications() async {
-    final user = _auth.currentUser;
-    if (user == null) {
+    if (!_apiClient.isAuthenticated) {
       _items.clear();
       return Result.success(const []);
     }
 
     try {
-      final snapshot = await _userNotifications(
-        user.uid,
-      ).orderBy('createdAtMs', descending: true).get();
+      final res = await _apiClient.get('/notifications');
+      final list = res as List<dynamic>;
 
       _items
         ..clear()
-        ..addAll(snapshot.docs.map(_toNotification));
+        ..addAll(list.map((item) {
+          final map = Map<String, dynamic>.from(item);
+          return NotificationModel(
+            id: map['id']?.toString() ?? '',
+            title: map['title']?.toString() ?? 'Notification',
+            message: map['message']?.toString() ?? '',
+            timeAgo: _relativeTime(map['createdAtMs'] as int?),
+            isUnread: map['isUnread'] as bool? ?? true,
+            type: _notificationType(map['type']?.toString()),
+          );
+        }));
 
       return Result.success(List.unmodifiable(_items));
-    } on FirebaseException catch (e) {
+    } catch (e) {
       return Result.failure(
         Failure(
-          message: 'Unable to load notifications right now.',
+          message: 'Unable to load notifications: $e',
           type: FailureType.network,
-          code: e.code,
         ),
       );
     }
@@ -52,8 +54,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
       return Result.success(List.unmodifiable(_items));
     }
 
-    final user = _auth.currentUser;
-    if (user == null) {
+    if (!_apiClient.isAuthenticated) {
       return Result.failure(
         const Failure(
           message: 'Please log in to manage notifications.',
@@ -65,44 +66,19 @@ class NotificationRepositoryImpl implements NotificationRepository {
     final current = _items[index];
     try {
       if (current.id.isNotEmpty) {
-        await _userNotifications(user.uid).doc(current.id).set({
-          'isUnread': false,
-          'updatedAtMs': DateTime.now().millisecondsSinceEpoch,
-        }, SetOptions(merge: true));
+        await _apiClient.put('/notifications/${current.id}/read', {});
       }
 
       _items[index] = current.copyWith(isUnread: false);
       return Result.success(List.unmodifiable(_items));
-    } on FirebaseException catch (e) {
+    } catch (e) {
       return Result.failure(
         Failure(
-          message: 'Unable to update notification right now.',
+          message: 'Unable to update notification: $e',
           type: FailureType.network,
-          code: e.code,
         ),
       );
     }
-  }
-
-  CollectionReference<Map<String, dynamic>> _userNotifications(String userId) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('notifications');
-  }
-
-  NotificationModel _toNotification(
-    QueryDocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
-    final data = doc.data();
-    return NotificationModel(
-      id: doc.id,
-      title: data['title']?.toString() ?? 'Notification',
-      message: data['message']?.toString() ?? '',
-      timeAgo: _relativeTime(_asInt(data['createdAtMs'])),
-      isUnread: data['isUnread'] as bool? ?? true,
-      type: _notificationType(data['type']?.toString()),
-    );
   }
 
   NotificationType _notificationType(String? raw) {
@@ -131,12 +107,5 @@ class NotificationRepositoryImpl implements NotificationRepository {
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     return '${diff.inDays}d ago';
-  }
-
-  int? _asInt(Object? value) {
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    if (value is String) return int.tryParse(value);
-    return null;
   }
 }

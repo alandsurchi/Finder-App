@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/network/api_client.dart';
 import '../../features/chat/mappers/message_mapper.dart';
 import '../../features/posts/mappers/post_mapper.dart';
 import '../../repositories/auth_repository.dart';
@@ -19,13 +20,13 @@ import '../../repositories/impl/notification_repository_impl.dart';
 import '../../repositories/impl/profile_repository_impl.dart';
 import '../../repositories/impl/saved_items_repository_impl.dart';
 import '../../services/analytics/analytics_service.dart';
-import '../../services/analytics/firebase_analytics_service.dart';
+import '../../services/analytics/mock_analytics_service.dart';
 import '../../services/auth/auth_service.dart';
-import '../../services/auth/firebase_auth_service.dart';
+import '../../services/auth/railway_auth_service.dart';
 import '../../services/chat/chat_service.dart';
-import '../../services/chat/firebase_chat_service.dart';
+import '../../services/chat/railway_chat_service.dart';
 import '../../services/posts/post_service.dart';
-import '../../services/posts/firebase_post_service.dart';
+import '../../services/posts/railway_post_service.dart';
 import '../../usecases/create_post.dart';
 import '../../usecases/get_posts.dart';
 import '../../usecases/login_user.dart';
@@ -34,6 +35,11 @@ import '../../usecases/get_conversations.dart';
 import '../../usecases/get_notifications.dart';
 import '../../usecases/get_messages.dart';
 import '../../usecases/signup_user.dart';
+
+// ApiClient provider
+final apiClientProvider = Provider<ApiClient>((ref) {
+  throw UnimplementedError('apiClientProvider must be overridden in main()');
+});
 
 final firebaseAuthProvider = Provider<FirebaseAuth>(
   (ref) => FirebaseAuth.instance,
@@ -48,25 +54,22 @@ final firebaseAnalyticsProvider = Provider<FirebaseAnalytics>(
 );
 
 final analyticsServiceProvider = Provider<AnalyticsService>(
-  (ref) =>
-      FirebaseAnalyticsService(analytics: ref.read(firebaseAnalyticsProvider)),
+  (ref) => MockAnalyticsService(), // Firebase analytics can be mocked
 );
 
 final authServiceProvider = Provider<AuthService>(
-  (ref) => FirebaseAuthService(
-    auth: ref.read(firebaseAuthProvider),
-    firestore: ref.read(firestoreProvider),
+  (ref) => RailwayAuthService(
+    apiClient: ref.read(apiClientProvider),
   ),
 );
 
 final postServiceProvider = Provider<PostService>(
-  (ref) => FirebasePostService(firestore: ref.read(firestoreProvider)),
+  (ref) => RailwayPostService(apiClient: ref.read(apiClientProvider)),
 );
 
 final chatServiceProvider = Provider<ChatService>(
-  (ref) => FirebaseChatService(
-    firestore: ref.read(firestoreProvider),
-    auth: ref.read(firebaseAuthProvider),
+  (ref) => RailwayChatService(
+    apiClient: ref.read(apiClientProvider),
   ),
 );
 
@@ -96,29 +99,25 @@ final chatRepositoryProvider = Provider<ChatRepository>(
 
 final conversationRepositoryProvider = Provider<ConversationRepository>(
   (ref) => ConversationRepositoryImpl(
-    firestore: ref.read(firestoreProvider),
-    auth: ref.read(firebaseAuthProvider),
+    apiClient: ref.read(apiClientProvider),
   ),
 );
 
 final notificationRepositoryProvider = Provider<NotificationRepository>(
   (ref) => NotificationRepositoryImpl(
-    firestore: ref.read(firestoreProvider),
-    auth: ref.read(firebaseAuthProvider),
+    apiClient: ref.read(apiClientProvider),
   ),
 );
 
 final profileRepositoryProvider = Provider<ProfileRepository>(
   (ref) => ProfileRepositoryImpl(
-    firestore: ref.read(firestoreProvider),
-    auth: ref.read(firebaseAuthProvider),
+    apiClient: ref.read(apiClientProvider),
   ),
 );
 
 final savedItemsRepositoryProvider = Provider<SavedItemsRepository>(
   (ref) => SavedItemsRepositoryImpl(
-    firestore: ref.read(firestoreProvider),
-    auth: ref.read(firebaseAuthProvider),
+    apiClient: ref.read(apiClientProvider),
   ),
 );
 
