@@ -1,5 +1,4 @@
 const { Pool } = require('pg');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -16,6 +15,7 @@ if (isPostgres) {
     ssl: useSsl
   });
 } else {
+  const sqlite3 = require('sqlite3').verbose();
   const dbPath = path.resolve(__dirname, 'database.sqlite');
   console.log('Connecting to local SQLite database at:', dbPath);
   sqliteDb = new sqlite3.Database(dbPath);
