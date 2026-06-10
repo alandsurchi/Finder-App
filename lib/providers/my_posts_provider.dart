@@ -1,45 +1,34 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/item_model.dart';
-import '../services/notification_service.dart';
+import 'post_provider.dart';
+import '../features/auth/presentation/auth_state_provider.dart';
 
 class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
-  MyPostsNotifier() : super(const AsyncValue.loading()) {
+  final Ref ref;
+
+  MyPostsNotifier(this.ref) : super(const AsyncValue.loading()) {
     load();
   }
 
   Future<void> load() async {
     state = const AsyncValue.loading();
-    final user = FirebaseAuth.instance.currentUser;
+    final authState = ref.read(authStateProvider);
+    final user = authState.userId;
     if (user == null) {
       state = const AsyncValue.data([]);
       return;
     }
     try {
-      // Simple single-field filter — no composite index required
-      final snap = await FirebaseFirestore.instance
-          .collection('posts')
-          .where('ownerId', isEqualTo: user.uid)
-          .get();
-
-      final items = snap.docs
-          .map((doc) => ItemModel.fromMap(doc.data(), doc.id))
-          .toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      state = AsyncValue.data(items);
-    } on FirebaseException catch (e) {
+      final posts = await ref.read(postServiceProvider).fetchItems(ownerId: user);
+      state = AsyncValue.data(posts);
+    } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     }
   }
 
   Future<void> deletePost(String postId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('posts')
-          .doc(postId)
-          .delete();
+      await ref.read(postServiceProvider).deletePost(postId);
       final current = state.value ?? [];
       state = AsyncValue.data(
         current.where((p) => p.id != postId).toList(),
@@ -49,23 +38,8 @@ class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
 
   Future<void> markResolved(String postId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('posts')
-          .doc(postId)
-          .update({
-        'isResolved': true,
-        'updatedAtMs': DateTime.now().millisecondsSinceEpoch,
-      });
-
+      await ref.read(postServiceProvider).markAsResolved(postId);
       final current = state.value ?? [];
-
-      // Notify the owner (themselves) that their post was resolved
-      final resolvedPost = current.where((p) => p.id == postId).isNotEmpty
-          ? current.firstWhere((p) => p.id == postId)
-          : null;
-      if (resolvedPost != null) {
-        await NotificationService.notifyResolved(postTitle: resolvedPost.title);
-      }
 
       state = AsyncValue.data(current.map((p) {
         if (p.id == postId) {
@@ -98,10 +72,8 @@ class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
     try {
       final data = updated.toMap()
         ..['updatedAtMs'] = DateTime.now().millisecondsSinceEpoch;
-      await FirebaseFirestore.instance
-          .collection('posts')
-          .doc(updated.id)
-          .update(data);
+      data.remove('createdAt'); // Not JSON-serializable
+      await ref.read(postServiceProvider).updatePost(updated.id, data);
 
       final current = state.value ?? [];
       state = AsyncValue.data(
@@ -113,5 +85,5 @@ class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
 
 final myPostsProvider =
     StateNotifierProvider<MyPostsNotifier, AsyncValue<List<ItemModel>>>(
-  (ref) => MyPostsNotifier(),
+  (ref) => MyPostsNotifier(ref),
 );

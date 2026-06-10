@@ -40,11 +40,15 @@ class RailwayAuthService implements AuthService {
   Future<AuthUser> signUpWithEmailPassword({
     required String email,
     required String password,
+    String? fullName,
+    String? phone,
   }) async {
     try {
       final res = await _apiClient.post('/auth/signup', {
         'email': email,
         'password': password,
+        'fullName': fullName,
+        'phone': phone,
       });
 
       final token = res['token'] as String;

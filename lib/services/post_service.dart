@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/utils/timestamp.dart';
 import '../../core/network/api_client.dart';
 import '../models/item_model.dart';
 
@@ -8,14 +8,15 @@ class PostService {
   PostService({required ApiClient apiClient}) : _apiClient = apiClient;
 
   // Real-time stream of all posts (polling fallback)
-  Stream<List<ItemModel>> getPostsStream() async* {
-    yield await _fetchItems();
-    yield* Stream.periodic(const Duration(seconds: 5)).asyncMap((_) => _fetchItems());
+  Stream<List<ItemModel>> getPostsStream({String? ownerId}) async* {
+    yield await fetchItems(ownerId: ownerId);
+    yield* Stream.periodic(const Duration(seconds: 5)).asyncMap((_) => fetchItems(ownerId: ownerId));
   }
 
-  Future<List<ItemModel>> _fetchItems() async {
+  Future<List<ItemModel>> fetchItems({String? ownerId}) async {
     try {
-      final res = await _apiClient.get('/posts?limit=50');
+      final queryParams = ownerId != null ? 'limit=50&ownerId=$ownerId' : 'limit=50';
+      final res = await _apiClient.get('/posts?$queryParams');
       final itemsList = res['items'] as List<dynamic>;
       return itemsList.map((item) {
         final map = Map<String, dynamic>.from(item);

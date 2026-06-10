@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/models/user_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/services/image_upload_service.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -233,7 +233,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = ref.read(authStateProvider).userId;
     if (uid == null) return;
     setState(() => _isUploadingAvatar = true);
     try {
@@ -376,11 +376,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     await ref.read(profileControllerProvider.notifier).updateProfile(updated);
 
-    // Also update Firebase Auth displayName so other screens see the new name
-    try {
-      await FirebaseAuth.instance.currentUser
-          ?.updateDisplayName(_fullNameCtrl.text.trim());
-    } catch (_) {}
+
 
     if (mounted) {
       setState(() => _isSaving = false);

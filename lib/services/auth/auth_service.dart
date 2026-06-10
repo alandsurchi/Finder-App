@@ -9,6 +9,8 @@ abstract class AuthService {
   Future<AuthUser> signUpWithEmailPassword({
     required String email,
     required String password,
+    String? fullName,
+    String? phone,
   });
 
   Future<AuthUser> loginWithGoogle();

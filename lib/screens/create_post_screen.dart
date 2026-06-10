@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/providers/post_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:finder/features/auth/presentation/auth_state_provider.dart';
+import 'package:finder/app/di/app_providers.dart' hide postServiceProvider;
 import 'package:finder/models/item_model.dart';
 import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/theme/app_color_tokens.dart';
@@ -1198,28 +1198,28 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
     setState(() => _isSubmitting = true);
 
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    final uid = ref.read(authStateProvider).userId;
+    if (uid == null) {
       if (mounted) setState(() => _isSubmitting = false);
       _showMessage('You must be logged in to post.', isError: true);
       return;
     }
 
     // Fetch owner's profile for name
-    String ownerDisplayName = user.displayName ?? '';
+    String ownerDisplayName = 'Finder User';
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      if (userDoc.exists) {
-        ownerDisplayName = userDoc.data()?['fullName'] ?? ownerDisplayName;
-      }
+      final profileRes = await ref.read(profileRepositoryProvider).getProfile();
+      profileRes.fold(
+        onSuccess: (profile) {
+          ownerDisplayName = profile.fullName.isNotEmpty ? profile.fullName : profile.nickName;
+        },
+        onFailure: (_) {},
+      );
     } catch (_) {}
-    if (ownerDisplayName.isEmpty) {
-      ownerDisplayName = user.email?.split('@').first ?? 'Finder User';
-    }
 
     final post = ItemModel(
-      id: FirebaseFirestore.instance.collection('posts').doc().id,
-      ownerId: user.uid,
+      id: '',
+      ownerId: uid,
       ownerName: ownerDisplayName,
       title: title,
       description: description,
@@ -1254,7 +1254,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Future<void> _pickAndUploadImage() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anon';
+    final uid = ref.read(authStateProvider).userId ?? 'anon';
     setState(() => _isUploadingImage = true);
     try {
       final fileName = '${uid}_${DateTime.now().millisecondsSinceEpoch}';

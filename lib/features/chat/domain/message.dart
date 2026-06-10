@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/timestamp.dart';
 
 class Message {
   final String messageId;

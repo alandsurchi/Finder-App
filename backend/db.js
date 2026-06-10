@@ -164,6 +164,23 @@ async function initDb() {
         post_id VARCHAR(255) REFERENCES posts(id) ON DELETE CASCADE,
         PRIMARY KEY (user_id, post_id)
       );
+
+      CREATE TABLE IF NOT EXISTS reports (
+        id VARCHAR(255) PRIMARY KEY,
+        post_id VARCHAR(255) REFERENCES posts(id) ON DELETE CASCADE,
+        reporter_id VARCHAR(255) REFERENCES users(uid) ON DELETE CASCADE,
+        reason TEXT,
+        status VARCHAR(50) DEFAULT 'pending',
+        created_at_ms BIGINT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS user_settings (
+        user_id VARCHAR(255) PRIMARY KEY REFERENCES users(uid) ON DELETE CASCADE,
+        show_profile BOOLEAN DEFAULT TRUE,
+        allow_messages BOOLEAN DEFAULT TRUE,
+        show_location BOOLEAN DEFAULT FALSE,
+        hide_phone BOOLEAN DEFAULT TRUE
+      );
     `);
   } else {
     // SQLite syntax
@@ -270,6 +287,30 @@ async function initDb() {
             PRIMARY KEY (user_id, post_id),
             FOREIGN KEY (user_id) REFERENCES users(uid) ON DELETE CASCADE,
             FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+          )
+        `);
+
+        sqliteDb.run(`
+          CREATE TABLE IF NOT EXISTS reports (
+            id TEXT PRIMARY KEY,
+            post_id TEXT,
+            reporter_id TEXT,
+            reason TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at_ms INTEGER NOT NULL,
+            FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+            FOREIGN KEY (reporter_id) REFERENCES users(uid) ON DELETE CASCADE
+          )
+        `);
+
+        sqliteDb.run(`
+          CREATE TABLE IF NOT EXISTS user_settings (
+            user_id TEXT PRIMARY KEY,
+            show_profile INTEGER DEFAULT 1,
+            allow_messages INTEGER DEFAULT 1,
+            show_location INTEGER DEFAULT 0,
+            hide_phone INTEGER DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(uid) ON DELETE CASCADE
           )
         `, (err) => {
           if (err) reject(err);

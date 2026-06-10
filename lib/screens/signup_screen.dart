@@ -155,8 +155,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           setState(() => _isLoading = true);
                           try {
                             await ref.read(authServiceProvider).signUpWithEmailPassword(
-                              email, 
-                              password,
+                              email: email,
+                              password: password,
                               fullName: name,
                               phone: phone,
                             );

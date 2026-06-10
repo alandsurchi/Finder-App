@@ -321,4 +321,29 @@ router.delete('/saved/:postId', verifyToken, async (req, res) => {
   }
 });
 
+// GET /profile/:userId - Get profile of a specific user by ID
+router.get('/:userId', verifyToken, async (req, res) => {
+  try {
+    const user = await db.queryOne('SELECT uid, email, full_name, nick_name, phone, address, job, avatar_url, created_at FROM users WHERE uid = $1', [req.params.userId]);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.status(200).json({
+      uid: user.uid,
+      email: user.email,
+      fullName: user.full_name || '',
+      nickName: user.nick_name || '',
+      phone: user.phone || '',
+      address: user.address || '',
+      job: user.job || '',
+      avatarUrl: user.avatar_url || '',
+      createdAtMs: parseInt(user.created_at)
+    });
+  } catch (err) {
+    console.error('Get specific user profile error:', err);
+    res.status(500).json({ message: 'Error fetching user profile.' });
+  }
+});
+
 module.exports = router;

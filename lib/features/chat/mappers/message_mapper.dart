@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/timestamp.dart';
 import '../../../models/dto/message_dto.dart';
 import '../domain/message.dart';
 

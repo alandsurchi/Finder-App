@@ -30,7 +30,7 @@ function verifyToken(req, res, next) {
 
 // POST /auth/signup
 router.post('/signup', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, fullName, phone } = req.body;
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
   }
@@ -49,12 +49,14 @@ router.post('/signup', async (req, res) => {
     const uid = crypto.randomUUID();
     const now = Date.now();
     const emailPrefix = email.split('@')[0];
+    const resolvedName = fullName || emailPrefix;
+    const resolvedNick = resolvedName.replace(/\s+/g, '').toLowerCase();
 
     // Create user profile
     await db.exec(
-      `INSERT INTO users (uid, email, password_hash, full_name, nick_name, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [uid, email.toLowerCase().trim(), passwordHash, emailPrefix, emailPrefix, now, now]
+      `INSERT INTO users (uid, email, password_hash, full_name, nick_name, phone, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [uid, email.toLowerCase().trim(), passwordHash, resolvedName, resolvedNick, phone || '', now, now]
     );
 
     // Sign JWT
@@ -65,7 +67,7 @@ router.post('/signup', async (req, res) => {
       user: {
         id: uid,
         email: email.toLowerCase().trim(),
-        displayName: emailPrefix,
+        displayName: resolvedName,
         photoUrl: ''
       }
     });

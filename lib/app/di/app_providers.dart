@@ -1,6 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_client.dart';
 import '../../features/chat/mappers/message_mapper.dart';
@@ -41,21 +39,7 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   throw UnimplementedError('apiClientProvider must be overridden in main()');
 });
 
-final firebaseAuthProvider = Provider<FirebaseAuth>(
-  (ref) => FirebaseAuth.instance,
-);
 
-final firestoreProvider = Provider<FirebaseFirestore>(
-  (ref) => FirebaseFirestore.instance,
-);
-
-final firebaseAnalyticsProvider = Provider<FirebaseAnalytics>(
-  (ref) => FirebaseAnalytics.instance,
-);
-
-final analyticsServiceProvider = Provider<AnalyticsService>(
-  (ref) => MockAnalyticsService(), // Firebase analytics can be mocked
-);
 
 final authServiceProvider = Provider<AuthService>(
   (ref) => RailwayAuthService(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/routes.dart';
@@ -155,7 +155,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           
                           setState(() => _isLoading = true);
                           try {
-                            await ref.read(authServiceProvider).loginWithEmailPassword(email, password);
+                            await ref.read(authServiceProvider).loginWithEmailPassword(
+                              email: email,
+                              password: password,
+                            );
                             if (context.mounted) {
                               Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
                             }
@@ -270,19 +273,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      if (!mounted) return;
-      ActionFeedback.showInfo(
-        context,
-        'Password reset email sent. Check your inbox.',
-      );
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      ActionFeedback.showInfo(
-        context,
-        e.message ?? 'Unable to send reset email right now.',
-      );
-    }
+    ActionFeedback.showInfo(
+      context,
+      'Password recovery is not supported in Railway mode. Please contact support.',
+    );
   }
 }

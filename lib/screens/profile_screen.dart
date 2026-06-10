@@ -15,8 +15,8 @@ import 'package:finder/theme/theme_provider.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/providers/auth_provider.dart';
 import 'package:finder/models/user_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:finder/features/auth/presentation/auth_state_provider.dart';
+import 'package:finder/providers/post_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -176,7 +176,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   Widget _buildStats(AppColorTokens t) {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final authState = ref.watch(authStateProvider);
+    final uid = authState.userId ?? '';
     return FutureBuilder<Map<String, int>>(
       future: _fetchPostStats(uid),
       builder: (context, snap) {
@@ -199,15 +200,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   Future<Map<String, int>> _fetchPostStats(String uid) async {
     if (uid.isEmpty) return {'total': 0, 'found': 0, 'trustPct': 0};
-    final snap = await FirebaseFirestore.instance
-        .collection('posts')
-        .where('ownerId', isEqualTo: uid)
-        .get();
-    final total = snap.docs.length;
-    final found = snap.docs.where((d) => d.data()['isLost'] == false).length;
-    final resolved = snap.docs.where((d) => d.data()['isResolved'] == true).length;
-    final trustPct = total == 0 ? 0 : ((resolved / total) * 100).round();
-    return {'total': total, 'found': found, 'trustPct': trustPct};
+    try {
+      final posts = await ref.read(postServiceProvider).fetchItems(ownerId: uid);
+      final total = posts.length;
+      final found = posts.where((d) => d.isLost == false).length;
+      final resolved = posts.where((d) => d.isResolved == true).length;
+      final trustPct = total == 0 ? 0 : ((resolved / total) * 100).round();
+      return {'total': total, 'found': found, 'trustPct': trustPct};
+    } catch (_) {
+      return {'total': 0, 'found': 0, 'trustPct': 0};
+    }
   }
 
   Widget _statItem(String label, String value, AppColorTokens t) {

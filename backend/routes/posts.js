@@ -10,6 +10,7 @@ router.get('/', verifyToken, async (req, res) => {
   const limit = parseInt(req.query.limit) || 20;
   const cursor = req.query.cursor ? parseInt(req.query.cursor) : null;
   const category = req.query.category; // e.g. "All Items", "Lost", "Found"
+  const ownerId = req.query.ownerId;
   
   let sql = 'SELECT * FROM posts';
   const params = [];
@@ -25,6 +26,11 @@ router.get('/', verifyToken, async (req, res) => {
     const isLost = category === 'Lost';
     params.push(isLost);
     conditions.push(`is_lost = $${params.length}`);
+  }
+
+  if (ownerId) {
+    params.push(ownerId);
+    conditions.push(`owner_id = $${params.length}`);
   }
 
   if (conditions.length > 0) {

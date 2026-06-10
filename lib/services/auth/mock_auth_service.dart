@@ -14,6 +14,8 @@ class MockAuthService implements AuthService {
   Future<AuthUser> signUpWithEmailPassword({
     required String email,
     required String password,
+    String? fullName,
+    String? phone,
   }) async {
     return _fakeUser(email);
   }

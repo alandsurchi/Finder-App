@@ -5,7 +5,7 @@ import 'package:finder/models/item_model.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/services/image_upload_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 
 class EditPostScreen extends ConsumerStatefulWidget {
   final ItemModel post;
@@ -485,7 +485,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
   }
 
   Future<void> _pickAndUploadImage() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anon';
+    final uid = ref.read(authStateProvider).userId ?? 'anon';
     setState(() => _isUploadingImage = true);
     try {
       final fileName = '${uid}_${DateTime.now().millisecondsSinceEpoch}';
