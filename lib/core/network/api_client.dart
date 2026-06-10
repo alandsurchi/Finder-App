@@ -9,11 +9,13 @@ class ApiClient {
 
   ApiClient({
     String? baseUrl,
-  }) : this.baseUrl = baseUrl ?? (kIsWeb 
-          ? 'http://localhost:3000' 
-          : (defaultTargetPlatform == TargetPlatform.android 
-              ? 'http://10.0.2.2:3000' 
-              : 'http://localhost:3000'));
+  }) : this.baseUrl = baseUrl ?? (const String.fromEnvironment('API_URL').isNotEmpty
+          ? const String.fromEnvironment('API_URL')
+          : (kIsWeb 
+              ? 'http://localhost:3001' 
+              : (defaultTargetPlatform == TargetPlatform.android 
+                  ? 'http://10.0.2.2:3001' 
+                  : 'http://localhost:3001')));
 
   String? get token => _token;
   bool get isAuthenticated => _token != null;
