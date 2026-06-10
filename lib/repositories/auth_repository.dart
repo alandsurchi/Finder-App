@@ -10,6 +10,8 @@ abstract class AuthRepository {
   Future<Result<AuthUser>> signUpWithEmailPassword({
     required String email,
     required String password,
+    String? fullName,
+    String? phone,
   });
 
   Future<Result<AuthUser>> loginWithGoogle();

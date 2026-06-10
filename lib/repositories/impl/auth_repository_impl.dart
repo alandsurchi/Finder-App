@@ -56,11 +56,15 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<AuthUser>> signUpWithEmailPassword({
     required String email,
     required String password,
+    String? fullName,
+    String? phone,
   }) async {
     try {
       final user = await service.signUpWithEmailPassword(
         email: email,
         password: password,
+        fullName: fullName,
+        phone: phone,
       );
       return Result.success(user);
     } on AppException catch (e) {

@@ -13,7 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/theme/theme_provider.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
-import 'package:finder/providers/auth_provider.dart';
+import 'package:finder/features/auth/presentation/auth_controller.dart';
 import 'package:finder/models/user_model.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/providers/post_provider.dart';
@@ -427,7 +427,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       child: ListTile(
         onTap: () async {
-          await ref.read(authServiceProvider).logout();
+          await ref.read(authControllerProvider.notifier).logout();
           if (context.mounted) {
             Navigator.pushNamedAndRemoveUntil(
               context,

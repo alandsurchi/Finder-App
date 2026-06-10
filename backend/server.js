@@ -38,8 +38,18 @@ initWebSocket(server);
 
 // Initialize DB and start server
 db.initDb()
-  .then(() => {
+  .then(async () => {
     console.log('Database initialized successfully.');
+    
+    if (process.env.RUN_MIGRATION === 'true') {
+      try {
+        const { runMigration } = require('./migrate');
+        await runMigration();
+      } catch (migErr) {
+        console.error('Migration failed on startup:', migErr);
+      }
+    }
+    
     server.listen(port, () => {
       console.log(`Finder custom backend server running on port ${port}`);
     });

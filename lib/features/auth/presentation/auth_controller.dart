@@ -32,10 +32,17 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   Future<Result<void>> signup({
     required String email,
     required String password,
+    String? fullName,
+    String? phone,
   }) async {
     state = const AsyncValue.loading();
     final usecase = ref.read(signupUserProvider);
-    final result = await usecase(email: email, password: password);
+    final result = await usecase(
+      email: email,
+      password: password,
+      fullName: fullName,
+      phone: phone,
+    );
     return result.fold(
       onSuccess: (user) {
         ref.read(authStateProvider.notifier).setAuthenticated(user.id);

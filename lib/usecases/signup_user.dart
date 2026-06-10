@@ -10,10 +10,14 @@ class SignupUser {
   Future<Result<AuthUser>> call({
     required String email,
     required String password,
+    String? fullName,
+    String? phone,
   }) {
     return repository.signUpWithEmailPassword(
       email: email,
       password: password,
+      fullName: fullName,
+      phone: phone,
     );
   }
 }

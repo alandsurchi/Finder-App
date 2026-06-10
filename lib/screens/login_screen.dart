@@ -6,7 +6,7 @@ import 'package:finder/routes.dart';
 import 'package:finder/widgets/custom_text_field.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/social_button.dart';
-import 'package:finder/providers/auth_provider.dart';
+import 'package:finder/features/auth/presentation/auth_controller.dart';
 import 'package:finder/core/validation/validators.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -154,21 +154,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           }
                           
                           setState(() => _isLoading = true);
-                          try {
-                            await ref.read(authServiceProvider).loginWithEmailPassword(
-                              email: email,
-                              password: password,
-                            );
-                            if (context.mounted) {
-                              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-                            }
-                          } finally {
-                            if (mounted) setState(() => _isLoading = false);
-                          }
+                          final res = await ref.read(authControllerProvider.notifier).login(
+                            email: email,
+                            password: password,
+                          );
+                          
+                          res.fold(
+                            onSuccess: (_) {
+                              if (context.mounted) {
+                                Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+                              }
+                            },
+                            onFailure: (failure) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(failure.message)),
+                                );
+                              }
+                            },
+                          );
+                          if (mounted) setState(() => _isLoading = false);
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: t.primary,
