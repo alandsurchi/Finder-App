@@ -444,8 +444,90 @@ router.post('/resend-verification', verifyToken, async (req, res) => {
   }
 });
 
+// POST /auth/google-login
+router.post('/google-login', async (req, res) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    return res.status(400).json({ message: 'Google idToken is required.' });
+  }
+
+  try {
+    const { OAuth2Client } = require('google-auth-library');
+    const oauth2Client = new OAuth2Client();
+    
+    // Verify Google ID token (validates signatures and client matches)
+    const ticket = await oauth2Client.verifyIdToken({
+      idToken: idToken,
+      audience: [
+        '685670849218-6vp6v6gpjujcb6krkqjcicd3gn5bcjeo.apps.googleusercontent.com',
+        '685670849218-pah2cvt7m1ksjumqhbt5uvtb7815mb9u.apps.googleusercontent.com',
+        '685670849218-9vt84sr1ibi9dpqphtqqugcavkk4kn63.apps.googleusercontent.com'
+      ]
+    });
+    
+    const payload = ticket.getPayload();
+    const email = payload['email'];
+    const name = payload['name'] || email.split('@')[0];
+    const picture = payload['picture'] || '';
+
+    // Check if user already exists
+    let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    let uid;
+    
+    if (!user) {
+      // Register new user via Google
+      uid = crypto.randomUUID();
+      const now = Date.now();
+      const nickName = name.replace(/\s+/g, '').toLowerCase();
+      
+      // Random dummy password since they authenticate with Google
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(crypto.randomUUID(), salt);
+
+      await db.exec(
+        `INSERT INTO users (uid, email, password_hash, full_name, nick_name, avatar_url, created_at, updated_at, is_verified) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [uid, email.toLowerCase().trim(), passwordHash, name, nickName, picture, now, now, db.isPostgres ? true : 1]
+      );
+      
+      user = {
+        uid,
+        email,
+        full_name: name,
+        avatar_url: picture,
+        is_verified: true
+      };
+    } else {
+      uid = user.uid;
+      // If user exists but is not verified, set to verified (since Google email is verified)
+      if (user.is_verified === 0 || user.is_verified === false) {
+        await db.exec('UPDATE users SET is_verified = $1 WHERE uid = $2', [db.isPostgres ? true : 1, uid]);
+        user.is_verified = true;
+      }
+    }
+
+    // Sign JWT
+    const token = jwt.sign({ userId: uid, isVerified: true }, JWT_SECRET, { expiresIn: '30d' });
+
+    res.status(200).json({
+      token,
+      user: {
+        id: uid,
+        email: user.email,
+        displayName: user.full_name,
+        photoUrl: user.avatar_url || '',
+        isVerified: true
+      }
+    });
+  } catch (err) {
+    console.error('Google login error:', err);
+    res.status(500).json({ message: 'Google authentication failed.' });
+  }
+});
+
 module.exports = {
   router,
   verifyToken
 };
+
 
