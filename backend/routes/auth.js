@@ -172,9 +172,11 @@ router.post('/forgot-password', async (req, res) => {
           }
         });
 
+        const fromEmail = process.env.SMTP_FROM || (process.env.SMTP_USER.includes('@') ? process.env.SMTP_USER : 'onboarding@resend.dev');
+
         // Send asynchronously to avoid blocking the HTTP response
         transporter.sendMail({
-          from: `"Finder Support" <${process.env.SMTP_USER}>`,
+          from: `"Finder Support" <${fromEmail}>`,
           to: email.toLowerCase().trim(),
           subject: 'Finder Password Reset Verification',
           text: `Your password reset verification code is: ${code}. It expires in 15 minutes.`,
