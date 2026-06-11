@@ -25,6 +25,10 @@ abstract class AuthRepository {
     required String code,
     required String newPassword,
   });
+
+  Future<Result<AuthUser>> verifyEmail({required String code});
+  Future<Result<void>> resendVerificationCode();
 }
+
 
 

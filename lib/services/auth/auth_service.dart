@@ -24,6 +24,10 @@ abstract class AuthService {
     required String code,
     required String newPassword,
   });
+
+  Future<AuthUser> verifyEmail({required String code});
+  Future<void> resendVerificationCode();
 }
+
 
 

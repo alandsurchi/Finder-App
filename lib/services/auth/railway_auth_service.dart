@@ -30,6 +30,7 @@ class RailwayAuthService implements AuthService {
         email: userData['email']?.toString() ?? '',
         displayName: userData['displayName']?.toString(),
         photoUrl: userData['photoUrl']?.toString(),
+        isVerified: userData['isVerified'] as bool? ?? true,
       );
     } catch (e) {
       throw AuthException(e.toString().replaceAll('Exception: ', ''));
@@ -61,6 +62,7 @@ class RailwayAuthService implements AuthService {
         email: userData['email']?.toString() ?? '',
         displayName: userData['displayName']?.toString(),
         photoUrl: userData['photoUrl']?.toString(),
+        isVerified: userData['isVerified'] as bool? ?? true,
       );
     } catch (e) {
       throw AuthException(e.toString().replaceAll('Exception: ', ''));
@@ -112,6 +114,38 @@ class RailwayAuthService implements AuthService {
         'code': code,
         'newPassword': newPassword,
       });
+    } catch (e) {
+      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  @override
+  Future<AuthUser> verifyEmail({required String code}) async {
+    try {
+      final res = await _apiClient.post('/auth/verify-email', {
+        'code': code,
+      });
+      final token = res['token'] as String;
+      final userData = res['user'] as Map<String, dynamic>;
+
+      await _apiClient.setToken(token);
+
+      return AuthUser(
+        id: userData['id']?.toString() ?? '',
+        email: userData['email']?.toString() ?? '',
+        displayName: userData['displayName']?.toString(),
+        photoUrl: userData['photoUrl']?.toString(),
+        isVerified: userData['isVerified'] as bool? ?? true,
+      );
+    } catch (e) {
+      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  @override
+  Future<void> resendVerificationCode() async {
+    try {
+      await _apiClient.post('/auth/resend-verification', {});
     } catch (e) {
       throw AuthException(e.toString().replaceAll('Exception: ', ''));
     }

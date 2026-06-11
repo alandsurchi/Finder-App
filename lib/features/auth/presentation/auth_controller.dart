@@ -17,7 +17,11 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     final result = await usecase(email: email, password: password);
     return result.fold(
       onSuccess: (user) {
-        ref.read(authStateProvider.notifier).setAuthenticated(user.id);
+        if (user.isVerified) {
+          ref.read(authStateProvider.notifier).setAuthenticated(user.id);
+        } else {
+          ref.read(authStateProvider.notifier).setUnverified(user.id);
+        }
         state = const AsyncValue.data(null);
         return Result.success(null);
       },
@@ -45,7 +49,11 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     );
     return result.fold(
       onSuccess: (user) {
-        ref.read(authStateProvider.notifier).setAuthenticated(user.id);
+        if (user.isVerified) {
+          ref.read(authStateProvider.notifier).setAuthenticated(user.id);
+        } else {
+          ref.read(authStateProvider.notifier).setUnverified(user.id);
+        }
         state = const AsyncValue.data(null);
         return Result.success(null);
       },
@@ -110,6 +118,39 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
       code: code,
       newPassword: newPassword,
     );
+    return result.fold(
+      onSuccess: (_) {
+        state = const AsyncValue.data(null);
+        return Result.success(null);
+      },
+      onFailure: (failure) {
+        state = AsyncValue.error(failure, StackTrace.current);
+        return Result.failure(failure);
+      },
+    );
+  }
+
+  Future<Result<void>> verifyEmail({required String code}) async {
+    state = const AsyncValue.loading();
+    final usecase = ref.read(verifyEmailProvider);
+    final result = await usecase(code: code);
+    return result.fold(
+      onSuccess: (user) {
+        ref.read(authStateProvider.notifier).setAuthenticated(user.id);
+        state = const AsyncValue.data(null);
+        return Result.success(null);
+      },
+      onFailure: (failure) {
+        state = AsyncValue.error(failure, StackTrace.current);
+        return Result.failure(failure);
+      },
+    );
+  }
+
+  Future<Result<void>> resendVerificationCode() async {
+    state = const AsyncValue.loading();
+    final usecase = ref.read(resendVerificationProvider);
+    final result = await usecase();
     return result.fold(
       onSuccess: (_) {
         state = const AsyncValue.data(null);

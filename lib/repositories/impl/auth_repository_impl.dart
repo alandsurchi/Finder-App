@@ -117,6 +117,31 @@ class AuthRepositoryImpl implements AuthRepository {
       return Result.failure(Failure(message: 'Unable to reset password'));
     }
   }
+
+  @override
+  Future<Result<AuthUser>> verifyEmail({required String code}) async {
+    try {
+      final user = await service.verifyEmail(code: code);
+      return Result.success(user);
+    } on AppException catch (e) {
+      return Result.failure(e.toFailure());
+    } catch (e) {
+      return Result.failure(Failure(message: 'Unable to verify email address'));
+    }
+  }
+
+  @override
+  Future<Result<void>> resendVerificationCode() async {
+    try {
+      await service.resendVerificationCode();
+      return Result.success(null);
+    } on AppException catch (e) {
+      return Result.failure(e.toFailure());
+    } catch (e) {
+      return Result.failure(Failure(message: 'Unable to resend verification code'));
+    }
+  }
 }
+
 
 

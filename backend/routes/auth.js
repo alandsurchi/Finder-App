@@ -52,15 +52,59 @@ router.post('/signup', async (req, res) => {
     const resolvedName = fullName || emailPrefix;
     const resolvedNick = resolvedName.replace(/\s+/g, '').toLowerCase();
 
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
     // Create user profile
     await db.exec(
-      `INSERT INTO users (uid, email, password_hash, full_name, nick_name, phone, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [uid, email.toLowerCase().trim(), passwordHash, resolvedName, resolvedNick, phone || '', now, now]
+      `INSERT INTO users (uid, email, password_hash, full_name, nick_name, phone, created_at, updated_at, is_verified, verification_code, verification_expires_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [uid, email.toLowerCase().trim(), passwordHash, resolvedName, resolvedNick, phone || '', now, now, db.isPostgres ? false : 0, verificationCode, verificationExpiresAt]
     );
 
-    // Sign JWT
-    const token = jwt.sign({ userId: uid }, JWT_SECRET, { expiresIn: '30d' });
+    console.log(`[SIGNUP VERIFICATION CODE] Email: ${email}, Code: ${verificationCode}`);
+
+    // Send email asynchronously
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT) || 587,
+          secure: process.env.SMTP_PORT == '465',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          }
+        });
+
+        const fromEmail = process.env.SMTP_FROM || (process.env.SMTP_USER.includes('@') ? process.env.SMTP_USER : 'onboarding@resend.dev');
+
+        transporter.sendMail({
+          from: `"Finder Support" <${fromEmail}>`,
+          to: email.toLowerCase().trim(),
+          subject: 'Welcome to Finder! Verify your email',
+          text: `Welcome to Finder! Your verification code is: ${verificationCode}.`,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+              <h2>Welcome to Finder!</h2>
+              <p>Please use the following 6-digit code to verify your account email address:</p>
+              <h1 style="background: #f4f4f4; padding: 10px 20px; display: inline-block; font-size: 28px; letter-spacing: 4px; color: #28a745; border-radius: 4px;">${verificationCode}</h1>
+              <p>If you did not create a Finder account, please ignore this email.</p>
+            </div>
+          `
+        }).then(() => {
+          console.log(`Signup verification email sent to ${email}`);
+        }).catch((mailErr) => {
+          console.error('Failed to send verification email via SMTP:', mailErr.message);
+        });
+      } catch (mailErr) {
+        console.error('Failed to setup verification transport:', mailErr.message);
+      }
+    }
+
+    // Sign JWT (unverified)
+    const token = jwt.sign({ userId: uid, isVerified: false }, JWT_SECRET, { expiresIn: '30d' });
 
     res.status(201).json({
       token,
@@ -68,7 +112,8 @@ router.post('/signup', async (req, res) => {
         id: uid,
         email: email.toLowerCase().trim(),
         displayName: resolvedName,
-        photoUrl: ''
+        photoUrl: '',
+        isVerified: false
       }
     });
   } catch (err) {
@@ -95,8 +140,10 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Incorrect email or password.' });
     }
 
+    const isVerified = user.is_verified === 1 || user.is_verified === true || user.is_verified === 'true';
+
     // Sign JWT
-    const token = jwt.sign({ userId: user.uid }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ userId: user.uid, isVerified: isVerified }, JWT_SECRET, { expiresIn: '30d' });
 
     res.status(200).json({
       token,
@@ -104,7 +151,8 @@ router.post('/login', async (req, res) => {
         id: user.uid,
         email: user.email,
         displayName: user.full_name || user.nick_name,
-        photoUrl: user.avatar_url || ''
+        photoUrl: user.avatar_url || '',
+        isVerified: isVerified
       }
     });
   } catch (err) {
@@ -125,7 +173,8 @@ router.get('/me', verifyToken, async (req, res) => {
       id: user.uid,
       email: user.email,
       displayName: user.full_name,
-      photoUrl: user.avatar_url
+      photoUrl: user.avatar_url,
+      isVerified: user.is_verified === 1 || user.is_verified === true || user.is_verified === 'true'
     });
   } catch (err) {
     console.error('Fetch me error:', err);
@@ -276,7 +325,127 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// POST /auth/verify-email
+router.post('/verify-email', verifyToken, async (req, res) => {
+  const { code } = req.body;
+  if (!code) {
+    return res.status(400).json({ message: 'Verification code is required.' });
+  }
+
+  try {
+    const user = await db.queryOne('SELECT * FROM users WHERE uid = $1', [req.userId]);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    if (user.is_verified === 1 || user.is_verified === true || user.is_verified === 'true') {
+      return res.status(400).json({ message: 'Account is already verified.' });
+    }
+
+    if (!user.verification_code || user.verification_code !== code.trim()) {
+      return res.status(400).json({ message: 'Invalid verification code.' });
+    }
+
+    const now = Date.now();
+    if (parseInt(user.verification_expires_at) < now) {
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+    }
+
+    // Update user status
+    await db.exec(
+      'UPDATE users SET is_verified = $1, verification_code = NULL, verification_expires_at = NULL WHERE uid = $2',
+      [db.isPostgres ? true : 1, req.userId]
+    );
+
+    // Sign a new verified JWT
+    const token = jwt.sign({ userId: req.userId, isVerified: true }, JWT_SECRET, { expiresIn: '30d' });
+
+    res.status(200).json({
+      message: 'Email verified successfully.',
+      token,
+      user: {
+        id: user.uid,
+        email: user.email,
+        displayName: user.full_name || user.nick_name,
+        photoUrl: user.avatar_url || '',
+        isVerified: true
+      }
+    });
+  } catch (err) {
+    console.error('Verify email error:', err);
+    res.status(500).json({ message: 'Database error occurred.' });
+  }
+});
+
+// POST /auth/resend-verification
+router.post('/resend-verification', verifyToken, async (req, res) => {
+  try {
+    const user = await db.queryOne('SELECT * FROM users WHERE uid = $1', [req.userId]);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    if (user.is_verified === 1 || user.is_verified === true || user.is_verified === 'true') {
+      return res.status(400).json({ message: 'Account is already verified.' });
+    }
+
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+
+    await db.exec(
+      'UPDATE users SET verification_code = $1, verification_expires_at = $2 WHERE uid = $3',
+      [verificationCode, verificationExpiresAt, req.userId]
+    );
+
+    console.log(`[RESEND VERIFICATION CODE] Email: ${user.email}, Code: ${verificationCode}`);
+
+    // Send email asynchronously
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT) || 587,
+          secure: process.env.SMTP_PORT == '465',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          }
+        });
+
+        const fromEmail = process.env.SMTP_FROM || (process.env.SMTP_USER.includes('@') ? process.env.SMTP_USER : 'onboarding@resend.dev');
+
+        transporter.sendMail({
+          from: `"Finder Support" <${fromEmail}>`,
+          to: user.email,
+          subject: 'Finder - Verify your email',
+          text: `Your verification code is: ${verificationCode}.`,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+              <h2>Verify your account email address</h2>
+              <p>Please use the following 6-digit code to verify your account email:</p>
+              <h1 style="background: #f4f4f4; padding: 10px 20px; display: inline-block; font-size: 28px; letter-spacing: 4px; color: #28a745; border-radius: 4px;">${verificationCode}</h1>
+            </div>
+          `
+        }).then(() => {
+          console.log(`Resent verification email to ${user.email}`);
+        }).catch((mailErr) => {
+          console.error('Failed to resend verification email via SMTP:', mailErr.message);
+        });
+      } catch (mailErr) {
+        console.error('Failed to setup verification transport:', mailErr.message);
+      }
+    }
+
+    res.status(200).json({ message: 'Verification code resent successfully.' });
+  } catch (err) {
+    console.error('Resend verification error:', err);
+    res.status(500).json({ message: 'Database error occurred.' });
+  }
+});
+
 module.exports = {
   router,
   verifyToken
 };
+

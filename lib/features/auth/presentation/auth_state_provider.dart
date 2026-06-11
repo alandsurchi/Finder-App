@@ -4,7 +4,7 @@ import '../../../core/errors/failure.dart';
 import '../../../core/network/api_client.dart';
 import '../../../app/di/app_providers.dart';
 
-enum AuthStatus { loading, authenticated, unauthenticated }
+enum AuthStatus { loading, authenticated, unauthenticated, unverified }
 
 class AuthState {
   final AuthStatus status;
@@ -17,6 +17,9 @@ class AuthState {
 
   const AuthState.authenticated(String userId)
     : this._(status: AuthStatus.authenticated, userId: userId);
+
+  const AuthState.unverified(String userId)
+    : this._(status: AuthStatus.unverified, userId: userId);
 
   const AuthState.unauthenticated([Failure? failure])
     : this._(status: AuthStatus.unauthenticated, failure: failure);
@@ -51,8 +54,13 @@ class AuthStateController extends StateNotifier<AuthState> {
           final decoded = utf8.decode(base64.decode(normalized));
           final map = jsonDecode(decoded);
           final uid = map['userId']?.toString() ?? '';
+          final isVerified = map['isVerified'] as bool? ?? true;
           if (uid.isNotEmpty) {
-            state = AuthState.authenticated(uid);
+            if (isVerified) {
+              state = AuthState.authenticated(uid);
+            } else {
+              state = AuthState.unverified(uid);
+            }
             return;
           }
         }
@@ -63,6 +71,10 @@ class AuthStateController extends StateNotifier<AuthState> {
 
   void setAuthenticated(String userId) {
     state = AuthState.authenticated(userId);
+  }
+
+  void setUnverified(String userId) {
+    state = AuthState.unverified(userId);
   }
 
   void setUnauthenticated([Failure? failure]) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'app/router/app_router.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/email_verification_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'core/network/api_client.dart';
@@ -79,6 +80,8 @@ class _AuthGate extends StatelessWidget {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       case AuthStatus.authenticated:
         return const HomeScreen();
+      case AuthStatus.unverified:
+        return const EmailVerificationScreen();
       case AuthStatus.unauthenticated:
         return const OnboardingScreen();
     }

@@ -101,7 +101,10 @@ async function initDb() {
         created_at BIGINT NOT NULL,
         updated_at BIGINT NOT NULL,
         reset_code VARCHAR(10),
-        reset_expires_at BIGINT
+        reset_expires_at BIGINT,
+        is_verified BOOLEAN DEFAULT TRUE,
+        verification_code VARCHAR(10),
+        verification_expires_at BIGINT
       );
 
       CREATE TABLE IF NOT EXISTS posts (
@@ -185,12 +188,14 @@ async function initDb() {
       );
     `);
 
-    // Alter existing table if columns are missing
     try {
       await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(10);');
       await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires_at BIGINT;');
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT TRUE;');
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code VARCHAR(10);');
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_expires_at BIGINT;');
     } catch (err) {
-      console.error('Error altering users table for reset columns (Postgres):', err.message);
+      console.error('Error altering users table for verification columns (Postgres):', err.message);
     }
   } else {
     // SQLite syntax
@@ -210,13 +215,19 @@ async function initDb() {
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL,
             reset_code TEXT,
-            reset_expires_at INTEGER
+            reset_expires_at INTEGER,
+            is_verified INTEGER DEFAULT 1,
+            verification_code TEXT,
+            verification_expires_at INTEGER
           )
         `);
 
         // Alter SQLite table to add columns (ignore errors if they already exist)
         sqliteDb.run('ALTER TABLE users ADD COLUMN reset_code TEXT', () => {});
         sqliteDb.run('ALTER TABLE users ADD COLUMN reset_expires_at INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 1', () => {});
+        sqliteDb.run('ALTER TABLE users ADD COLUMN verification_code TEXT', () => {});
+        sqliteDb.run('ALTER TABLE users ADD COLUMN verification_expires_at INTEGER', () => {});
 
         sqliteDb.run(`
           CREATE TABLE IF NOT EXISTS posts (

@@ -36,6 +36,8 @@ import '../../usecases/signup_user.dart';
 import '../../usecases/send_password_reset.dart';
 import '../../usecases/reset_password.dart';
 import '../../usecases/verify_reset_code.dart';
+import '../../usecases/verify_email.dart';
+import '../../usecases/resend_verification.dart';
 
 // ApiClient provider
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -150,4 +152,12 @@ final resetPasswordProvider = Provider<ResetPassword>(
 
 final verifyResetCodeProvider = Provider<VerifyResetCode>(
   (ref) => VerifyResetCode(ref.read(authRepositoryProvider)),
+);
+
+final verifyEmailProvider = Provider<VerifyEmail>(
+  (ref) => VerifyEmail(ref.read(authRepositoryProvider)),
+);
+
+final resendVerificationProvider = Provider<ResendVerification>(
+  (ref) => ResendVerification(ref.read(authRepositoryProvider)),
 );
