@@ -33,6 +33,8 @@ import '../../usecases/get_conversations.dart';
 import '../../usecases/get_notifications.dart';
 import '../../usecases/get_messages.dart';
 import '../../usecases/signup_user.dart';
+import '../../usecases/send_password_reset.dart';
+import '../../usecases/reset_password.dart';
 
 // ApiClient provider
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -135,4 +137,12 @@ final getConversationsProvider = Provider<GetConversations>(
 
 final getNotificationsProvider = Provider<GetNotifications>(
   (ref) => GetNotifications(ref.read(notificationRepositoryProvider)),
+);
+
+final sendPasswordResetProvider = Provider<SendPasswordReset>(
+  (ref) => SendPasswordReset(ref.read(authRepositoryProvider)),
+);
+
+final resetPasswordProvider = Provider<ResetPassword>(
+  (ref) => ResetPassword(ref.read(authRepositoryProvider)),
 );

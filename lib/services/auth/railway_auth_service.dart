@@ -76,4 +76,33 @@ class RailwayAuthService implements AuthService {
   Future<void> logout() async {
     await _apiClient.clearToken();
   }
+
+  @override
+  Future<void> sendPasswordResetCode({required String email}) async {
+    try {
+      await _apiClient.post('/auth/forgot-password', {
+        'email': email,
+      });
+    } catch (e) {
+      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      await _apiClient.post('/auth/reset-password', {
+        'email': email,
+        'code': code,
+        'newPassword': newPassword,
+      });
+    } catch (e) {
+      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
 }
+

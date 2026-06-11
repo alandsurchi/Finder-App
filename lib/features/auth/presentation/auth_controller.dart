@@ -62,7 +62,48 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     await repo.logout();
     ref.read(authStateProvider.notifier).setUnauthenticated();
   }
+
+  Future<Result<void>> forgotPassword({required String email}) async {
+    state = const AsyncValue.loading();
+    final usecase = ref.read(sendPasswordResetProvider);
+    final result = await usecase(email: email);
+    return result.fold(
+      onSuccess: (_) {
+        state = const AsyncValue.data(null);
+        return Result.success(null);
+      },
+      onFailure: (failure) {
+        state = AsyncValue.error(failure, StackTrace.current);
+        return Result.failure(failure);
+      },
+    );
+  }
+
+  Future<Result<void>> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    state = const AsyncValue.loading();
+    final usecase = ref.read(resetPasswordProvider);
+    final result = await usecase(
+      email: email,
+      code: code,
+      newPassword: newPassword,
+    );
+    return result.fold(
+      onSuccess: (_) {
+        state = const AsyncValue.data(null);
+        return Result.success(null);
+      },
+      onFailure: (failure) {
+        state = AsyncValue.error(failure, StackTrace.current);
+        return Result.failure(failure);
+      },
+    );
+  }
 }
+
 
 final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<void>>(
   (ref) => AuthController(ref),

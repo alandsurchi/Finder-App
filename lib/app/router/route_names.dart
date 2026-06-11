@@ -18,4 +18,6 @@ class RouteNames {
   static const String profile = '/profile';
   static const String savedItems = '/saved-items';
   static const String search = '/search';
+  static const String forgotPassword = '/forgot-password';
 }
+

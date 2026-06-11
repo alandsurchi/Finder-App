@@ -99,7 +99,9 @@ async function initDb() {
         job VARCHAR(255) DEFAULT '',
         avatar_url VARCHAR(255) DEFAULT '',
         created_at BIGINT NOT NULL,
-        updated_at BIGINT NOT NULL
+        updated_at BIGINT NOT NULL,
+        reset_code VARCHAR(10),
+        reset_expires_at BIGINT
       );
 
       CREATE TABLE IF NOT EXISTS posts (
@@ -182,6 +184,14 @@ async function initDb() {
         hide_phone BOOLEAN DEFAULT TRUE
       );
     `);
+
+    // Alter existing table if columns are missing
+    try {
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(10);');
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires_at BIGINT;');
+    } catch (err) {
+      console.error('Error altering users table for reset columns (Postgres):', err.message);
+    }
   } else {
     // SQLite syntax
     return new Promise((resolve, reject) => {
@@ -198,9 +208,15 @@ async function initDb() {
             job TEXT DEFAULT '',
             avatar_url TEXT DEFAULT '',
             created_at INTEGER NOT NULL,
-            updated_at INTEGER NOT NULL
+            updated_at INTEGER NOT NULL,
+            reset_code TEXT,
+            reset_expires_at INTEGER
           )
         `);
+
+        // Alter SQLite table to add columns (ignore errors if they already exist)
+        sqliteDb.run('ALTER TABLE users ADD COLUMN reset_code TEXT', () => {});
+        sqliteDb.run('ALTER TABLE users ADD COLUMN reset_expires_at INTEGER', () => {});
 
         sqliteDb.run(`
           CREATE TABLE IF NOT EXISTS posts (

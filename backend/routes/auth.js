@@ -133,6 +133,112 @@ router.get('/me', verifyToken, async (req, res) => {
   }
 });
 
+// POST /auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' });
+  }
+
+  try {
+    const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    if (!user) {
+      return res.status(404).json({ message: 'No user registered with this email address.' });
+    }
+
+    // Generate 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 mins expiry
+
+    // Save to database
+    await db.exec(
+      'UPDATE users SET reset_code = $1, reset_expires_at = $2 WHERE email = $3',
+      [code, expiresAt, email.toLowerCase().trim()]
+    );
+
+    console.log(`[PASSWORD RESET CODE] Email: ${email}, Code: ${code}`);
+
+    // Attempt to send email via SMTP if SMTP configuration is set in env
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT) || 587,
+          secure: process.env.SMTP_PORT == '465',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          }
+        });
+
+        await transporter.sendMail({
+          from: `"Finder Support" <${process.env.SMTP_USER}>`,
+          to: email.toLowerCase().trim(),
+          subject: 'Finder Password Reset Verification',
+          text: `Your password reset verification code is: ${code}. It expires in 15 minutes.`,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+              <h2>Finder Password Reset</h2>
+              <p>You requested a password reset. Please use the following 6-digit verification code to complete your reset:</p>
+              <h1 style="background: #f4f4f4; padding: 10px 20px; display: inline-block; font-size: 28px; letter-spacing: 4px; color: #007bff; border-radius: 4px;">${code}</h1>
+              <p>This code will expire in 15 minutes. If you did not request this, you can ignore this email.</p>
+            </div>
+          `
+        });
+        console.log(`Reset email sent to ${email}`);
+      } catch (mailErr) {
+        console.error('Failed to send reset email via SMTP:', mailErr.message);
+      }
+    }
+
+    res.status(200).json({ message: 'Verification code sent successfully.' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ message: 'Database error occurred.' });
+  }
+});
+
+// POST /auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  const { email, code, newPassword } = req.body;
+  if (!email || !code || !newPassword) {
+    return res.status(400).json({ message: 'Email, code, and new password are required.' });
+  }
+
+  try {
+    const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Check code and expiry
+    if (!user.reset_code || user.reset_code !== code.trim()) {
+      return res.status(400).json({ message: 'Invalid verification code.' });
+    }
+
+    const now = Date.now();
+    if (parseInt(user.reset_expires_at) < now) {
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    // Update password and invalidate code
+    await db.exec(
+      'UPDATE users SET password_hash = $1, reset_code = NULL, reset_expires_at = NULL WHERE email = $2',
+      [passwordHash, email.toLowerCase().trim()]
+    );
+
+    res.status(200).json({ message: 'Password has been reset successfully.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ message: 'Database error occurred.' });
+  }
+});
+
 module.exports = {
   router,
   verifyToken

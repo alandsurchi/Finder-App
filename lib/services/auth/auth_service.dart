@@ -16,4 +16,12 @@ abstract class AuthService {
   Future<AuthUser> loginWithGoogle();
 
   Future<void> logout();
+
+  Future<void> sendPasswordResetCode({required String email});
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  });
 }
+

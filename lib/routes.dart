@@ -20,4 +20,6 @@ class AppRoutes {
   static const String profile = RouteNames.profile;
   static const String savedItems = RouteNames.savedItems;
   static const String search = RouteNames.search;
+  static const String forgotPassword = RouteNames.forgotPassword;
 }
+

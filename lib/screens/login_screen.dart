@@ -271,16 +271,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Future<void> _sendPasswordReset() async {
+  void _sendPasswordReset() {
     final email = _emailCtrl.text.trim();
-    if (!Validators.isEmail(email)) {
-      ActionFeedback.showInfo(context, 'Enter your account email first.');
-      return;
-    }
-
-    ActionFeedback.showInfo(
+    Navigator.pushNamed(
       context,
-      'Password recovery is not supported in Railway mode. Please contact support.',
+      AppRoutes.forgotPassword,
+      arguments: email.isNotEmpty ? email : null,
     );
   }
 }
+
