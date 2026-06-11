@@ -19,10 +19,12 @@ abstract class AuthRepository {
   Future<Result<void>> logout();
 
   Future<Result<void>> sendPasswordResetCode({required String email});
+  Future<Result<void>> verifyResetCode({required String email, required String code});
   Future<Result<void>> resetPassword({
     required String email,
     required String code,
     required String newPassword,
   });
 }
+
 

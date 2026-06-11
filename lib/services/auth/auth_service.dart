@@ -18,10 +18,12 @@ abstract class AuthService {
   Future<void> logout();
 
   Future<void> sendPasswordResetCode({required String email});
+  Future<void> verifyResetCode({required String email, required String code});
   Future<void> resetPassword({
     required String email,
     required String code,
     required String newPassword,
   });
 }
+
 

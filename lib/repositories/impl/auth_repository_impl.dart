@@ -87,6 +87,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<void>> verifyResetCode({required String email, required String code}) async {
+    try {
+      await service.verifyResetCode(email: email, code: code);
+      return Result.success(null);
+    } on AppException catch (e) {
+      return Result.failure(e.toFailure());
+    } catch (e) {
+      return Result.failure(Failure(message: 'Unable to verify verification code'));
+    }
+  }
+
+  @override
   Future<Result<void>> resetPassword({
     required String email,
     required String code,
@@ -106,4 +118,5 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 }
+
 

@@ -34,6 +34,11 @@ class MockAuthService implements AuthService {
   }
 
   @override
+  Future<void> verifyResetCode({required String email, required String code}) async {
+    await Future.delayed(const Duration(seconds: 1));
+  }
+
+  @override
   Future<void> resetPassword({
     required String email,
     required String code,
@@ -43,6 +48,7 @@ class MockAuthService implements AuthService {
   }
 
   AuthUser _fakeUser(String email) {
+
 
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     final name = email.split('@').first;

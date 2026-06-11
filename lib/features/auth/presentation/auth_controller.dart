@@ -79,6 +79,25 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     );
   }
 
+  Future<Result<void>> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    state = const AsyncValue.loading();
+    final usecase = ref.read(verifyResetCodeProvider);
+    final result = await usecase(email: email, code: code);
+    return result.fold(
+      onSuccess: (_) {
+        state = const AsyncValue.data(null);
+        return Result.success(null);
+      },
+      onFailure: (failure) {
+        state = AsyncValue.error(failure, StackTrace.current);
+        return Result.failure(failure);
+      },
+    );
+  }
+
   Future<Result<void>> resetPassword({
     required String email,
     required String code,
@@ -103,6 +122,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     );
   }
 }
+
 
 
 final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<void>>(

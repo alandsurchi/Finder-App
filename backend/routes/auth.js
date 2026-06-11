@@ -172,7 +172,8 @@ router.post('/forgot-password', async (req, res) => {
           }
         });
 
-        await transporter.sendMail({
+        // Send asynchronously to avoid blocking the HTTP response
+        transporter.sendMail({
           from: `"Finder Support" <${process.env.SMTP_USER}>`,
           to: email.toLowerCase().trim(),
           subject: 'Finder Password Reset Verification',
@@ -185,10 +186,13 @@ router.post('/forgot-password', async (req, res) => {
               <p>This code will expire in 15 minutes. If you did not request this, you can ignore this email.</p>
             </div>
           `
+        }).then(() => {
+          console.log(`Reset email sent to ${email}`);
+        }).catch((mailErr) => {
+          console.error('Failed to send reset email via SMTP:', mailErr.message);
         });
-        console.log(`Reset email sent to ${email}`);
       } catch (mailErr) {
-        console.error('Failed to send reset email via SMTP:', mailErr.message);
+        console.error('Failed to setup nodemailer transport:', mailErr.message);
       }
     }
 
@@ -198,6 +202,37 @@ router.post('/forgot-password', async (req, res) => {
     res.status(500).json({ message: 'Database error occurred.' });
   }
 });
+
+// POST /auth/verify-reset-code
+router.post('/verify-reset-code', async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    return res.status(400).json({ message: 'Email and code are required.' });
+  }
+
+  try {
+    const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Check code and expiry
+    if (!user.reset_code || user.reset_code !== code.trim()) {
+      return res.status(400).json({ message: 'Invalid verification code.' });
+    }
+
+    const now = Date.now();
+    if (parseInt(user.reset_expires_at) < now) {
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+    }
+
+    res.status(200).json({ message: 'Verification code is valid.' });
+  } catch (err) {
+    console.error('Verify reset code error:', err);
+    res.status(500).json({ message: 'Database error occurred.' });
+  }
+});
+
 
 // POST /auth/reset-password
 router.post('/reset-password', async (req, res) => {

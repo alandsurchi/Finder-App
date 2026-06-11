@@ -89,6 +89,18 @@ class RailwayAuthService implements AuthService {
   }
 
   @override
+  Future<void> verifyResetCode({required String email, required String code}) async {
+    try {
+      await _apiClient.post('/auth/verify-reset-code', {
+        'email': email,
+        'code': code,
+      });
+    } catch (e) {
+      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  @override
   Future<void> resetPassword({
     required String email,
     required String code,
@@ -105,4 +117,5 @@ class RailwayAuthService implements AuthService {
     }
   }
 }
+
 
