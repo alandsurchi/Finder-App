@@ -215,12 +215,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SocialButton(
-                    icon: Icons.g_mobiledata,
-                    color: const Color(0xFFEA4335),
-                    onTap: () => ActionFeedback.showComingSoon(
-                      context,
-                      feature: 'Google sign in',
-                    ),
+                    imageAsset: 'assets/images/google_logo.png',
+                    onTap: _isLoading
+                        ? null
+                        : () {
+                            _handleGoogleSignIn();
+                          },
                   ),
                   const SizedBox(width: 16),
                   SocialButton(
@@ -278,6 +278,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       AppRoutes.forgotPassword,
       arguments: email.isNotEmpty ? email : null,
     );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    final res = await ref.read(authControllerProvider.notifier).loginWithGoogle();
+    res.fold(
+      onSuccess: (_) {
+        if (context.mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+        }
+      },
+      onFailure: (failure) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(failure.message)),
+          );
+        }
+      },
+    );
+    if (mounted) setState(() => _isLoading = false);
   }
 }
 

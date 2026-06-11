@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/network/api_client.dart';
 import '../../features/auth/domain/auth_user.dart';
@@ -71,7 +74,57 @@ class RailwayAuthService implements AuthService {
 
   @override
   Future<AuthUser> loginWithGoogle() async {
-    throw const AuthException('Google login is not supported in Railway mode.');
+    try {
+      final String? clientId = kIsWeb
+          ? '685670849218-9vt84sr1ibi9dpqphtqqugcavkk4kn63.apps.googleusercontent.com'
+          : (Platform.isIOS
+              ? '685670849218-6vp6v6gpjujcb6krkqjcicd3gn5bcjeo.apps.googleusercontent.com'
+              : null);
+
+      final String? serverClientId = kIsWeb
+          ? null
+          : (Platform.isAndroid
+              ? '685670849218-pah2cvt7m1ksjumqhbt5uvtb7815mb9u.apps.googleusercontent.com'
+              : '685670849218-6vp6v6gpjujcb6krkqjcicd3gn5bcjeo.apps.googleusercontent.com');
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId: clientId,
+        serverClientId: serverClientId,
+        scopes: ['email', 'profile'],
+      );
+
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw const AuthException('Google sign-in was cancelled by the user.');
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        throw const AuthException('Failed to retrieve Google ID token.');
+      }
+
+      final res = await _apiClient.post('/auth/google-login', {
+        'idToken': idToken,
+      });
+
+      final token = res['token'] as String;
+      final userData = res['user'] as Map<String, dynamic>;
+
+      await _apiClient.setToken(token);
+
+      return AuthUser(
+        id: userData['id']?.toString() ?? '',
+        email: userData['email']?.toString() ?? '',
+        displayName: userData['displayName']?.toString(),
+        photoUrl: userData['photoUrl']?.toString(),
+        isVerified: userData['isVerified'] as bool? ?? true,
+      );
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+    }
   }
 
   @override

@@ -42,8 +42,10 @@ dependencies:
   http: ^1.2.1
   shared_preferences: ^2.2.3
   web_socket_channel: ^3.0.1
+  google_sign_in: ^6.2.1
 
 dev_dependencies:
+
   flutter_test:
     sdk: flutter
   riverpod_generator: ^2.4.0

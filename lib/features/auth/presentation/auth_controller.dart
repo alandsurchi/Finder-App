@@ -33,6 +33,24 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     );
   }
 
+  Future<Result<void>> loginWithGoogle() async {
+    state = const AsyncValue.loading();
+    final usecase = ref.read(loginWithGoogleProvider);
+    final result = await usecase();
+    return result.fold(
+      onSuccess: (user) {
+        ref.read(authStateProvider.notifier).setAuthenticated(user.id);
+        state = const AsyncValue.data(null);
+        return Result.success(null);
+      },
+      onFailure: (failure) {
+        ref.read(authStateProvider.notifier).setUnauthenticated(failure);
+        state = AsyncValue.error(failure, StackTrace.current);
+        return Result.failure(failure);
+      },
+    );
+  }
+
   Future<Result<void>> signup({
     required String email,
     required String password,

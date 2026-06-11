@@ -38,6 +38,7 @@ import '../../usecases/reset_password.dart';
 import '../../usecases/verify_reset_code.dart';
 import '../../usecases/verify_email.dart';
 import '../../usecases/resend_verification.dart';
+import '../../usecases/login_with_google.dart';
 
 // ApiClient provider
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -160,4 +161,8 @@ final verifyEmailProvider = Provider<VerifyEmail>(
 
 final resendVerificationProvider = Provider<ResendVerification>(
   (ref) => ResendVerification(ref.read(authRepositoryProvider)),
+);
+
+final loginWithGoogleProvider = Provider<LoginWithGoogle>(
+  (ref) => LoginWithGoogle(ref.read(authRepositoryProvider)),
 );
