@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/app_config.dart';
 import '../errors/exceptions.dart';
 
 /// Thin JSON client over the Finder backend.
@@ -25,18 +26,8 @@ class ApiClient {
     String? baseUrl,
     this.timeout = const Duration(seconds: 10),
     http.Client? httpClient,
-  })  : baseUrl = baseUrl ?? defaultBaseUrl(),
+  })  : baseUrl = baseUrl ?? AppConfig.apiUrl,
         _http = httpClient ?? http.Client();
-
-  static String defaultBaseUrl() {
-    const fromEnv = String.fromEnvironment('API_URL');
-    if (fromEnv.isNotEmpty) return fromEnv;
-    if (kIsWeb) return 'http://localhost:3001';
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3001';
-    }
-    return 'http://localhost:3001';
-  }
 
   String? get token => _token;
   bool get isAuthenticated => _token != null;
@@ -85,6 +76,11 @@ class ApiClient {
 
   Future<dynamic> delete(String path) =>
       _send(path, () => _http.delete(_uri(path), headers: _headers()));
+
+  Future<dynamic> deleteWithBody(String path, Map<String, dynamic> body) => _send(
+        path,
+        () => _http.delete(_uri(path), headers: _headers(), body: json.encode(body)),
+      );
 
   Future<dynamic> _send(
     String path,

@@ -7,7 +7,7 @@ import 'package:finder/features/profile/presentation/blocked_users_controller.da
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/providers/post_provider.dart';
 import 'package:finder/routes.dart';
-import 'package:finder/services/image_upload_service.dart';
+import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
@@ -469,7 +469,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _sendPhoto(String chatId) async {
     setState(() => _uploading = true);
     try {
-      final url = await ImageUploadService.pickAndUpload(
+      final url = await ref.read(imageUploadServiceProvider).pickAndUpload(
         folder: 'chat',
         fileName: 'chat_${DateTime.now().millisecondsSinceEpoch}',
       );

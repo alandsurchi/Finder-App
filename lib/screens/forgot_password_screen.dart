@@ -115,9 +115,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final password = _passwordCtrl.text.trim();
     final confirm = _confirmPasswordCtrl.text.trim();
 
-    if (!Validators.hasMinLength(password, 6)) {
+    if (!Validators.isStrongPassword(password)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('New password must be at least 6 characters')),
+        const SnackBar(content: Text(Validators.passwordRule)),
       );
       return;
     }

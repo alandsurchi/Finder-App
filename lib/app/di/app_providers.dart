@@ -10,6 +10,7 @@ import '../../repositories/impl/profile_repository_impl.dart';
 import '../../repositories/impl/saved_items_repository_impl.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/auth/railway_auth_service.dart';
+import '../../services/image_upload_service.dart';
 import '../../usecases/login_user.dart';
 import '../../usecases/signup_user.dart';
 import '../../usecases/send_password_reset.dart';
@@ -80,4 +81,8 @@ final profileRepositoryProvider = Provider<ProfileRepository>(
 
 final savedItemsRepositoryProvider = Provider<SavedItemsRepository>(
   (ref) => SavedItemsRepositoryImpl(apiClient: ref.read(apiClientProvider)),
+);
+
+final imageUploadServiceProvider = Provider<ImageUploadService>(
+  (ref) => ImageUploadService(apiClient: ref.read(apiClientProvider)),
 );

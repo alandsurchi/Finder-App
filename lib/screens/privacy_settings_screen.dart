@@ -10,7 +10,8 @@ import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/features/profile/presentation/privacy_settings_controller.dart';
 import 'package:finder/features/profile/presentation/blocked_users_controller.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:finder/app/di/app_providers.dart';
+import 'package:finder/features/auth/presentation/auth_controller.dart';
 
 class PrivacySettingsScreen extends ConsumerStatefulWidget {
   const PrivacySettingsScreen({super.key});
@@ -49,34 +50,68 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
     );
   }
 
-  Future<void> _requestDeletion() async {
+  Future<void> _deleteAccount() async {
     final profile = ref.read(profileControllerProvider).value;
+    final usesGoogle = profile?.usesGoogle ?? false;
+    final ctrl = TextEditingController();
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Request data deletion?'),
-        content: const Text(
-            'We will open an e-mail to our privacy team. Your account, posts and conversations are removed within 30 days of the request.'),
+        title: const Text('Delete your account?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your posts, conversations, saved items and profile are removed immediately. This cannot be undone.',
+              style: text.bodyMedium,
+            ),
+            const SizedBox(height: BeaconSpace.lg),
+            AppTextField(
+              controller: ctrl,
+              label: usesGoogle ? 'Type DELETE to confirm' : 'Your password',
+              hint: usesGoogle ? 'DELETE' : 'Password',
+              prefixIcon: usesGoogle ? Icons.warning_amber_rounded : Icons.lock_outline_rounded,
+              obscureText: !usesGoogle,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => Navigator.pop(ctx, true),
+            ),
+          ],
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Continue')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: t.error, foregroundColor: t.onError),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete account'),
+          ),
         ],
       ),
     );
+    final entered = ctrl.text;
+    ctrl.dispose();
     if (confirmed != true || !mounted) return;
-    final uri = Uri(
-      scheme: 'mailto',
-      path: 'privacy@finder.app',
-      query: 'subject=${Uri.encodeComponent('Data deletion request')}'
-          '&body=${Uri.encodeComponent('Please delete the Finder account for ${profile?.email ?? 'my e-mail address'}.')}',
-    );
-    var ok = false;
-    try {
-      ok = await launchUrl(uri);
-    } catch (_) {}
-    if (!ok && mounted) {
-      ActionFeedback.showInfo(context, 'No e-mail app found. Write to privacy@finder.app to request deletion.');
+    if (entered.isEmpty) {
+      ActionFeedback.showError(context, usesGoogle ? 'Type DELETE to confirm.' : 'Please enter your password.');
+      return;
     }
+
+    final result = await ref.read(profileRepositoryProvider).deleteAccount(
+          password: usesGoogle ? null : entered,
+          confirm: usesGoogle ? entered.trim().toUpperCase() : null,
+        );
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (_) async {
+        ActionFeedback.showInfo(context, 'Your account has been deleted.');
+        await ref.read(authControllerProvider.notifier).logout();
+      },
+      onFailure: (f) => ActionFeedback.showError(context, f.message),
+    );
   }
 
   @override
@@ -305,7 +340,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                         index: 3,
                         child: SurfaceCard(
                           tone: SurfaceTone.error,
-                          onTap: _requestDeletion,
+                          onTap: _deleteAccount,
                           child: Row(
                             children: [
                               Icon(Icons.warning_amber_rounded, color: t.error, size: 22),
@@ -314,9 +349,9 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Request data deletion',
+                                    Text('Delete account',
                                         style: text.titleMedium?.copyWith(color: t.error)),
-                                    Text('Permanently remove your account and data.',
+                                    Text('Permanently remove your account, posts and conversations.',
                                         style: text.bodySmall),
                                   ],
                                 ),

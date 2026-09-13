@@ -4,7 +4,7 @@ import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/models/user_model.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
-import 'package:finder/services/image_upload_service.dart';
+import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
@@ -284,7 +284,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (uid == null) return;
     setState(() => _isUploadingAvatar = true);
     try {
-      final url = await ImageUploadService.pickAndUpload(
+      final url = await ref.read(imageUploadServiceProvider).pickAndUpload(
         folder: 'avatars',
         fileName: uid,
       );

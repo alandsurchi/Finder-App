@@ -10,7 +10,7 @@ import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:finder/core/constants/app_categories.dart';
-import 'package:finder/services/image_upload_service.dart';
+import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/widgets/ui/ui.dart';
 
@@ -764,7 +764,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     setState(() => _isUploadingImage = true);
     try {
       final fileName = '${uid}_${DateTime.now().millisecondsSinceEpoch}';
-      final url = await ImageUploadService.pickAndUpload(
+      final url = await ref.read(imageUploadServiceProvider).pickAndUpload(
         folder: 'posts',
         fileName: fileName,
       );

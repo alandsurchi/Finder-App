@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/core/constants/app_categories.dart';
-import 'package:finder/services/image_upload_service.dart';
+import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
@@ -394,7 +394,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
     setState(() => _isUploadingImage = true);
     try {
       final fileName = '${uid}_${DateTime.now().millisecondsSinceEpoch}';
-      final url = await ImageUploadService.pickAndUpload(
+      final url = await ref.read(imageUploadServiceProvider).pickAndUpload(
         folder: 'posts',
         fileName: fileName,
       );

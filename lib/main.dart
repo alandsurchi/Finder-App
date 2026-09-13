@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/di/app_providers.dart';
 import 'app/router/app_router.dart';
+import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
 import 'features/auth/presentation/auth_state_provider.dart';
 import 'features/notifications/presentation/notifications_controller.dart';
@@ -29,6 +30,12 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final configError = AppConfig.configurationError;
+  if (configError != null) {
+    runApp(_ConfigErrorApp(message: configError));
+    return;
+  }
 
   final apiClient = ApiClient();
   await apiClient.init();
@@ -122,5 +129,41 @@ class _AuthGate extends StatelessWidget {
       case AuthStatus.unauthenticated:
         return const OnboardingScreen();
     }
+  }
+}
+
+/// Shown instead of the app when a release build was made without API_URL.
+class _ConfigErrorApp extends StatelessWidget {
+  final String message;
+  const _ConfigErrorApp({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Finder',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      home: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.settings_suggest_outlined, size: 48),
+                  const SizedBox(height: 16),
+                  Text('This build is not configured',
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 8),
+                  Text(message, textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

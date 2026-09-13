@@ -12,6 +12,7 @@ class UserModel {
   final String avatarUrl;
   final bool identityVerified;
   final int postsCount;
+  final String authProvider;
 
   UserModel({
     required this.uid,
@@ -25,7 +26,10 @@ class UserModel {
     this.avatarUrl = '',
     this.identityVerified = false,
     this.postsCount = 0,
+    this.authProvider = 'email',
   });
+
+  bool get usesGoogle => authProvider == 'google';
 
   String get displayName {
     if (fullName.trim().isNotEmpty) return fullName.trim();
@@ -57,6 +61,7 @@ class UserModel {
       avatarUrl: map['avatarUrl']?.toString() ?? '',
       identityVerified: map['identityVerified'] == true,
       postsCount: (map['postsCount'] as num?)?.toInt() ?? 0,
+      authProvider: map['authProvider']?.toString() ?? 'email',
       createdAt: Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
     );
   }
@@ -105,6 +110,7 @@ class UserModel {
     String? avatarUrl,
     bool? identityVerified,
     int? postsCount,
+    String? authProvider,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -118,6 +124,7 @@ class UserModel {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       identityVerified: identityVerified ?? this.identityVerified,
       postsCount: postsCount ?? this.postsCount,
+      authProvider: authProvider ?? this.authProvider,
     );
   }
 }

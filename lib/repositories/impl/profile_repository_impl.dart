@@ -160,6 +160,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
       );
 
   @override
+  Future<Result<void>> deleteAccount({String? password, String? confirm}) => _guard(
+        'delete your account',
+        () => _apiClient.deleteWithBody('/profile', {
+          if (password != null) 'password': password,
+          if (confirm != null) 'confirm': confirm,
+        }),
+        fallback: 'Unable to delete your account.',
+      );
+
+  @override
   Future<Result<VerificationStatus>> getVerificationStatus() => _guard(
         'check verification',
         () async => VerificationStatus.fromApi(

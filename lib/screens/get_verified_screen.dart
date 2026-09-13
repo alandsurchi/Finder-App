@@ -4,7 +4,7 @@ import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/profile/domain/verification_status.dart';
 import 'package:finder/features/profile/presentation/verification_controller.dart';
 import 'package:finder/providers/my_posts_provider.dart';
-import 'package:finder/services/image_upload_service.dart';
+import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
@@ -397,7 +397,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
     if (_uploading != null) return;
     setState(() => _uploading = slot);
     try {
-      final url = await ImageUploadService.pickAndUpload(
+      final url = await ref.read(imageUploadServiceProvider).pickAndUpload(
         folder: 'verification',
         fileName: '${slot}_${DateTime.now().millisecondsSinceEpoch}',
       );

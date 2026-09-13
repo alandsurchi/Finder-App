@@ -8,6 +8,7 @@ import 'package:finder/screens/privacy_settings_screen.dart';
 import 'package:finder/screens/notification_settings_screen.dart';
 import 'package:finder/screens/help_support_screen.dart';
 import 'package:finder/screens/get_verified_screen.dart';
+import 'package:finder/screens/legal_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
@@ -391,6 +392,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+                ),
+              ),
+              SettingsTile(
+                icon: Icons.description_outlined,
+                title: 'Terms of service',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const LegalScreen(kind: LegalDocKind.terms)),
+                ),
+              ),
+              SettingsTile(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Privacy policy',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const LegalScreen(kind: LegalDocKind.privacy)),
                 ),
               ),
               SettingsTile(

@@ -4,6 +4,7 @@ import 'package:finder/routes.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/social_button.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/widgets/common/legal_footer.dart';
 import 'package:finder/features/auth/presentation/auth_controller.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/core/validation/validators.dart';
@@ -76,8 +77,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               AppTextField(
                 controller: _passwordCtrl,
                 label: 'Password',
-                hint: 'At least 6 characters',
-                helper: 'Use 6 or more characters.',
+                hint: 'At least 8 characters',
+                helper: Validators.passwordRule,
                 prefixIcon: Icons.lock_outline_rounded,
                 obscureText: true,
                 textInputAction: TextInputAction.done,
@@ -106,6 +107,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
           ),
         ),
+        const LegalFooter(),
+        const SizedBox(height: BeaconSpace.md),
         AuthFooterLink(
           prompt: 'Already have an account?',
           action: 'Log in',
@@ -134,8 +137,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       ActionFeedback.showError(context, 'Enter a valid email address.');
       return;
     }
-    if (!Validators.hasMinLength(password, 6)) {
-      ActionFeedback.showError(context, 'Password must be at least 6 characters.');
+    if (!Validators.isStrongPassword(password)) {
+      ActionFeedback.showError(context, Validators.passwordRule);
       return;
     }
 

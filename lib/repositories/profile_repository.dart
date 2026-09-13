@@ -25,6 +25,10 @@ abstract class ProfileRepository {
 
   Future<Result<void>> unblockUser(String userId);
 
+  /// Permanently deletes the account. E-mail accounts pass [password];
+  /// Google accounts pass [confirm] = 'DELETE'.
+  Future<Result<void>> deleteAccount({String? password, String? confirm});
+
   Future<Result<VerificationStatus>> getVerificationStatus();
 
   Future<Result<VerificationStatus>> submitVerification(VerificationRequest request);

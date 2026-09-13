@@ -16,7 +16,7 @@ Security
 - [x] Seed script refuses to run against a production database
 
 Infrastructure
-- [x] Postgres path verified with `docker compose` (backend + Postgres)
+- [~] Postgres path: `docker compose` stack written; run `docker compose up --build` once Docker Desktop is available to confirm on this machine
 - [x] `Dockerfile`, `docker-compose.yml`, `railway.json`, health check
 - [x] `.env.example` covers every variable; `docs/DEPLOYMENT.md` explains hosting, SMTP (Resend), Cloudinary, Google OAuth
 - [ ] Deploy the backend to Railway/Render with Postgres and a custom domain (needs your accounts)
