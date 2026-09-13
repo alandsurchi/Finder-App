@@ -203,7 +203,18 @@ router.delete('/:id', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'You do not own this post.' });
     }
 
+    // SQLite does not enforce the foreign keys, so clean up by hand.
     await db.exec('DELETE FROM saved_items WHERE post_id = $1', [id]);
+    await db.exec('DELETE FROM reports WHERE post_id = $1', [id]);
+    await db.exec(
+      'DELETE FROM messages WHERE chat_id IN (SELECT id FROM chats WHERE post_id = $1)',
+      [id]
+    );
+    await db.exec(
+      'DELETE FROM chat_participants WHERE chat_id IN (SELECT id FROM chats WHERE post_id = $1)',
+      [id]
+    );
+    await db.exec('DELETE FROM chats WHERE post_id = $1', [id]);
     await db.exec('DELETE FROM posts WHERE id = $1', [id]);
     res.status(200).json({ message: 'Post deleted successfully.' });
   } catch (err) {
