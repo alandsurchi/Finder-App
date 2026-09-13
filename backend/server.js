@@ -1,9 +1,11 @@
-require('./env').loadEnv();
+const config = require('./config');
 
 const express = require('express');
 const http = require('http');
 const path = require('path');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const db = require('./db');
 const { router: authRouter } = require('./routes/auth');
 const postsRouter = require('./routes/posts');
@@ -11,16 +13,29 @@ const chatsRouter = require('./routes/chats');
 const profileRouter = require('./routes/profile');
 const notificationsRouter = require('./routes/notifications');
 const usersRouter = require('./routes/users');
+const uploadsRouter = require('./routes/uploads');
 const { initWebSocket } = require('./websocket');
 
 const app = express();
-const port = process.env.PORT || 3001;
 
-// Enable CORS
-app.use(cors());
+// Behind Railway/Render/Fly the client IP arrives in X-Forwarded-For.
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
 
-// Parse JSON request body
-app.use(express.json({ limit: '2mb' }));
+app.use(helmet({
+  // Images under /static are loaded by the app from another origin.
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+}));
+
+app.use(cors({
+  origin: config.corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
+}));
+
+app.use(express.json({ limit: '1mb' }));
 
 // Request log: method path status ms
 app.use((req, res, next) => {
@@ -31,20 +46,50 @@ app.use((req, res, next) => {
   next();
 });
 
-// Demo images and any other static assets
-app.use('/static', express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
+const limiter = (max, message) => rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message },
+});
 
-// Routes mapping
+app.use(limiter(config.rateLimit.general, 'Too many requests. Please slow down.'));
+const authLimiter = limiter(config.rateLimit.auth, 'Too many sign-in attempts. Try again in 15 minutes.');
+const resetLimiter = limiter(config.rateLimit.passwordReset, 'Too many reset requests. Try again later.');
+
+// Demo images, legal pages and any other static assets
+app.use('/static', express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
+app.get('/legal/:doc(privacy|terms)', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'legal', `${req.params.doc}.html`));
+});
+
+// Routes
+app.use('/auth/login', authLimiter);
+app.use('/auth/signup', authLimiter);
+app.use('/auth/google-login', authLimiter);
+app.use('/auth/forgot-password', resetLimiter);
+app.use('/auth/resend-verification', resetLimiter);
 app.use('/auth', authRouter);
 app.use('/posts', postsRouter);
 app.use('/chats', chatsRouter);
 app.use('/profile', profileRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/users', usersRouter);
+app.use('/uploads', uploadsRouter);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', database: db.isPostgres ? 'postgresql' : 'sqlite' });
+app.get('/health', async (req, res) => {
+  try {
+    await db.queryOne('SELECT 1 AS ok');
+    res.status(200).json({
+      status: 'healthy',
+      database: db.isPostgres ? 'postgresql' : 'sqlite',
+      uploads: config.cloudinary.configured ? 'signed' : 'unconfigured',
+    });
+  } catch (err) {
+    res.status(503).json({ status: 'unhealthy', message: err.message });
+  }
 });
 
 // 404
@@ -55,18 +100,19 @@ app.use((req, res) => {
 // Error handler
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
+  if (err && err.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'Request body is not valid JSON.' });
+  }
   console.error('Unhandled error:', err);
   if (res.headersSent) return;
-  res.status(err.status || 500).json({ message: err.message || 'Internal server error.' });
+  res.status(err.status || 500).json({
+    message: config.isProduction ? 'Internal server error.' : (err.message || 'Internal server error.'),
+  });
 });
 
-// Create HTTP server
 const server = http.createServer(app);
-
-// Initialize WebSockets
 initWebSocket(server);
 
-// Initialize DB and start server
 db.initDb()
   .then(async () => {
     console.log('Database initialized successfully.');
@@ -80,11 +126,19 @@ db.initDb()
       }
     }
 
-    server.listen(port, () => {
-      console.log(`Finder custom backend server running on port ${port}`);
+    server.listen(config.port, () => {
+      console.log(`Finder backend listening on port ${config.port} (${config.isProduction ? 'production' : 'development'})`);
     });
   })
   .catch((err) => {
     console.error('Failed to initialize database:', err);
     process.exit(1);
   });
+
+function shutdown(signal) {
+  console.log(`${signal} received, shutting down.`);
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 5000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

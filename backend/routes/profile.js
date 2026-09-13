@@ -13,6 +13,9 @@ const {
   bool,
 } = require('../lib/helpers');
 
+const bcrypt = require('bcryptjs');
+const { validate, schemas } = require('../lib/validate');
+
 const router = express.Router();
 
 function ownProfile(user) {
@@ -26,6 +29,7 @@ function ownProfile(user) {
     job: user.job || '',
     avatarUrl: user.avatar_url || '',
     identityVerified: truthy(user.identity_verified),
+    authProvider: user.auth_provider || 'email',
     createdAtMs: parseInt(user.created_at),
   };
 }
@@ -43,7 +47,7 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // PUT /profile - update profile details
-router.put('/', verifyToken, async (req, res) => {
+router.put('/', verifyToken, validate(schemas.updateProfile), async (req, res) => {
   const { fullName, nickName, phone, address, job, avatarUrl } = req.body;
 
   try {
@@ -94,7 +98,7 @@ router.get('/privacy', verifyToken, async (req, res) => {
   }
 });
 
-router.put('/privacy', verifyToken, async (req, res) => {
+router.put('/privacy', verifyToken, validate(schemas.privacy), async (req, res) => {
   const { showProfile, allowMessages, showLocation, hidePhone } = req.body;
   try {
     const next = await saveSettings(req.userId, {
@@ -130,7 +134,7 @@ router.get('/notification-settings', verifyToken, async (req, res) => {
   }
 });
 
-router.put('/notification-settings', verifyToken, async (req, res) => {
+router.put('/notification-settings', verifyToken, validate(schemas.notificationSettings), async (req, res) => {
   const { messages, matches, updates, marketing, email } = req.body;
   try {
     const next = await saveSettings(req.userId, {
@@ -170,7 +174,7 @@ router.get('/verification', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/verification', verifyToken, async (req, res) => {
+router.post('/verification', verifyToken, validate(schemas.verification), async (req, res) => {
   const { docType, frontUrl, backUrl, selfieUrl } = req.body;
   if (!docType || !frontUrl || !selfieUrl) {
     return res.status(400).json({ message: 'docType, frontUrl and selfieUrl are required.' });
@@ -222,7 +226,7 @@ router.get('/blocked', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/blocked', verifyToken, async (req, res) => {
+router.post('/blocked', verifyToken, validate(schemas.blockUser), async (req, res) => {
   const { blockedUserId } = req.body;
   if (!blockedUserId) return res.status(400).json({ message: 'blockedUserId is required.' });
   if (blockedUserId === req.userId) return res.status(400).json({ message: 'You cannot block yourself.' });
@@ -277,7 +281,7 @@ router.get('/saved', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/saved', verifyToken, async (req, res) => {
+router.post('/saved', verifyToken, validate(schemas.savePost), async (req, res) => {
   const { postId } = req.body;
   if (!postId) return res.status(400).json({ message: 'postId is required.' });
 
@@ -312,6 +316,55 @@ router.delete('/saved/:postId', verifyToken, async (req, res) => {
 });
 
 // ── Public profile (privacy-aware) ──────────────────────────────────────────
+// DELETE /profile - permanently delete the signed-in account and everything it owns.
+// E-mail accounts confirm with their password; Google accounts send confirm: "DELETE".
+router.delete('/', verifyToken, validate(schemas.deleteAccount), async (req, res) => {
+  const { password, confirm } = req.body;
+  try {
+    const user = await db.queryOne('SELECT * FROM users WHERE uid = $1', [req.userId]);
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    if (user.auth_provider === 'google') {
+      if (confirm !== 'DELETE') {
+        return res.status(400).json({ message: 'Type DELETE to confirm.' });
+      }
+    } else {
+      if (!password) return res.status(400).json({ message: 'Password is required.' });
+      const ok = await bcrypt.compare(password, user.password_hash || '');
+      if (!ok) return res.status(401).json({ message: 'Incorrect password.' });
+    }
+
+    const uid = req.userId;
+    // Chats the user took part in (their own posts' chats included).
+    const chatRows = await db.query(
+      `SELECT DISTINCT c.id FROM chats c
+       LEFT JOIN chat_participants cp ON cp.chat_id = c.id
+       LEFT JOIN posts p ON p.id = c.post_id
+       WHERE cp.user_id = $1 OR p.owner_id = $2`,
+      [uid, uid]
+    );
+    for (const row of chatRows) {
+      await db.exec('DELETE FROM messages WHERE chat_id = $1', [row.id]);
+      await db.exec('DELETE FROM chat_participants WHERE chat_id = $1', [row.id]);
+      await db.exec('DELETE FROM chats WHERE id = $1', [row.id]);
+    }
+    await db.exec('DELETE FROM saved_items WHERE user_id = $1 OR post_id IN (SELECT id FROM posts WHERE owner_id = $2)', [uid, uid]);
+    await db.exec('DELETE FROM reports WHERE reporter_id = $1 OR post_id IN (SELECT id FROM posts WHERE owner_id = $2)', [uid, uid]);
+    await db.exec('DELETE FROM posts WHERE owner_id = $1', [uid]);
+    await db.exec('DELETE FROM notifications WHERE user_id = $1', [uid]);
+    await db.exec('DELETE FROM blocked_users WHERE user_id = $1 OR blocked_user_id = $2', [uid, uid]);
+    await db.exec('DELETE FROM verification_requests WHERE user_id = $1', [uid]);
+    await db.exec('DELETE FROM user_settings WHERE user_id = $1', [uid]);
+    await db.exec('DELETE FROM users WHERE uid = $1', [uid]);
+
+    console.log(`[ACCOUNT DELETED] ${user.email}`);
+    res.status(200).json({ message: 'Your account and data have been deleted.' });
+  } catch (err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ message: 'Error deleting account.' });
+  }
+});
+
 router.get('/:userId', verifyToken, async (req, res) => {
   const targetId = req.params.userId;
   try {

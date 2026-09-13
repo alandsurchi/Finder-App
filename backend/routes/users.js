@@ -3,11 +3,13 @@ const db = require('../db');
 const { verifyToken } = require('./auth');
 const { blockedIdsFor, displayName, truthy } = require('../lib/helpers');
 
+const { validate, schemas } = require('../lib/validate');
+
 const router = express.Router();
 
 // GET /users/search?q=  — find people to message (excludes self and blocks)
-router.get('/search', verifyToken, async (req, res) => {
-  const q = (req.query.q || '').toString().trim().toLowerCase();
+router.get('/search', verifyToken, validate(schemas.searchQuery, 'query'), async (req, res) => {
+  const q = req.validatedQuery.q.toLowerCase();
   if (q.length < 2) return res.status(200).json([]);
 
   try {

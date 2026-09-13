@@ -5,8 +5,10 @@ const db = require('../db');
 const crypto = require('crypto');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'finder_secret_key_12345';
+const config = require('../config');
+const JWT_SECRET = config.jwtSecret;
 const { smtpConfigured, truthy } = require('../lib/helpers');
+const { validate, schemas } = require('../lib/validate');
 
 // Middleware to verify JWT token
 function verifyToken(req, res, next) {
@@ -30,11 +32,8 @@ function verifyToken(req, res, next) {
 }
 
 // POST /auth/signup
-router.post('/signup', async (req, res) => {
+router.post('/signup', validate(schemas.signup), async (req, res) => {
   const { email, password, fullName, phone } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required.' });
-  }
 
   try {
     // Check if user already exists
@@ -113,7 +112,7 @@ router.post('/signup', async (req, res) => {
       }
     }
 
-    const token = jwt.sign({ userId: uid, isVerified: autoVerify }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ userId: uid, isVerified: autoVerify }, JWT_SECRET, { expiresIn: config.jwtExpiresIn });
 
     res.status(201).json({
       token,
@@ -132,11 +131,8 @@ router.post('/signup', async (req, res) => {
 });
 
 // POST /auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', validate(schemas.login), async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required.' });
-  }
 
   try {
     const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
@@ -152,7 +148,7 @@ router.post('/login', async (req, res) => {
     const isVerified = user.is_verified === 1 || user.is_verified === true || user.is_verified === 'true';
 
     // Sign JWT
-    const token = jwt.sign({ userId: user.uid, isVerified: isVerified }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ userId: user.uid, isVerified: isVerified }, JWT_SECRET, { expiresIn: config.jwtExpiresIn });
 
     res.status(200).json({
       token,
@@ -184,7 +180,8 @@ router.get('/me', verifyToken, async (req, res) => {
       displayName: user.full_name,
       photoUrl: user.avatar_url,
       isVerified: truthy(user.is_verified),
-      identityVerified: truthy(user.identity_verified)
+      identityVerified: truthy(user.identity_verified),
+      authProvider: user.auth_provider || 'email'
     });
   } catch (err) {
     console.error('Fetch me error:', err);
@@ -193,16 +190,14 @@ router.get('/me', verifyToken, async (req, res) => {
 });
 
 // POST /auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', validate(schemas.forgotPassword), async (req, res) => {
   const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required.' });
-  }
 
   try {
     const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
     if (!user) {
-      return res.status(404).json({ message: 'No user registered with this email address.' });
+      // Same answer as for a known address, so the endpoint cannot be used to enumerate accounts.
+      return res.status(200).json({ message: 'If that address is registered, a code is on its way.' });
     }
 
     // Generate 6-digit verification code
@@ -265,7 +260,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // POST /auth/verify-reset-code
-router.post('/verify-reset-code', async (req, res) => {
+router.post('/verify-reset-code', validate(schemas.verifyResetCode), async (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
     return res.status(400).json({ message: 'Email and code are required.' });
@@ -296,11 +291,8 @@ router.post('/verify-reset-code', async (req, res) => {
 
 
 // POST /auth/reset-password
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', validate(schemas.resetPassword), async (req, res) => {
   const { email, code, newPassword } = req.body;
-  if (!email || !code || !newPassword) {
-    return res.status(400).json({ message: 'Email, code, and new password are required.' });
-  }
 
   try {
     const user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
@@ -336,11 +328,8 @@ router.post('/reset-password', async (req, res) => {
 });
 
 // POST /auth/verify-email
-router.post('/verify-email', verifyToken, async (req, res) => {
+router.post('/verify-email', verifyToken, validate(schemas.verifyEmail), async (req, res) => {
   const { code } = req.body;
-  if (!code) {
-    return res.status(400).json({ message: 'Verification code is required.' });
-  }
 
   try {
     const user = await db.queryOne('SELECT * FROM users WHERE uid = $1', [req.userId]);
@@ -371,7 +360,7 @@ router.post('/verify-email', verifyToken, async (req, res) => {
     );
 
     // Sign a new verified JWT
-    const token = jwt.sign({ userId: req.userId, isVerified: true }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ userId: req.userId, isVerified: true }, JWT_SECRET, { expiresIn: config.jwtExpiresIn });
 
     res.status(200).json({
       message: 'Email verified successfully.',
@@ -458,11 +447,8 @@ router.post('/resend-verification', verifyToken, async (req, res) => {
 });
 
 // POST /auth/google-login
-router.post('/google-login', async (req, res) => {
+router.post('/google-login', validate(schemas.googleLogin), async (req, res) => {
   const { idToken } = req.body;
-  if (!idToken) {
-    return res.status(400).json({ message: 'Google idToken is required.' });
-  }
 
   try {
     const { OAuth2Client } = require('google-auth-library');
@@ -498,9 +484,9 @@ router.post('/google-login', async (req, res) => {
       const passwordHash = await bcrypt.hash(crypto.randomUUID(), salt);
 
       await db.exec(
-        `INSERT INTO users (uid, email, password_hash, full_name, nick_name, avatar_url, created_at, updated_at, is_verified) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [uid, email.toLowerCase().trim(), passwordHash, name, nickName, picture, now, now, db.isPostgres ? true : 1]
+        `INSERT INTO users (uid, email, password_hash, full_name, nick_name, avatar_url, created_at, updated_at, is_verified, auth_provider)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [uid, email.toLowerCase().trim(), passwordHash, name, nickName, picture, now, now, db.isPostgres ? true : 1, 'google']
       );
       
       user = {
@@ -520,7 +506,7 @@ router.post('/google-login', async (req, res) => {
     }
 
     // Sign JWT
-    const token = jwt.sign({ userId: uid, isVerified: true }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ userId: uid, isVerified: true }, JWT_SECRET, { expiresIn: config.jwtExpiresIn });
 
     res.status(200).json({
       token,

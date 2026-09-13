@@ -12,6 +12,8 @@ const {
   bool,
 } = require('../lib/helpers');
 
+const { validate, schemas } = require('../lib/validate');
+
 const router = express.Router();
 
 // GET /chats - Get user conversations (one query, grouped in JS)
@@ -115,7 +117,7 @@ router.get('/:id/messages', verifyToken, async (req, res) => {
 
 // POST /chats/initiate - Start or get a chat.
 // With postId: one chat per (post, pair). Without: a direct chat per pair.
-router.post('/initiate', verifyToken, async (req, res) => {
+router.post('/initiate', verifyToken, validate(schemas.initiateChat), async (req, res) => {
   const { peerId, postId, itemName } = req.body;
   const currentUserId = req.userId;
 
@@ -170,7 +172,7 @@ router.post('/initiate', verifyToken, async (req, res) => {
 });
 
 // POST /chats/:id/messages - Send a text and/or image message
-router.post('/:id/messages', verifyToken, async (req, res) => {
+router.post('/:id/messages', verifyToken, validate(schemas.sendMessage), async (req, res) => {
   const chatId = req.params.id;
   const senderId = req.userId;
   const text = typeof req.body.text === 'string' ? req.body.text.trim() : '';

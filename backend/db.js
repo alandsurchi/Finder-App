@@ -200,6 +200,7 @@ async function initDb() {
 
     try {
       await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS identity_verified BOOLEAN DEFAULT FALSE;');
+      await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(20) DEFAULT 'email';");
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS lost_on TEXT;');
       await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;');
       await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_messages BOOLEAN DEFAULT TRUE;');
@@ -373,6 +374,7 @@ async function initDb() {
 
         // Demo schema additions (ignore "duplicate column" errors on re-runs)
         sqliteDb.run('ALTER TABLE users ADD COLUMN identity_verified INTEGER DEFAULT 0', () => {});
+        sqliteDb.run("ALTER TABLE users ADD COLUMN auth_provider TEXT DEFAULT 'email'", () => {});
         sqliteDb.run('ALTER TABLE posts ADD COLUMN lost_on TEXT', () => {});
         sqliteDb.run('ALTER TABLE messages ADD COLUMN image_url TEXT', () => {});
         sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_messages INTEGER DEFAULT 1', () => {});

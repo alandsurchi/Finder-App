@@ -1,0 +1,46 @@
+# Local production-like stack: Postgres + the API.
+#   docker compose up --build
+#   docker compose exec api node seed.js        # optional demo data
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: finder
+      POSTGRES_PASSWORD: finder
+      POSTGRES_DB: finder
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finder -d finder"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    ports:
+      - "5432:5432"
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgres://finder:finder@db:5432/finder?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-random-string-of-at-least-32-chars}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3001}
+      SEED_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3001}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    ports:
+      - "3001:3001"
+
+volumes:
+  pgdata:

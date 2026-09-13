@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const db = require('./db');
 const crypto = require('crypto');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'finder_secret_key_12345';
+const JWT_SECRET = require('./config').jwtSecret;
 
 // Map of userId -> Set of active WebSocket connections
 const clients = new Map();

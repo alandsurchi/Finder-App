@@ -5,6 +5,11 @@
 // "seed-" prefixed id so re-running replaces exactly the same data.
 require('./env').loadEnv();
 
+if (process.env.NODE_ENV === 'production' && process.env.SEED_FORCE !== '1') {
+  console.error('Refusing to seed demo data into a production database. Set SEED_FORCE=1 to override.');
+  process.exit(1);
+}
+
 const bcrypt = require('bcryptjs');
 const db = require('./db');
 const { bool } = require('./lib/helpers');

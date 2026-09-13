@@ -11,7 +11,11 @@ npm run seed              # demo accounts, posts, chats, notifications
 npm start                 # http://localhost:3001
 ```
 
-`GET /health` reports which database is in use.
+`GET /health` reports which database is in use and whether signed uploads are configured.
+
+Production settings (JWT secret, CORS allow-list, Postgres, SMTP, Cloudinary, rate limits) are
+described in [`docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md). Every write endpoint validates its
+body; passwords need at least 8 characters with a letter and a number.
 
 ## Demo accounts
 
@@ -79,6 +83,9 @@ UPDATE verification_requests SET status = 'approved' WHERE user_id = '<uid>';
 | Profile | `GET/PUT /profile`, `GET /profile/:userId`, `GET/PUT /profile/privacy`, `GET/PUT /profile/notification-settings`, `GET/POST /profile/verification`, `GET/POST/DELETE /profile/blocked`, `GET/POST/DELETE /profile/saved` |
 | Notifications | `GET /notifications`, `PUT /notifications/read-all`, `PUT /notifications/:id/read` |
 | Users | `GET /users/search?q=` |
+| Uploads | `POST /uploads/sign` (Cloudinary signature for `posts`, `avatars`, `chat`, `verification`) |
+| Account | `DELETE /profile` (`{password}` or `{confirm:"DELETE"}` for Google accounts) |
+| Legal | `GET /legal/privacy`, `GET /legal/terms` |
 
 All routes except `/auth/*` and `/health` need `Authorization: Bearer <token>`.
 Blocked users cannot see each other's posts, conversations or profiles, and cannot

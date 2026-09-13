@@ -3,6 +3,7 @@ const db = require('../db');
 const { verifyToken } = require('./auth');
 const crypto = require('crypto');
 const { POST_SELECT, mapPost, bool, truthy, notify, blockedIdsFor } = require('../lib/helpers');
+const { validate, schemas } = require('../lib/validate');
 
 const router = express.Router();
 
@@ -99,12 +100,8 @@ router.get('/:id/similar', verifyToken, async (req, res) => {
 });
 
 // POST /posts (Create)
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, validate(schemas.createPost), async (req, res) => {
   const { title, description, category, isLost, reward, location, imageUrl, lostOn } = req.body;
-
-  if (!title || !description || !category || !location) {
-    return res.status(400).json({ message: 'Title, description, category, and location are required.' });
-  }
 
   try {
     const id = crypto.randomUUID();
@@ -114,7 +111,7 @@ router.post('/', verifyToken, async (req, res) => {
     await db.exec(
       `INSERT INTO posts (id, owner_id, title, description, category, is_lost, reward, location, image_url, lost_on, status, created_at_ms, updated_at_ms)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-      [id, ownerId, title, description, category, bool(!!isLost), reward || null, location, imageUrl || '', lostOn || null, 'active', now, now]
+      [id, ownerId, title, description, category, bool(!!isLost), reward === undefined || reward === null || reward === '' ? null : String(reward), location, imageUrl || '', lostOn || null, 'active', now, now]
     );
 
     const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [id]);
@@ -126,13 +123,9 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 // PUT /posts/:id (Update)
-router.put('/:id', verifyToken, async (req, res) => {
+router.put('/:id', verifyToken, validate(schemas.updatePost), async (req, res) => {
   const { id } = req.params;
   const { title, description, category, isLost, reward, location, imageUrl, lostOn, status } = req.body;
-
-  if (status !== undefined && !['active', 'resolved'].includes(status)) {
-    return res.status(400).json({ message: 'status must be active or resolved.' });
-  }
 
   try {
     const post = await db.queryOne('SELECT * FROM posts WHERE id = $1', [id]);
@@ -155,7 +148,7 @@ router.put('/:id', verifyToken, async (req, res) => {
         description !== undefined ? description : post.description,
         category !== undefined ? category : post.category,
         isLost !== undefined ? bool(!!isLost) : post.is_lost,
-        reward !== undefined ? reward : post.reward,
+        reward !== undefined ? (reward === null || reward === '' ? null : String(reward)) : post.reward,
         location !== undefined ? location : post.location,
         imageUrl !== undefined ? imageUrl : post.image_url,
         lostOn !== undefined ? lostOn : post.lost_on,
@@ -224,7 +217,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
 });
 
 // POST /posts/:id/report (Report a post)
-router.post('/:id/report', verifyToken, async (req, res) => {
+router.post('/:id/report', verifyToken, validate(schemas.reportPost), async (req, res) => {
   const { id } = req.params;
   const { reason } = req.body;
 
