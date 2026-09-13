@@ -1,11 +1,11 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-// Web-only: native browser file dialog (no plugin needed)
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+// Web-only: native browser file dialog (no plugin needed). The dart:html
+// implementation is only linked on web; other platforms get a stub.
+import 'upload/web_picker_stub.dart'
+    if (dart.library.html) 'upload/web_picker_web.dart' as web_picker;
 
 // Mobile-only: image_picker
 import 'package:image_picker/image_picker.dart';
@@ -26,59 +26,12 @@ class ImageUploadService {
     required String fileName,
   }) {
     if (kIsWeb) {
-      return _webPickAndUpload(folder: folder);
+      return web_picker.webPickAndUpload(
+        folder: folder,
+        upload: _uploadToCloudinary,
+      );
     }
     return _mobilePickAndUpload(folder: folder);
-  }
-
-  // ── Web: dart:html file input ─────────────────────────────────────────────
-  static Future<String?> _webPickAndUpload({required String folder}) {
-    final completer = Completer<String?>();
-    bool fileSelected = false;
-
-    final input = html.FileUploadInputElement()
-      ..accept = 'image/*'
-      ..style.display = 'none';
-
-    html.document.body?.append(input);
-
-    // ── File selected ──
-    input.onChange.listen((_) async {
-      fileSelected = true;
-      final file = (input.files?.isNotEmpty == true) ? input.files![0] : null;
-      input.remove();
-
-      if (file == null) {
-        if (!completer.isCompleted) completer.complete(null);
-        return;
-      }
-
-      try {
-        // Read bytes from file
-        final reader = html.FileReader();
-        reader.readAsArrayBuffer(file);
-        await reader.onLoad.first;
-        final bytes = Uint8List.fromList(reader.result as List<int>);
-
-        // Upload to Cloudinary
-        final url = await _uploadToCloudinary(bytes, folder: folder);
-        if (!completer.isCompleted) completer.complete(url);
-      } catch (e, st) {
-        if (!completer.isCompleted) completer.completeError(e, st);
-      }
-    });
-
-    // ── User cancelled (closed dialog without picking) ──
-    // Fallback: resolve with null after 60s if nothing happened
-    Future.delayed(const Duration(seconds: 60), () {
-      if (!completer.isCompleted && !fileSelected) {
-        completer.complete(null);
-        input.remove();
-      }
-    });
-
-    input.click();
-    return completer.future;
   }
 
   // ── Mobile: image_picker ────────────────────────────────────────────────
