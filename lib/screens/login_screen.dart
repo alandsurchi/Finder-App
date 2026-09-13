@@ -6,7 +6,13 @@ import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/social_button.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/features/auth/presentation/auth_controller.dart';
+import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/core/validation/validators.dart';
+
+/// TEMPORARY: while the backend flows are still being wired up, "Sign in"
+/// skips authentication and opens the app as a placeholder user.
+/// Set to false to restore the real login.
+const bool kDevAutoSignIn = true;
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -126,6 +132,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
+    if (kDevAutoSignIn) {
+      ref.read(authStateProvider.notifier).setAuthenticated('dev-user');
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+      }
+      return;
+    }
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text.trim();
     if (!Validators.isEmail(email)) {
