@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../models/item_model.dart';
-import 'posts_controller.dart';
 
 class PostsFilterState {
   final String category;
@@ -35,16 +33,3 @@ class PostsFilterController extends StateNotifier<PostsFilterState> {
 final postsFilterProvider = StateNotifierProvider<PostsFilterController, PostsFilterState>(
   (ref) => PostsFilterController(),
 );
-
-final filteredPostsProvider = Provider<List<ItemModel>>((ref) {
-  final filter = ref.watch(postsFilterProvider);
-  final postsState = ref.watch(postsControllerProvider);
-  final items = postsState.value ?? [];
-
-  return items.where((item) {
-    if (filter.category == 'All Items') return true;
-    if (filter.category == 'Lost') return item.isLost;
-    if (filter.category == 'Found') return !item.isLost;
-    return true;
-  }).toList();
-});

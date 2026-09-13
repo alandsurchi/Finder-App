@@ -6,6 +6,8 @@ import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/features/posts/presentation/saved_items_controller.dart';
+import 'package:finder/providers/my_posts_provider.dart';
+import 'package:finder/widgets/common/action_feedback.dart';
 
 class SavedItemsScreen extends ConsumerWidget {
   const SavedItemsScreen({super.key});
@@ -32,7 +34,7 @@ class SavedItemsScreen extends ConsumerWidget {
                   variant: LoadingVariant.list,
                 ),
                 error: (err, _) => ErrorStateWidget(
-                  message: err.toString(),
+                  message: describeError(err),
                   onRetry: () =>
                       ref.read(savedItemsProvider.notifier).loadSavedItems(),
                 ),
@@ -60,9 +62,18 @@ class SavedItemsScreen extends ConsumerWidget {
                         child: SavedCard(
                           item: item,
                           isSaved: true,
-                          onToggleSave: () => ref
-                              .read(savedItemsProvider.notifier)
-                              .toggleSaved(item),
+                          onToggleSave: () async {
+                            final result = await ref
+                                .read(savedItemsProvider.notifier)
+                                .toggleSaved(item);
+                            if (!context.mounted) return;
+                            result.fold(
+                              onSuccess: (_) => ActionFeedback.showInfo(
+                                  context, 'Removed from saved items.'),
+                              onFailure: (f) =>
+                                  ActionFeedback.showError(context, f.message),
+                            );
+                          },
                         ),
                       );
                     },

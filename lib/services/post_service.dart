@@ -1,84 +1,83 @@
-import '../core/utils/timestamp.dart';
-import '../../core/network/api_client.dart';
+import '../core/network/api_client.dart';
 import '../models/item_model.dart';
 
+/// Posts API. Every method throws a typed [AppException] on failure so the
+/// caller can show the server's message; nothing is swallowed here.
 class PostService {
   final ApiClient _apiClient;
 
   PostService({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  // Real-time stream of all posts (polling fallback)
-  Stream<List<ItemModel>> getPostsStream({String? ownerId}) async* {
-    yield await fetchItems(ownerId: ownerId);
-    yield* Stream.periodic(const Duration(seconds: 5)).asyncMap((_) => fetchItems(ownerId: ownerId));
-  }
+  static const Duration pollInterval = Duration(seconds: 5);
 
-  Future<List<ItemModel>> fetchItems({String? ownerId}) async {
-    try {
-      final queryParams = ownerId != null ? 'limit=50&ownerId=$ownerId' : 'limit=50';
-      final res = await _apiClient.get('/posts?$queryParams');
-      final itemsList = res['items'] as List<dynamic>;
-      return itemsList.map((item) {
-        final map = Map<String, dynamic>.from(item);
-        final createdAtMs = map['createdAtMs'] as int? ?? DateTime.now().millisecondsSinceEpoch;
-        map['createdAt'] = Timestamp.fromMillisecondsSinceEpoch(createdAtMs);
-        return ItemModel.fromMap(map, map['id']?.toString() ?? '');
-      }).toList();
-    } catch (_) {
-      return [];
+  /// Polls the feed. Emits an error only while there is no data yet; once
+  /// something was loaded, transient failures keep the last good list.
+  Stream<List<ItemModel>> getPostsStream({
+    String? ownerId,
+    String? status,
+    Duration interval = pollInterval,
+  }) async* {
+    List<ItemModel>? last;
+    while (true) {
+      try {
+        last = await fetchItems(ownerId: ownerId, status: status);
+        yield last;
+      } catch (e, st) {
+        if (last == null) yield* Stream<List<ItemModel>>.error(e, st);
+      }
+      await Future<void>.delayed(interval);
     }
   }
 
-  // Create a new post
-  Future<void> createPost(ItemModel post) async {
-    try {
-      final map = post.toMap();
-      map['id'] = post.id;
-      map['createdAtMs'] = post.createdAt.millisecondsSinceEpoch;
-      map.remove('createdAt'); // Not JSON-serializable
-      
-      await _apiClient.post('/posts', map);
-    } catch (e) {
-      throw Exception('Failed to create post: $e');
-    }
+  Future<List<ItemModel>> fetchItems({
+    String? ownerId,
+    String? status,
+    String? category,
+    int limit = 100,
+  }) async {
+    final query = <String, String>{'limit': '$limit'};
+    if (ownerId != null && ownerId.isNotEmpty) query['ownerId'] = ownerId;
+    if (status != null && status.isNotEmpty) query['status'] = status;
+    if (category != null && category.isNotEmpty) query['category'] = category;
+    final qs = Uri(queryParameters: query).query;
+
+    final res = await _apiClient.get('/posts?$qs');
+    final items = (res is Map ? res['items'] : res) as List<dynamic>? ?? [];
+    return items
+        .map((e) => ItemModel.fromApi(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
-  // Update a post
-  Future<void> updatePost(String id, Map<String, dynamic> data) async {
-    try {
-      await _apiClient.put('/posts/$id', data);
-    } catch (e) {
-      throw Exception('Failed to update post: $e');
-    }
+  Future<ItemModel> fetchById(String id) async {
+    final res = await _apiClient.get('/posts/$id');
+    return ItemModel.fromApi(Map<String, dynamic>.from(res as Map));
   }
 
-  // Delete a post
-  Future<void> deletePost(String id) async {
-    try {
-      await _apiClient.delete('/posts/$id');
-    } catch (e) {
-      throw Exception('Failed to delete post: $e');
-    }
+  Future<List<ItemModel>> fetchSimilar(String id) async {
+    final res = await _apiClient.get('/posts/$id/similar');
+    final list = res as List<dynamic>? ?? [];
+    return list
+        .map((e) => ItemModel.fromApi(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
-  // Mark post as resolved
-  Future<void> markAsResolved(String id) async {
-    try {
-      await _apiClient.put('/posts/$id', {'status': 'resolved'});
-    } catch (e) {
-      throw Exception('Failed to resolve post: $e');
-    }
+  Future<ItemModel> createPost(ItemModel post) async {
+    final res = await _apiClient.post('/posts', post.toApiBody());
+    return ItemModel.fromApi(Map<String, dynamic>.from(res as Map));
   }
 
-  // Report post
-  Future<void> reportPost(String postId, String reporterId, String reason) async {
-    try {
-      await _apiClient.post('/posts/$postId/report', {
-        'reporterId': reporterId,
-        'reason': reason,
-      });
-    } catch (e) {
-      throw Exception('Failed to report post: $e');
-    }
+  Future<ItemModel> updatePost(String id, Map<String, dynamic> body) async {
+    final res = await _apiClient.put('/posts/$id', body);
+    return ItemModel.fromApi(Map<String, dynamic>.from(res as Map));
   }
+
+  Future<void> deletePost(String id) => _apiClient.delete('/posts/$id');
+
+  Future<ItemModel> markAsResolved(String id) =>
+      updatePost(id, {'status': 'resolved'});
+
+  Future<ItemModel> reopen(String id) => updatePost(id, {'status': 'active'});
+
+  Future<void> reportPost(String postId, String reason) =>
+      _apiClient.post('/posts/$postId/report', {'reason': reason});
 }

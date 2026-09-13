@@ -7,6 +7,7 @@ import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/screens/edit_post_screen.dart';
 
 class MyPostsScreen extends ConsumerStatefulWidget {
@@ -84,7 +85,7 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
                   variant: LoadingVariant.rows,
                 ),
                 error: (err, _) => ErrorStateWidget(
-                  message: err.toString(),
+                  message: describeError(err),
                   onRetry: () => ref.read(myPostsProvider.notifier).load(),
                 ),
                 data: (_) {
@@ -168,6 +169,22 @@ class _PostManageCard extends ConsumerWidget {
               size: AppButtonSize.small,
               expand: false,
               onPressed: () => _confirmResolve(context, ref, post),
+            )
+          else
+            AppButton.tonal(
+              label: 'Reopen',
+              icon: Icons.replay_rounded,
+              size: AppButtonSize.small,
+              expand: false,
+              onPressed: () async {
+                final result =
+                    await ref.read(myPostsProvider.notifier).reopen(post.id);
+                if (!context.mounted) return;
+                result.fold(
+                  onSuccess: (_) => ActionFeedback.showSuccess(context, 'Post is active again.'),
+                  onFailure: (f) => ActionFeedback.showError(context, f.message),
+                );
+              },
             ),
           AppIconButton(
             icon: Icons.delete_outline_rounded,
@@ -198,9 +215,15 @@ class _PostManageCard extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              ref.read(myPostsProvider.notifier).markResolved(post.id);
+              final result =
+                  await ref.read(myPostsProvider.notifier).markResolved(post.id);
+              if (!context.mounted) return;
+              result.fold(
+                onSuccess: (_) => ActionFeedback.showSuccess(context, 'Marked as resolved.'),
+                onFailure: (f) => ActionFeedback.showError(context, f.message),
+              );
             },
             child: const Text('Resolve'),
           ),
@@ -228,9 +251,15 @@ class _PostManageCard extends ConsumerWidget {
               backgroundColor: t.error,
               foregroundColor: t.onError,
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              ref.read(myPostsProvider.notifier).deletePost(post.id);
+              final result =
+                  await ref.read(myPostsProvider.notifier).deletePost(post.id);
+              if (!context.mounted) return;
+              result.fold(
+                onSuccess: (_) => ActionFeedback.showSuccess(context, 'Post deleted.'),
+                onFailure: (f) => ActionFeedback.showError(context, f.message),
+              );
             },
             child: const Text('Delete'),
           ),

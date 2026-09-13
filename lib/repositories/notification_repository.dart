@@ -4,5 +4,7 @@ import '../models/notification_model.dart';
 abstract class NotificationRepository {
   Future<Result<List<NotificationModel>>> getNotifications();
 
-  Future<Result<List<NotificationModel>>> markAsRead(int index);
+  Future<Result<void>> markAsRead(String id);
+
+  Future<Result<void>> markAllRead();
 }

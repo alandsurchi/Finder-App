@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:finder/theme/app_color_tokens.dart';
-import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/screens/search_screen.dart';
 import 'package:finder/screens/create_post_screen.dart';
@@ -15,6 +13,8 @@ import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/providers/post_provider.dart';
 import 'package:finder/features/posts/presentation/posts_filter.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
+import 'package:finder/features/notifications/presentation/notifications_controller.dart';
+import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/core/constants/app_categories.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -154,13 +154,14 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
             // ── Scrollable posts ─────────────────────────────────────────────
             Expanded(
               child: postsStream.when(
+                skipError: true,
                 loading: () => const LoadingWidget(
                   message: 'Loading posts...',
                   variant: LoadingVariant.list,
                 ),
                 error: (err, _) => ErrorStateWidget(
-                  message: err.toString(),
-                  onRetry: () => ref.refresh(postsStreamProvider),
+                  message: describeError(err),
+                  onRetry: () => ref.invalidate(postsStreamProvider),
                 ),
                 data: (allPosts) {
                   final items = allPosts.where((p) {
@@ -242,14 +243,8 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
               ),
             ),
           ),
-          AppIconButton(
-            icon: Icons.notifications_none_rounded,
-            tooltip: 'Notifications',
-            variant: AppIconButtonVariant.glass,
-            size: 48,
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.notifications);
-            },
+          _NotificationBell(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
           ),
         ],
       ),
@@ -288,6 +283,61 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
   String _categoryLabel(String category) {
     if (category == 'All Items') return 'All';
     return category;
+  }
+}
+
+/// Bell with an unread count badge.
+class _NotificationBell extends ConsumerWidget {
+  final VoidCallback onPressed;
+  const _NotificationBell({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    final unread = ref.watch(unreadNotificationsCountProvider);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        AppIconButton(
+          icon: unread > 0
+              ? Icons.notifications_active_outlined
+              : Icons.notifications_none_rounded,
+          tooltip: unread > 0
+              ? 'Notifications, $unread unread'
+              : 'Notifications',
+          variant: AppIconButtonVariant.glass,
+          size: 48,
+          onPressed: onPressed,
+        ),
+        if (unread > 0)
+          Positioned(
+            right: -2,
+            top: -2,
+            child: IgnorePointer(
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 20),
+                height: 20,
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                decoration: BoxDecoration(
+                  color: t.lost,
+                  borderRadius: BeaconRadius.rPill,
+                  border: Border.all(color: t.bg, width: 2),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  unread > 99 ? '99+' : '$unread',
+                  style: text.labelSmall?.copyWith(
+                    color: t.onLost,
+                    fontSize: 10,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 

@@ -1,4 +1,4 @@
-enum NotificationType { itemMatch, newMessage, postApproved, system }
+enum NotificationType { itemMatch, newMessage, postApproved, update, system }
 
 class NotificationModel {
   final String id;
@@ -16,6 +16,24 @@ class NotificationModel {
     this.isUnread = false,
     required this.type,
   });
+
+  /// Backend `type` values: match, message, update, system.
+  static NotificationType typeFromApi(String? raw) {
+    switch (raw) {
+      case 'match':
+      case 'itemMatch':
+        return NotificationType.itemMatch;
+      case 'message':
+      case 'newMessage':
+        return NotificationType.newMessage;
+      case 'update':
+        return NotificationType.update;
+      case 'postApproved':
+        return NotificationType.postApproved;
+      default:
+        return NotificationType.system;
+    }
+  }
 
   NotificationModel copyWith({
     String? id,

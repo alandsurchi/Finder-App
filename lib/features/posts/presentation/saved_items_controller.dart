@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/di/app_providers.dart';
+import '../../../core/utils/result.dart';
 import '../../../models/item_model.dart';
 
+/// The user's bookmarked posts. Toggling is optimistic: the list updates at
+/// once and is rolled back if the server rejects the change.
 class SavedItemsController extends StateNotifier<AsyncValue<List<ItemModel>>> {
   final Ref ref;
 
@@ -18,17 +21,27 @@ class SavedItemsController extends StateNotifier<AsyncValue<List<ItemModel>>> {
     );
   }
 
-  Future<void> toggleSaved(ItemModel item) async {
-    final current = List<ItemModel>.from(state.value ?? []);
-    final exists = current.any((i) => i.id == item.id);
-    if (exists) {
-      current.removeWhere((i) => i.id == item.id);
-    } else {
-      current.add(item);
-    }
+  bool isSaved(String postId) =>
+      (state.value ?? const []).any((i) => i.id == postId);
+
+  /// Returns the new saved state on success.
+  Future<Result<bool>> toggleSaved(ItemModel item) async {
+    final before = List<ItemModel>.from(state.value ?? []);
+    final wasSaved = before.any((i) => i.id == item.id);
+    final after = wasSaved
+        ? before.where((i) => i.id != item.id).toList()
+        : [item, ...before];
+    state = AsyncValue.data(after);
+
     final repo = ref.read(savedItemsRepositoryProvider);
-    await repo.updateSavedItems(current);
-    state = AsyncValue.data(current);
+    final result = await repo.setSaved(item.id, !wasSaved);
+    return result.fold(
+      onSuccess: (_) => Result.success(!wasSaved),
+      onFailure: (failure) {
+        state = AsyncValue.data(before);
+        return Result.failure(failure);
+      },
+    );
   }
 }
 

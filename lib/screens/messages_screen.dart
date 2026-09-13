@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:finder/widgets/common/action_feedback.dart';
+import 'package:finder/features/chat/presentation/open_chat.dart';
+import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/widgets/cards/conversation_card.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/providers/chat_provider.dart';
+import 'package:finder/widgets/sheets/user_search_sheet.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
@@ -30,6 +32,22 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
     super.dispose();
   }
 
+  Future<void> _newChat() async {
+    final user = await showUserSearchSheet(
+      context,
+      title: 'New conversation',
+      actionLabel: 'Message',
+    );
+    if (user == null || !mounted) return;
+    await openChatWith(
+      context,
+      ref,
+      peerId: user.uid,
+      peerName: user.displayName,
+      peerAvatarUrl: user.avatarUrl,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final conversationsState = ref.watch(conversationsStreamProvider);
@@ -43,8 +61,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
       floatingActionButton: Padding(
         padding: EdgeInsets.only(bottom: CustomBottomNavBar.totalHeight(context) - 8),
         child: FloatingActionButton.extended(
-          onPressed: () =>
-              ActionFeedback.showComingSoon(context, feature: 'New conversation'),
+          onPressed: _newChat,
           icon: const Icon(Icons.edit_outlined),
           label: const Text('New chat'),
         ),
@@ -70,7 +87,6 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                 ),
               ),
 
-              // ── Search bar
               StaggeredEntrance(
                 index: 1,
                 child: Padding(
@@ -85,31 +101,38 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
 
               const SizedBox(height: BeaconSpace.lg),
 
-              // ── List
               Expanded(
                 child: conversationsState.when(
+                  skipError: true,
                   loading: () => const LoadingWidget(
                     message: 'Loading conversations...',
                     variant: LoadingVariant.rows,
                   ),
-                  error: (err, _) => ErrorStateWidget(message: err.toString()),
+                  error: (err, _) => ErrorStateWidget(
+                    message: describeError(err),
+                    onRetry: () => ref.invalidate(conversationsStreamProvider),
+                  ),
                   data: (items) {
                     final filteredItems = _query.isEmpty
                         ? items
                         : items.where((c) {
                             final q = _query.toLowerCase();
-                            // In the future, c.name will be resolved asynchronously.
-                            // For now, if we don't have it, we just use empty string.
                             return c.name.toLowerCase().contains(q) ||
-                                   c.message.toLowerCase().contains(q);
+                                c.itemName.toLowerCase().contains(q) ||
+                                c.message.toLowerCase().contains(q);
                           }).toList();
 
                     if (filteredItems.isEmpty) {
-                      return const EmptyWidget(
+                      return EmptyWidget(
                         icon: Icons.forum_outlined,
-                        title: 'No conversations found',
-                        subtitle:
-                            'Messages will appear here once you start chatting.',
+                        title: _query.isEmpty
+                            ? 'No conversations yet'
+                            : 'No conversations found',
+                        subtitle: _query.isEmpty
+                            ? 'Contact an owner or finder from any post, or start a new chat.'
+                            : 'Try another name or keyword.',
+                        actionLabel: _query.isEmpty ? 'New chat' : null,
+                        onAction: _query.isEmpty ? _newChat : null,
                       );
                     }
                     return ListView.builder(

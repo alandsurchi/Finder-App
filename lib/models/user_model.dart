@@ -10,6 +10,8 @@ class UserModel {
   final String address;
   final String job;
   final String avatarUrl;
+  final bool identityVerified;
+  final int postsCount;
 
   UserModel({
     required this.uid,
@@ -21,19 +23,41 @@ class UserModel {
     this.address = '',
     this.job = '',
     this.avatarUrl = '',
+    this.identityVerified = false,
+    this.postsCount = 0,
   });
+
+  String get displayName {
+    if (fullName.trim().isNotEmpty) return fullName.trim();
+    if (nickName.trim().isNotEmpty) return nickName.trim();
+    return 'Finder User';
+  }
 
   factory UserModel.empty() {
     return UserModel(
       uid: '',
       email: '',
       createdAt: Timestamp.now(),
-      fullName: '',
-      nickName: '',
-      phone: '',
-      address: '',
-      job: '',
-      avatarUrl: '',
+    );
+  }
+
+  /// Builds a user from `/profile`, `/profile/:id` or `/auth/me` responses.
+  factory UserModel.fromApi(Map<String, dynamic> map) {
+    final createdAtMs = (map['createdAtMs'] as num?)?.toInt() ??
+        (map['memberSinceMs'] as num?)?.toInt() ??
+        DateTime.now().millisecondsSinceEpoch;
+    return UserModel(
+      uid: map['uid']?.toString() ?? '',
+      email: map['email']?.toString() ?? '',
+      fullName: map['fullName']?.toString() ?? '',
+      nickName: map['nickName']?.toString() ?? '',
+      phone: map['phone']?.toString() ?? '',
+      address: map['address']?.toString() ?? '',
+      job: map['job']?.toString() ?? '',
+      avatarUrl: map['avatarUrl']?.toString() ?? '',
+      identityVerified: map['identityVerified'] == true,
+      postsCount: (map['postsCount'] as num?)?.toInt() ?? 0,
+      createdAt: Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
     );
   }
 
@@ -48,6 +72,8 @@ class UserModel {
       address: map['address'] ?? '',
       job: map['job'] ?? '',
       avatarUrl: map['avatarUrl'] ?? '',
+      identityVerified: map['identityVerified'] ?? false,
+      postsCount: map['postsCount'] ?? 0,
     );
   }
 
@@ -62,6 +88,8 @@ class UserModel {
       'address': address,
       'job': job,
       'avatarUrl': avatarUrl,
+      'identityVerified': identityVerified,
+      'postsCount': postsCount,
     };
   }
 
@@ -75,6 +103,8 @@ class UserModel {
     String? address,
     String? job,
     String? avatarUrl,
+    bool? identityVerified,
+    int? postsCount,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -86,6 +116,8 @@ class UserModel {
       address: address ?? this.address,
       job: job ?? this.job,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      identityVerified: identityVerified ?? this.identityVerified,
+      postsCount: postsCount ?? this.postsCount,
     );
   }
 }

@@ -6,11 +6,13 @@ class NotificationStyleResolver {
   static Color resolveIconColor(NotificationModel n, AppColorTokens t) {
     switch (n.type) {
       case NotificationType.itemMatch:
-        return t.success;
+        return t.accent;
       case NotificationType.newMessage:
         return t.primary;
       case NotificationType.postApproved:
         return t.warning;
+      case NotificationType.update:
+        return t.found;
       case NotificationType.system:
         return t.onSurfaceMuted;
     }
@@ -19,13 +21,15 @@ class NotificationStyleResolver {
   static IconData resolveIcon(NotificationModel n) {
     switch (n.type) {
       case NotificationType.itemMatch:
-        return Icons.check_circle_outline;
+        return Icons.radar_rounded;
       case NotificationType.newMessage:
-        return Icons.chat_bubble_outline;
+        return Icons.chat_bubble_outline_rounded;
       case NotificationType.postApproved:
         return Icons.verified_outlined;
+      case NotificationType.update:
+        return Icons.task_alt_rounded;
       case NotificationType.system:
-        return Icons.info_outline;
+        return Icons.info_outline_rounded;
     }
   }
 }

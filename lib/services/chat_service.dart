@@ -1,108 +1,90 @@
 import '../core/utils/timestamp.dart';
-import '../../core/network/api_client.dart';
+import '../core/network/api_client.dart';
 import '../models/conversation_model.dart';
 import '../features/chat/domain/message.dart';
 
+/// Chats API. Methods throw typed exceptions; the polling streams keep the
+/// last good value once something was loaded.
 class ChatService {
   final ApiClient _apiClient;
 
   ChatService({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  String generateChatId(String userA, String userB, String postId) {
-    if (userA.compareTo(userB) < 0) {
-      return '${postId}_${userA}_$userB';
-    } else {
-      return '${postId}_${userB}_$userA';
-    }
+  static const Duration conversationsInterval = Duration(seconds: 4);
+  static const Duration messagesInterval = Duration(seconds: 3);
+
+  /// Opens (or returns) the conversation with [peerId]. With a [postId] the
+  /// chat is tied to that item; without one it is a direct chat.
+  Future<String> createOrGetChat({
+    required String peerId,
+    String? postId,
+    String? itemName,
+  }) async {
+    final res = await _apiClient.post('/chats/initiate', {
+      'peerId': peerId,
+      if (postId != null && postId.isNotEmpty) 'postId': postId,
+      if (itemName != null && itemName.isNotEmpty) 'itemName': itemName,
+    });
+    return (res as Map)['chatId'].toString();
   }
 
-  Future<String> createOrGetChat(String currentUserId, String peerId, String postId, String itemName) async {
-    try {
-      final res = await _apiClient.post('/chats/initiate', {
-        'peerId': peerId,
-        'postId': postId,
-        'itemName': itemName,
-      });
-      return res['chatId'] as String;
-    } catch (e) {
-      throw Exception('Failed to initiate chat: $e');
-    }
-  }
-
-  Future<void> sendMessage(String chatId, String senderId, String text) async {
-    try {
-      await _apiClient.post('/chats/$chatId/messages', {
-        'text': text,
-      });
-    } catch (e) {
-      throw Exception('Failed to send message: $e');
-    }
+  /// Sends a text and/or image message and returns the stored message.
+  Future<Message> sendMessage(
+    String chatId, {
+    String? text,
+    String? imageUrl,
+  }) async {
+    final res = await _apiClient.post('/chats/$chatId/messages', {
+      if (text != null && text.trim().isNotEmpty) 'text': text.trim(),
+      if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+    });
+    return Message.fromApi(Map<String, dynamic>.from(res as Map));
   }
 
   Stream<List<ConversationModel>> getConversationsStream(String userId) async* {
-    yield await _fetchConversations(userId);
-    yield* Stream.periodic(const Duration(seconds: 4)).asyncMap((_) => _fetchConversations(userId));
-  }
-
-  Future<List<ConversationModel>> _fetchConversations(String userId) async {
-    try {
-      final res = await _apiClient.get('/chats');
-      final list = res as List<dynamic>;
-      return list.map((item) {
-        final map = Map<String, dynamic>.from(item);
-        final id = map['id']?.toString() ?? '';
-        
-        // Map backend properties back to format expected by fromMap
-        final resolvedMap = {
-          'postId': map['postId'],
-          'participants': map['participants'],
-          'participantNames': map['participantNames'],
-          'participantAvatars': map['participantAvatars'],
-          'lastMessage': map['lastMessageText'],
-          'lastMessageSenderId': map['lastSenderId'],
-          'lastUpdatedAt': Timestamp.fromMillisecondsSinceEpoch(map['updatedAtMs'] as int? ?? DateTime.now().millisecondsSinceEpoch),
-          'createdAt': Timestamp.now(),
-          'unreadCount': (map['unreadCounts'] as Map?)?[userId] ?? 0,
-          'itemName': map['itemName'],
-        };
-        
-        return ConversationModel.fromMap(resolvedMap, id, userId);
-      }).toList();
-    } catch (_) {
-      return [];
+    List<ConversationModel>? last;
+    while (true) {
+      try {
+        last = await fetchConversations(userId);
+        yield last;
+      } catch (e, st) {
+        if (last == null) yield* Stream<List<ConversationModel>>.error(e, st);
+      }
+      await Future<void>.delayed(conversationsInterval);
     }
   }
 
-  Stream<List<Message>> getMessagesStream(String chatId) async* {
-    yield await _fetchMessages(chatId);
-    yield* Stream.periodic(const Duration(seconds: 3)).asyncMap((_) => _fetchMessages(chatId));
+  Future<List<ConversationModel>> fetchConversations(String userId) async {
+    final res = await _apiClient.get('/chats');
+    final list = res as List<dynamic>? ?? [];
+    return list.map((item) {
+      final map = Map<String, dynamic>.from(item as Map);
+      final id = map['id']?.toString() ?? '';
+      final updatedAtMs = (map['updatedAtMs'] as num?)?.toInt() ??
+          DateTime.now().millisecondsSinceEpoch;
+      final resolvedMap = {
+        'postId': map['postId'],
+        'participants': map['participants'],
+        'participantNames': map['participantNames'],
+        'participantAvatars': map['participantAvatars'],
+        'lastMessage': map['lastMessageText'],
+        'lastMessageSenderId': map['lastSenderId'],
+        'lastUpdatedAt': Timestamp.fromMillisecondsSinceEpoch(updatedAtMs),
+        'createdAt': Timestamp.fromMillisecondsSinceEpoch(updatedAtMs),
+        'unreadCount': (map['unreadCounts'] as Map?)?[userId] ?? 0,
+        'itemName': map['itemName'],
+      };
+      return ConversationModel.fromMap(resolvedMap, id, userId);
+    }).toList();
   }
 
-  Future<List<Message>> _fetchMessages(String chatId) async {
-    try {
-      final res = await _apiClient.get('/chats/$chatId/messages?limit=50');
-      final itemsList = res['items'] as List<dynamic>;
-      
-      // Reverse list to display oldest first (as messagesStream expects ascending order)
-      final reversedList = List.from(itemsList.reversed);
-      
-      return reversedList.map((item) {
-        final map = Map<String, dynamic>.from(item);
-        final id = map['id']?.toString() ?? '';
-        final createdAtMs = map['createdAtMs'] as int? ?? DateTime.now().millisecondsSinceEpoch;
-        
-        final resolvedMap = {
-          'senderId': map['senderId'],
-          'receiverId': '', // Optional
-          'text': map['text'],
-          'createdAt': Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
-          'isRead': map['isRead'] as bool? ?? false,
-        };
-        
-        return Message.fromMap(resolvedMap, id);
-      }).toList();
-    } catch (_) {
-      return [];
-    }
+  /// Oldest first.
+  Future<List<Message>> fetchMessages(String chatId, {int limit = 100}) async {
+    final res = await _apiClient.get('/chats/$chatId/messages?limit=$limit');
+    final items = (res is Map ? res['items'] : res) as List<dynamic>? ?? [];
+    final messages = items
+        .map((e) => Message.fromApi(Map<String, dynamic>.from(e as Map)))
+        .toList();
+    return messages.reversed.toList();
   }
 }

@@ -4,7 +4,8 @@ class ConversationModel {
   final String chatId;
   final String postId;
   final List<String> participants;
-  final String name; // Peer's name, resolved later
+  final String name; // Peer's display name
+  final String peerId;
   final String message;
   final String lastMessageSenderId;
   final Timestamp lastUpdatedAt;
@@ -20,6 +21,7 @@ class ConversationModel {
     required this.postId,
     required this.participants,
     this.name = '',
+    this.peerId = '',
     required this.message,
     required this.lastMessageSenderId,
     required this.lastUpdatedAt,
@@ -34,28 +36,29 @@ class ConversationModel {
   factory ConversationModel.fromMap(Map<String, dynamic> map, String id, String currentUserId) {
     final participantsList = List<String>.from(map['participants'] ?? []);
     final otherUserId = participantsList.firstWhere(
-      (p) => p != currentUserId, 
-      orElse: () => currentUserId
+      (p) => p != currentUserId,
+      orElse: () => currentUserId,
     );
-    
+
     final namesMap = Map<String, dynamic>.from(map['participantNames'] ?? {});
     final avatarsMap = Map<String, dynamic>.from(map['participantAvatars'] ?? {});
-    
+
     final resolvedName = namesMap[otherUserId]?.toString() ?? 'Finder User';
     final resolvedAvatar = avatarsMap[otherUserId]?.toString() ?? '';
 
     return ConversationModel(
       chatId: id,
-      postId: map['postId'] ?? '',
+      postId: map['postId']?.toString() ?? '',
       participants: participantsList,
       name: resolvedName,
+      peerId: otherUserId == currentUserId ? '' : otherUserId,
       avatarUrl: resolvedAvatar,
-      message: map['lastMessage'] ?? '',
-      lastMessageSenderId: map['lastMessageSenderId'] ?? '',
+      message: map['lastMessage']?.toString() ?? '',
+      lastMessageSenderId: map['lastMessageSenderId']?.toString() ?? '',
       lastUpdatedAt: map['lastUpdatedAt'] ?? Timestamp.now(),
       createdAt: map['createdAt'] ?? Timestamp.now(),
-      unreadCount: map['unreadCount'] ?? 0,
-      itemName: map['itemName'] ?? '', // optional, if we want to store it
+      unreadCount: (map['unreadCount'] as num?)?.toInt() ?? 0,
+      itemName: map['itemName']?.toString() ?? '',
     );
   }
 

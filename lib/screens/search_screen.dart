@@ -53,7 +53,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       imagePath: item.imagePath,
       isLost: item.isLost,
       category: item.category,
-      hasReward: item.reward != null && item.reward!.isNotEmpty,
+      hasReward: item.hasReward,
       isVerified: item.isVerified,
       reportedAt: item.createdAt.toDate(),
       item: item,

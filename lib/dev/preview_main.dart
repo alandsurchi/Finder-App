@@ -21,7 +21,12 @@ import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/app/router/app_router.dart';
 import 'package:finder/app/router/route_names.dart';
 import 'package:finder/core/network/api_client.dart';
+import 'package:finder/core/utils/result.dart';
 import 'package:finder/core/utils/timestamp.dart';
+import 'package:finder/features/profile/domain/notification_settings.dart';
+import 'package:finder/features/profile/domain/verification_status.dart';
+import 'package:finder/features/profile/presentation/notification_settings_controller.dart';
+import 'package:finder/features/profile/presentation/verification_controller.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/features/chat/domain/message.dart';
 import 'package:finder/features/notifications/presentation/notifications_controller.dart';
@@ -224,8 +229,10 @@ class _PreviewProfile extends ProfileController {
   @override
   Future<void> loadProfile() async => state = AsyncValue.data(sampleUser);
   @override
-  Future<void> updateProfile(UserModel profile) async =>
-      state = AsyncValue.data(profile);
+  Future<Result<UserModel>> updateProfile(UserModel profile) async {
+    state = AsyncValue.data(profile);
+    return Result.success(profile);
+  }
 }
 
 class _PreviewSaved extends SavedItemsController {
@@ -234,29 +241,39 @@ class _PreviewSaved extends SavedItemsController {
   Future<void> loadSavedItems() async =>
       state = AsyncValue.data([samplePosts[1], samplePosts[3]]);
   @override
-  Future<void> toggleSaved(ItemModel item) async {
+  Future<Result<bool>> toggleSaved(ItemModel item) async {
     final current = List<ItemModel>.from(state.value ?? []);
-    if (current.any((i) => i.id == item.id)) {
+    final wasSaved = current.any((i) => i.id == item.id);
+    if (wasSaved) {
       current.removeWhere((i) => i.id == item.id);
     } else {
       current.add(item);
     }
     state = AsyncValue.data(current);
+    return Result.success(!wasSaved);
   }
 }
 
 class _PreviewNotifications extends NotificationsController {
   _PreviewNotifications(super.ref);
   @override
-  Future<void> loadNotifications() async =>
+  Future<void> loadNotifications({bool silent = false}) async =>
       state = AsyncValue.data(sampleNotifications);
   @override
-  Future<void> markAsRead(int index) async {
-    final list = List<NotificationModel>.from(state.value ?? []);
-    if (index >= 0 && index < list.length) {
-      list[index] = list[index].copyWith(isUnread: false);
-    }
-    state = AsyncValue.data(list);
+  Future<Result<void>> markAsRead(String id) async {
+    state = AsyncValue.data([
+      for (final n in state.value ?? <NotificationModel>[])
+        n.id == id ? n.copyWith(isUnread: false) : n,
+    ]);
+    return Result.success(null);
+  }
+
+  @override
+  Future<Result<void>> markAllRead() async {
+    state = AsyncValue.data([
+      for (final n in state.value ?? <NotificationModel>[]) n.copyWith(isUnread: false),
+    ]);
+    return Result.success(null);
   }
 }
 
@@ -266,37 +283,80 @@ class _PreviewMyPosts extends MyPostsNotifier {
   Future<void> load() async => state = AsyncValue.data(
       samplePosts.where((p) => p.ownerId == kPreviewUserId).toList());
   @override
-  Future<void> deletePost(String postId) async => state = AsyncValue.data(
-      (state.value ?? []).where((p) => p.id != postId).toList());
-  @override
-  Future<void> markResolved(String postId) async {
-    state = AsyncValue.data((state.value ?? []).map((p) {
-      if (p.id != postId) return p;
-      return ItemModel(
-        id: p.id,
-        ownerId: p.ownerId,
-        title: p.title,
-        description: p.description,
-        createdAt: p.createdAt,
-        location: p.location,
-        timeAgo: p.timeAgo,
-        imagePath: p.imagePath,
-        isLost: p.isLost,
-        reward: p.reward,
-        isVerified: p.isVerified,
-        category: p.category,
-        lostOn: p.lostOn,
-        lastSeenAt: p.lastSeenAt,
-        ownerName: p.ownerName,
-        ownerTrustScore: p.ownerTrustScore,
-        isResolved: true,
-      );
-    }).toList());
+  Future<Result<void>> deletePost(String postId) async {
+    state = AsyncValue.data((state.value ?? []).where((p) => p.id != postId).toList());
+    return Result.success(null);
   }
 
   @override
-  Future<void> updatePost(ItemModel updated) async => state = AsyncValue.data(
-      (state.value ?? []).map((p) => p.id == updated.id ? updated : p).toList());
+  Future<Result<void>> markResolved(String postId) async {
+    state = AsyncValue.data([
+      for (final p in state.value ?? <ItemModel>[])
+        p.id == postId ? p.copyWith(isResolved: true) : p,
+    ]);
+    return Result.success(null);
+  }
+
+  @override
+  Future<Result<void>> reopen(String postId) async {
+    state = AsyncValue.data([
+      for (final p in state.value ?? <ItemModel>[])
+        p.id == postId ? p.copyWith(isResolved: false) : p,
+    ]);
+    return Result.success(null);
+  }
+
+  @override
+  Future<Result<ItemModel>> updatePost(ItemModel updated) async {
+    state = AsyncValue.data(
+        (state.value ?? []).map((p) => p.id == updated.id ? updated : p).toList());
+    return Result.success(updated);
+  }
+}
+
+class _PreviewChat extends ChatMessagesController {
+  _PreviewChat(super.ref, super.chatId);
+  @override
+  Future<void> load() async {
+    if (!state.hasValue) state = AsyncValue.data(List.of(sampleMessages));
+  }
+
+  @override
+  Future<Result<Message>> send({String? text, String? imageUrl}) async {
+    final m = Message(
+      messageId: 'local-${DateTime.now().millisecondsSinceEpoch}',
+      senderId: kPreviewUserId,
+      text: text ?? '',
+      imageUrl: imageUrl ?? '',
+      createdAt: Timestamp.now(),
+    );
+    state = AsyncValue.data([...(state.value ?? []), m]);
+    return Result.success(m);
+  }
+}
+
+class _PreviewNotificationSettings extends NotificationSettingsController {
+  _PreviewNotificationSettings(super.ref);
+  @override
+  Future<void> load() async =>
+      state = const AsyncValue.data(NotificationSettings.defaults);
+  @override
+  Future<Result<NotificationSettings>> update(NotificationSettings next) async {
+    state = AsyncValue.data(next);
+    return Result.success(next);
+  }
+}
+
+class _PreviewVerification extends VerificationController {
+  _PreviewVerification(super.ref);
+  @override
+  Future<void> load() async => state = const AsyncValue.data(VerificationStatus.none);
+  @override
+  Future<Result<VerificationStatus>> submit(VerificationRequest request) async {
+    const pending = VerificationStatus(state: VerificationState.pending, docType: 'passport');
+    state = const AsyncValue.data(pending);
+    return Result.success(pending);
+  }
 }
 
 class _PreviewPrivacy extends PrivacySettingsController {
@@ -305,8 +365,10 @@ class _PreviewPrivacy extends PrivacySettingsController {
   Future<void> loadSettings() async => state = const AsyncValue.data(
       PrivacySettings(showProfile: true, allowMessages: true, showLocation: false, hidePhone: true));
   @override
-  Future<void> updateSettings(PrivacySettings settings) async =>
-      state = AsyncValue.data(settings);
+  Future<Result<PrivacySettings>> updateSettings(PrivacySettings settings) async {
+    state = AsyncValue.data(settings);
+    return Result.success(settings);
+  }
 }
 
 class _PreviewBlocked extends BlockedUsersController {
@@ -316,8 +378,10 @@ class _PreviewBlocked extends BlockedUsersController {
         BlockedUser(id: 'b1', name: 'Spam Account', avatarLabel: 'SA'),
       ]);
   @override
-  Future<void> unblockUser(String userId) async => state = AsyncValue.data(
-      (state.value ?? []).where((u) => u.id != userId).toList());
+  Future<Result<void>> unblockUser(String userId) async {
+    state = AsyncValue.data((state.value ?? []).where((u) => u.id != userId).toList());
+    return Result.success(null);
+  }
 }
 
 class _PreviewTheme extends ThemeController {
@@ -355,8 +419,10 @@ Future<void> main() async {
         blockedUsersProvider.overrideWith((ref) => _PreviewBlocked(ref)),
         conversationsStreamProvider
             .overrideWith((ref) => Stream.value(sampleConversations)),
-        messagesStreamProvider
-            .overrideWith((ref, chatId) => Stream.value(sampleMessages)),
+        chatMessagesProvider.overrideWith((ref, chatId) => _PreviewChat(ref, chatId)),
+        notificationSettingsProvider
+            .overrideWith((ref) => _PreviewNotificationSettings(ref)),
+        verificationProvider.overrideWith((ref) => _PreviewVerification(ref)),
         userProfileProvider.overrideWith((ref, id) async =>
             id == kPreviewUserId ? sampleUser : sampleOwner(id)),
         similarItemsProvider.overrideWith(
@@ -405,7 +471,7 @@ class _PreviewLauncherState extends State<_PreviewLauncher> {
       Object? args;
       if (route == RouteNames.itemDetails) args = samplePosts.first;
       if (route == RouteNames.chat) {
-        args = {'chatId': 'c1', 'userName': 'Sarah Ahmed', 'itemName': 'Brown leather wallet'};
+        args = {'chatId': 'c1', 'userName': 'Sarah Ahmed', 'itemName': 'Brown leather wallet', 'peerId': 'u-sarah', 'postId': 'p1'};
       }
       if (route == RouteNames.forgotPassword) args = 'alex@example.com';
       Navigator.of(context).pushNamed(route, arguments: args);

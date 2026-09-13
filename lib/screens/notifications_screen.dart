@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/models/notification_model.dart';
+import 'package:finder/providers/my_posts_provider.dart';
+import 'package:finder/routes.dart';
+import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/items/notification_item.dart';
 import 'package:finder/features/notifications/presentation/notifications_controller.dart';
 import 'package:finder/features/notifications/presentation/notification_style_resolver.dart';
@@ -15,11 +19,7 @@ class NotificationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppColorTokens.of(context);
     final notificationsState = ref.watch(notificationsControllerProvider);
-
-    final unreadCount = notificationsState.value
-            ?.where((n) => n.isUnread)
-            .length ??
-        0;
+    final unreadCount = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -35,17 +35,15 @@ class NotificationsScreen extends ConsumerWidget {
                   AppButton.ghost(
                     label: 'Mark all read',
                     size: AppButtonSize.small,
-                    onPressed: () {
-                      final notifs = ref
-                          .read(notificationsControllerProvider)
-                          .value ?? [];
-                      for (var i = 0; i < notifs.length; i++) {
-                        if (notifs[i].isUnread) {
-                          ref
-                              .read(notificationsControllerProvider.notifier)
-                              .markAsRead(i);
-                        }
-                      }
+                    onPressed: () async {
+                      final result = await ref
+                          .read(notificationsControllerProvider.notifier)
+                          .markAllRead();
+                      if (!context.mounted) return;
+                      result.fold(
+                        onSuccess: (_) {},
+                        onFailure: (f) => ActionFeedback.showError(context, f.message),
+                      );
                     },
                   ),
                 AppIconButton(
@@ -64,7 +62,7 @@ class NotificationsScreen extends ConsumerWidget {
                   variant: LoadingVariant.rows,
                 ),
                 error: (err, _) => ErrorStateWidget(
-                  message: err.toString(),
+                  message: describeError(err),
                   onRetry: () => ref
                       .read(notificationsControllerProvider.notifier)
                       .loadNotifications(),
@@ -78,36 +76,40 @@ class NotificationsScreen extends ConsumerWidget {
                           'You will hear from us when someone messages you, your post gets activity, or an item is resolved.',
                     );
                   }
-                  return ListView.builder(
-                    padding: EdgeInsets.fromLTRB(
-                      BeaconSpace.page,
-                      BeaconSpace.xs,
-                      BeaconSpace.page,
-                      BeaconSpace.xxxl + MediaQuery.paddingOf(context).bottom,
-                    ),
-                    itemCount: notifications.length,
-                    itemBuilder: (context, index) {
-                      final n = notifications[index];
-                      final displayColor =
-                          NotificationStyleResolver.resolveIconColor(n, t);
-                      final icon = NotificationStyleResolver.resolveIcon(n);
+                  return RefreshIndicator(
+                    onRefresh: () => ref
+                        .read(notificationsControllerProvider.notifier)
+                        .loadNotifications(),
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        BeaconSpace.page,
+                        BeaconSpace.xs,
+                        BeaconSpace.page,
+                        BeaconSpace.xxxl + MediaQuery.paddingOf(context).bottom,
+                      ),
+                      itemCount: notifications.length,
+                      itemBuilder: (context, index) {
+                        final n = notifications[index];
+                        final displayColor =
+                            NotificationStyleResolver.resolveIconColor(n, t);
+                        final icon = NotificationStyleResolver.resolveIcon(n);
 
-                      return StaggeredEntrance(
-                        index: index.clamp(0, 8),
-                        baseDelay: const Duration(milliseconds: 35),
-                        child: NotificationItem(
-                          title: n.title,
-                          message: n.message,
-                          timeAgo: n.timeAgo,
-                          isUnread: n.isUnread,
-                          icon: icon,
-                          iconColor: displayColor,
-                          onTap: () => ref
-                              .read(notificationsControllerProvider.notifier)
-                              .markAsRead(index),
-                        ),
-                      );
-                    },
+                        return StaggeredEntrance(
+                          index: index.clamp(0, 8),
+                          baseDelay: const Duration(milliseconds: 35),
+                          child: NotificationItem(
+                            title: n.title,
+                            message: n.message,
+                            timeAgo: n.timeAgo,
+                            isUnread: n.isUnread,
+                            icon: icon,
+                            iconColor: displayColor,
+                            onTap: () => _open(context, ref, n),
+                          ),
+                        );
+                      },
+                    ),
                   );
                 },
               ),
@@ -116,5 +118,12 @@ class NotificationsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _open(BuildContext context, WidgetRef ref, NotificationModel n) {
+    ref.read(notificationsControllerProvider.notifier).markAsRead(n.id);
+    if (n.type == NotificationType.newMessage) {
+      Navigator.pushNamed(context, AppRoutes.messages);
+    }
   }
 }

@@ -12,7 +12,6 @@ class AppRoutes {
   static const String editProfile = RouteNames.editProfile;
   static const String getVerified = RouteNames.getVerified;
   static const String helpSupport = RouteNames.helpSupport;
-  static const String managePost = RouteNames.managePost;
   static const String messages = RouteNames.messages;
   static const String myPosts = RouteNames.myPosts;
   static const String notificationSettings = RouteNames.notificationSettings;

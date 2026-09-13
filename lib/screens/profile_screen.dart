@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/screens/edit_profile_screen.dart';
 import 'package:finder/screens/my_posts_screen.dart';
@@ -13,9 +14,9 @@ import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/theme/theme_provider.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/features/auth/presentation/auth_controller.dart';
+import 'package:finder/features/posts/presentation/saved_items_controller.dart';
 import 'package:finder/models/user_model.dart';
-import 'package:finder/features/auth/presentation/auth_state_provider.dart';
-import 'package:finder/providers/post_provider.dart';
+import 'package:finder/providers/my_posts_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -28,9 +29,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Refresh profile every time we visit this screen
+    // Refresh silently every time the tab opens; the shared copy is kept.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(profileControllerProvider.notifier).loadProfile();
+      ref.read(myPostsProvider.notifier).load();
     });
   }
 
@@ -57,11 +59,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       BeaconSpace.page, BeaconSpace.md, BeaconSpace.page, BeaconSpace.sm),
                 ),
               ),
-              StaggeredEntrance(index: 1, child: _buildProfileSummaryPanel(t, profile)),
+              StaggeredEntrance(
+                  index: 1, child: _buildProfileSummaryPanel(t, profile, profileState.isLoading)),
               const SizedBox(height: BeaconSpace.lg),
-              StaggeredEntrance(index: 2, child: _buildActionButtons(t)),
+              StaggeredEntrance(index: 2, child: _buildActionButtons(t, profile)),
               const SizedBox(height: BeaconSpace.xxxl),
-              StaggeredEntrance(index: 3, child: _buildMenuSection(t)),
+              StaggeredEntrance(index: 3, child: _buildMenuSection(t, profile)),
             ],
           ),
         ),
@@ -69,14 +72,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileSummaryPanel(AppColorTokens t, UserModel profile) {
+  Widget _buildProfileSummaryPanel(AppColorTokens t, UserModel profile, bool loading) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
       child: SurfaceCard(
         padding: EdgeInsets.zero,
         child: Stack(
           children: [
-            // Cover band: primary gradient with the beacon glow.
             Positioned(
               left: 0,
               right: 0,
@@ -84,9 +86,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               height: 104,
               child: DecoratedBox(
                 decoration: BoxDecoration(gradient: t.primaryGradient),
-                child: Stack(
+                child: const Stack(
                   fit: StackFit.expand,
-                  children: const [
+                  children: [
                     BeaconGlow(alignment: Alignment(1.1, -0.6), radius: 0.9),
                     BeaconRings(alignment: Alignment(1.05, -0.5), radius: 180, opacity: 0.18),
                   ],
@@ -98,7 +100,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   BeaconSpace.lg, 56, BeaconSpace.lg, BeaconSpace.lg),
               child: Column(
                 children: [
-                  _buildProfileHeader(t, profile),
+                  _buildProfileHeader(t, profile, loading),
                   const SizedBox(height: BeaconSpace.xl),
                   _buildStats(t),
                 ],
@@ -110,9 +112,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(AppColorTokens t, UserModel profile) {
+  Widget _buildProfileHeader(AppColorTokens t, UserModel profile, bool loading) {
     final text = Theme.of(context).textTheme;
-    final name = profile.fullName.isEmpty ? 'Guest User' : profile.fullName;
+    final name = profile.uid.isEmpty
+        ? (loading ? 'Loading…' : 'Finder member')
+        : profile.displayName;
     return Column(
       children: [
         Stack(
@@ -132,68 +136,67 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 size: 32,
                 iconSize: 16,
                 variant: AppIconButtonVariant.filled,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-                ),
+                onPressed: _openEdit,
               ),
             ),
           ],
         ),
         const SizedBox(height: BeaconSpace.lg),
-        Text(name, style: text.headlineSmall, textAlign: TextAlign.center),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(name,
+                  style: text.headlineSmall,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+            ),
+            if (profile.identityVerified) ...[
+              const SizedBox(width: BeaconSpace.sm),
+              Icon(Icons.verified_rounded, color: t.primary, size: 22),
+            ],
+          ],
+        ),
         const SizedBox(height: BeaconSpace.xs),
         Text(
           profile.nickName.isEmpty
-              ? '@guest_finder'
-              : '@${profile.nickName.toLowerCase()}_finder',
+              ? (profile.job.isEmpty ? profile.email : profile.job)
+              : '@${profile.nickName.toLowerCase()}',
           style: text.bodyMedium?.copyWith(color: t.primary),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
+        if (profile.identityVerified) ...[
+          const SizedBox(height: BeaconSpace.sm),
+          StatusBadge.verified(),
+        ],
       ],
     );
   }
 
   Widget _buildStats(AppColorTokens t) {
-    final authState = ref.watch(authStateProvider);
-    final uid = authState.userId ?? '';
-    return FutureBuilder<Map<String, int>>(
-      future: _fetchPostStats(uid),
-      builder: (context, snap) {
-        final posts = snap.data?['total'] ?? 0;
-        final found = snap.data?['found'] ?? 0;
-        final trust = snap.data?['trustPct'] ?? 0;
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: BeaconSpace.md),
-          decoration: BoxDecoration(
-            color: t.surfaceLow,
-            borderRadius: BeaconRadius.rLg,
-          ),
-          child: Row(
-            children: [
-              _statItem('Posts', snap.hasData ? '$posts' : '--', t),
-              _buildDivider(t),
-              _statItem('Found', snap.hasData ? '$found' : '--', t),
-              _buildDivider(t),
-              _statItem('Trust', snap.hasData ? '$trust%' : '--', t),
-            ],
-          ),
-        );
-      },
+    final posts = ref.watch(myPostsProvider).value;
+    final saved = ref.watch(savedItemsProvider).value;
+    final total = posts?.length;
+    final resolved = posts?.where((p) => p.isResolved).length;
+    final active = (total != null && resolved != null) ? total - resolved : null;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: BeaconSpace.md),
+      decoration: BoxDecoration(
+        color: t.surfaceLow,
+        borderRadius: BeaconRadius.rLg,
+      ),
+      child: Row(
+        children: [
+          _statItem('Active', active?.toString() ?? '--', t),
+          _buildDivider(t),
+          _statItem('Resolved', resolved?.toString() ?? '--', t),
+          _buildDivider(t),
+          _statItem('Saved', saved?.length.toString() ?? '--', t),
+        ],
+      ),
     );
-  }
-
-  Future<Map<String, int>> _fetchPostStats(String uid) async {
-    if (uid.isEmpty) return {'total': 0, 'found': 0, 'trustPct': 0};
-    try {
-      final posts = await ref.read(postServiceProvider).fetchItems(ownerId: uid);
-      final total = posts.length;
-      final found = posts.where((d) => d.isLost == false).length;
-      final resolved = posts.where((d) => d.isResolved == true).length;
-      final trustPct = total == 0 ? 0 : ((resolved / total) * 100).round();
-      return {'total': total, 'found': found, 'trustPct': trustPct};
-    } catch (_) {
-      return {'total': 0, 'found': 0, 'trustPct': 0};
-    }
   }
 
   Widget _statItem(String label, String value, AppColorTokens t) {
@@ -214,7 +217,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Container(height: 28, width: 1, color: t.outlineVariant);
   }
 
-  Widget _buildActionButtons(AppColorTokens t) {
+  void _openEdit() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+    );
+  }
+
+  Future<void> _shareProfile(UserModel profile) async {
+    final lines = [
+      profile.displayName,
+      if (profile.nickName.isNotEmpty) '@${profile.nickName}',
+      if (profile.job.isNotEmpty) profile.job,
+      if (profile.address.isNotEmpty) profile.address,
+      'Find me on Finder · member id ${profile.uid}',
+    ];
+    await Clipboard.setData(ClipboardData(text: lines.join('\n')));
+    if (!mounted) return;
+    ActionFeedback.showInfo(context, 'Profile details copied to clipboard.');
+  }
+
+  Widget _buildActionButtons(AppColorTokens t, UserModel profile) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
       child: Row(
@@ -224,28 +247,68 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               label: 'Edit profile',
               icon: Icons.edit_outlined,
               size: AppButtonSize.medium,
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-              ),
+              onPressed: _openEdit,
             ),
           ),
           const SizedBox(width: BeaconSpace.md),
           AppIconButton(
             icon: Icons.share_outlined,
-            tooltip: 'Share profile',
+            tooltip: 'Copy profile details',
             variant: AppIconButtonVariant.outlined,
-            onPressed: () => ActionFeedback.showInfo(
-              context,
-              'Profile link copied soon. Sharing flow is being prepared.',
-            ),
+            onPressed: () => _shareProfile(profile),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMenuSection(AppColorTokens t) {
+  void _showAbout() {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    AppBottomSheet.show<void>(
+      context,
+      builder: (sheetCtx) => AppBottomSheet(
+        title: 'About Finder',
+        subtitle: 'Version 1.0 · Beacon design',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Finder helps a community reunite lost belongings with their owners. '
+              'Report what you lost or found, chat safely inside the app and mark items as resolved when they are back home.',
+              style: text.bodyLarge,
+            ),
+            const SizedBox(height: BeaconSpace.lg),
+            SurfaceCard(
+              tone: SurfaceTone.low,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.shield_outlined, color: t.primary, size: 18),
+                      const SizedBox(width: BeaconSpace.sm),
+                      Text('Safety first', style: text.titleSmall),
+                    ],
+                  ),
+                  const SizedBox(height: BeaconSpace.xs),
+                  Text(
+                    'Meet in public places, never pay a reward before you have your item, and use in-app chat so you can block and report.',
+                    style: text.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: BeaconSpace.xl),
+            AppButton.tonal(label: 'Close', onPressed: () => Navigator.pop(sheetCtx)),
+            const SizedBox(height: BeaconSpace.lg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuSection(AppColorTokens t, UserModel profile) {
     final mode = ref.watch(themeControllerProvider);
     final isDark = mode == ThemeMode.dark;
 
@@ -277,8 +340,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               SettingsTile(
                 icon: Icons.verified_user_outlined,
-                title: 'Get verified',
-                subtitle: 'Build trust with a verified badge',
+                title: profile.identityVerified ? 'Verified identity' : 'Get verified',
+                subtitle: profile.identityVerified
+                    ? 'Your badge is visible to the community'
+                    : 'Build trust with a verified badge',
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const GetVerifiedScreen()),
@@ -331,7 +396,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               SettingsTile(
                 icon: Icons.info_outline_rounded,
                 title: 'About Finder',
-                onTap: () {},
+                onTap: _showAbout,
               ),
             ],
           ),
@@ -342,12 +407,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: 'Log out',
                 destructive: true,
                 showChevron: false,
-                onTap: () => ref.read(authControllerProvider.notifier).logout(),
+                onTap: _confirmLogout,
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Log out?'),
+        content: const Text('You can sign back in at any time.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Log out')),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(authControllerProvider.notifier).logout();
+    }
   }
 }

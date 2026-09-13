@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/di/app_providers.dart';
+import '../../../core/utils/result.dart';
 import '../../../models/user_model.dart';
 
+/// The signed-in user's profile. Kept alive for the whole session so the
+/// Home header, Profile tab and edit screen share one copy; it is
+/// invalidated by the app when the session changes.
 class ProfileController extends StateNotifier<AsyncValue<UserModel>> {
   final Ref ref;
 
@@ -10,27 +14,36 @@ class ProfileController extends StateNotifier<AsyncValue<UserModel>> {
   }
 
   Future<void> loadProfile() async {
-    state = const AsyncValue.loading();
+    if (!state.hasValue) state = const AsyncValue.loading();
     final repo = ref.read(profileRepositoryProvider);
     final result = await repo.getProfile();
-    state = result.fold(
-      onSuccess: (profile) => AsyncValue.data(profile),
-      onFailure: (failure) => AsyncValue.error(failure, StackTrace.current),
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (profile) => state = AsyncValue.data(profile),
+      onFailure: (failure) {
+        if (!state.hasValue) {
+          state = AsyncValue.error(failure, StackTrace.current);
+        }
+      },
     );
   }
 
-  Future<void> updateProfile(UserModel profile) async {
+  /// Saves and updates the shared copy in place. The previous profile is
+  /// kept on failure.
+  Future<Result<UserModel>> updateProfile(UserModel profile) async {
     final repo = ref.read(profileRepositoryProvider);
     final result = await repo.updateProfile(profile);
-    state = result.fold(
-      onSuccess: (updated) => AsyncValue.data(updated),
-      onFailure: (failure) => AsyncValue.error(failure, StackTrace.current),
-    );
+    if (mounted) {
+      result.fold(
+        onSuccess: (updated) => state = AsyncValue.data(updated),
+        onFailure: (_) {},
+      );
+    }
+    return result;
   }
 }
 
-// autoDispose ensures it freshly reloads after every login/signup
 final profileControllerProvider =
-    StateNotifierProvider.autoDispose<ProfileController, AsyncValue<UserModel>>(
+    StateNotifierProvider<ProfileController, AsyncValue<UserModel>>(
   (ref) => ProfileController(ref),
 );

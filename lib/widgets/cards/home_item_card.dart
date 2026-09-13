@@ -4,8 +4,7 @@ import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:finder/providers/chat_provider.dart';
-import 'package:finder/features/auth/presentation/auth_state_provider.dart';
+import 'package:finder/features/chat/presentation/open_chat.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/features/posts/presentation/saved_items_controller.dart';
 import 'package:finder/widgets/ui/app_button.dart';
@@ -92,40 +91,15 @@ class HomeItemCard extends ConsumerWidget {
         label: buttonLabel,
         icon: Icons.chat_bubble_outline_rounded,
         size: AppButtonSize.medium,
-        onPressed: () async {
-          final currentUserId = ref.read(authStateProvider).userId ?? '';
-          final ownerId = item.ownerId;
-
-          if (currentUserId.isEmpty) {
-            ActionFeedback.showInfo(context, 'Please log in to message the owner.');
-            return;
-          }
-          if (ownerId.isEmpty || ownerId == currentUserId) {
-            ActionFeedback.showInfo(context, 'You cannot message yourself.');
-            return;
-          }
-
-          try {
-            final chatService = ref.read(chatServiceProvider);
-            final chatId = await chatService.createOrGetChat(currentUserId, ownerId, item.id, item.title);
-
-            if (context.mounted) {
-              Navigator.pushNamed(
-                context,
-                AppRoutes.chat,
-                arguments: {
-                  'chatId': chatId,
-                  'userName': item.ownerName?.isNotEmpty == true ? item.ownerName! : 'Finder User',
-                  'itemName': item.title,
-                },
-              );
-            }
-          } catch (e) {
-            if (context.mounted) {
-              ActionFeedback.showInfo(context, 'Error creating chat: $e');
-            }
-          }
-        },
+        onPressed: () => openChatWith(
+          context,
+          ref,
+          peerId: item.ownerId,
+          peerName: item.ownerName?.isNotEmpty == true ? item.ownerName! : 'Finder User',
+          peerAvatarUrl: item.ownerAvatarUrl,
+          postId: item.id,
+          itemName: item.title,
+        ),
       ),
     );
   }
@@ -165,16 +139,16 @@ class _SaveButtonState extends ConsumerState<_SaveButton>
   Future<void> _tap() async {
     await _ctrl.reverse();
     await _ctrl.forward();
-    final notifier = ref.read(savedItemsProvider.notifier);
-    await notifier.toggleSaved(widget.item);
-    if (mounted) {
-      final isSaved = (ref.read(savedItemsProvider).value ?? [])
-          .any((i) => i.id == widget.item.id);
-      ActionFeedback.showInfo(
+    final result =
+        await ref.read(savedItemsProvider.notifier).toggleSaved(widget.item);
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (saved) => ActionFeedback.showSuccess(
         context,
-        isSaved ? 'Saved to your list!' : 'Removed from saved items.',
-      );
-    }
+        saved ? 'Saved to your list.' : 'Removed from saved items.',
+      ),
+      onFailure: (f) => ActionFeedback.showError(context, f.message),
+    );
   }
 
   @override

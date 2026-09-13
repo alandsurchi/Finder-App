@@ -7,7 +7,6 @@ import 'package:finder/screens/help_support_screen.dart';
 import 'package:finder/screens/home_screen.dart';
 import 'package:finder/screens/item_details_screen.dart';
 import 'package:finder/screens/login_screen.dart';
-import 'package:finder/screens/manage_post_screen.dart';
 import 'package:finder/screens/messages_screen.dart';
 import 'package:finder/screens/my_posts_screen.dart';
 import 'package:finder/screens/notification_settings_screen.dart';
@@ -53,8 +52,6 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const GetVerifiedScreen());
       case RouteNames.helpSupport:
         return MaterialPageRoute(builder: (_) => const HelpSupportScreen());
-      case RouteNames.managePost:
-        return MaterialPageRoute(builder: (_) => const ManagePostScreen());
       case RouteNames.messages:
         return MaterialPageRoute(builder: (_) => const MessagesScreen());
       case RouteNames.myPosts:

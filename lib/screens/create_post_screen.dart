@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/providers/post_provider.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
-import 'package:finder/app/di/app_providers.dart' hide postServiceProvider;
+import 'package:finder/providers/my_posts_provider.dart';
+import 'package:finder/features/profile/presentation/privacy_settings_controller.dart';
+import 'package:finder/features/profile/domain/privacy_settings.dart';
+import 'package:finder/features/profile/presentation/profile_controller.dart';
+import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/services/image_upload_service.dart';
@@ -30,13 +34,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final _dateCtrl = TextEditingController();
   DateTime? _selectedDateTime;
   final _rewardCtrl = TextEditingController();
-  bool _useInApp = true;
   bool _usePhone = false;
-  bool _useEmail = false;
   final _phoneCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
   bool _publicSearch = true;
-  bool _hideLocation = false;
   bool _isSubmitting = false;
   bool _isUploadingImage = false;
   String _imagePath = '';
@@ -64,7 +64,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       _dateCtrl,
       _rewardCtrl,
       _phoneCtrl,
-      _emailCtrl,
     ]) {
       c.dispose();
     }
@@ -403,68 +402,68 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   }
 
   Widget _buildPrivacyContactSection(AppColorTokens t) {
+    final text = Theme.of(context).textTheme;
+    final profile = ref.watch(profileControllerProvider).value;
+    if (_usePhone && _phoneCtrl.text.isEmpty && (profile?.phone.isNotEmpty ?? false)) {
+      _phoneCtrl.text = profile!.phone;
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Privacy & contact', eyebrow: 'Step 4'),
+        const SectionHeader(title: 'How people reach you', eyebrow: 'Step 4'),
         SurfaceCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppTextField(
-                controller: _phoneCtrl,
-                label: 'Phone number',
-                hint: 'e.g. +1 234 567 8900',
-                prefixIcon: Icons.phone_outlined,
-                keyboardType: TextInputType.phone,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: BeaconSpace.lg),
-              AppTextField(
-                controller: _emailCtrl,
-                label: 'Email address',
-                hint: 'e.g. yourname@example.com',
-                prefixIcon: Icons.mail_outline_rounded,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.done,
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: t.primaryContainer,
+                      borderRadius: BeaconRadius.rMd,
+                    ),
+                    child: Icon(Icons.chat_bubble_outline_rounded, color: t.primary, size: 20),
+                  ),
+                  const SizedBox(width: BeaconSpace.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('In-app chat', style: text.titleSmall),
+                        Text('Always on. Members contact you through Finder messages.',
+                            style: text.bodySmall),
+                      ],
+                    ),
+                  ),
+                  StatusBadge.neutral('ON', small: true),
+                ],
               ),
               const SizedBox(height: BeaconSpace.lg),
               SurfaceCard(
                 tone: SurfaceTone.low,
                 padding: const EdgeInsets.symmetric(vertical: BeaconSpace.xs),
-                child: Column(
-                  children: [
-                    ToggleTile(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      title: 'In-app chat',
-                      subtitle: 'Recommended',
-                      value: _useInApp,
-                      onChanged: _isSubmitting ? null : (v) => setState(() => _useInApp = v),
-                    ),
-                    ToggleTile(
-                      icon: Icons.visibility_off_outlined,
-                      title: 'Hide exact location',
-                      subtitle: 'Shows a general area only',
-                      value: _hideLocation,
-                      onChanged: _isSubmitting ? null : (v) => setState(() => _hideLocation = v),
-                    ),
-                    ToggleTile(
-                      icon: Icons.phone_outlined,
-                      title: 'Show phone number publicly',
-                      subtitle: 'Visible to all registered users',
-                      value: _usePhone,
-                      onChanged: _isSubmitting ? null : (v) => setState(() => _usePhone = v),
-                    ),
-                    ToggleTile(
-                      icon: Icons.mail_outline_rounded,
-                      title: 'Show email publicly',
-                      subtitle: 'Visible to all registered users',
-                      value: _useEmail,
-                      onChanged: _isSubmitting ? null : (v) => setState(() => _useEmail = v),
-                    ),
-                  ],
+                child: ToggleTile(
+                  icon: Icons.phone_outlined,
+                  title: 'Show my phone number',
+                  subtitle: 'Shown on your profile to signed-in members',
+                  value: _usePhone,
+                  onChanged: _isSubmitting ? null : (v) => setState(() => _usePhone = v),
                 ),
               ),
+              if (_usePhone) ...[
+                const SizedBox(height: BeaconSpace.lg),
+                AppTextField(
+                  controller: _phoneCtrl,
+                  label: 'Phone number',
+                  hint: 'e.g. +1 234 567 8900',
+                  prefixIcon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
+                  helper: 'Saved to your profile and shared with signed-in members.',
+                ),
+              ],
             ],
           ),
         ),
@@ -676,22 +675,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       return;
     }
 
-    if (!_useInApp && !_usePhone && !_useEmail) {
-      _showMessage('Please enable at least one contact method.', isError: true);
-      return;
-    }
-
     if (_usePhone && _phoneCtrl.text.trim().isEmpty) {
       _showMessage(
-        'Please enter a phone number or disable phone sharing.',
-        isError: true,
-      );
-      return;
-    }
-
-    if (_useEmail && !_emailCtrl.text.contains('@')) {
-      _showMessage(
-        'Please enter a valid email or disable email sharing.',
+        'Please enter a phone number or turn off phone sharing.',
         isError: true,
       );
       return;
@@ -706,32 +692,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       return;
     }
 
-    // Fetch owner's profile for name
-    String ownerDisplayName = 'Finder User';
-    try {
-      final profileRes = await ref.read(profileRepositoryProvider).getProfile();
-      profileRes.fold(
-        onSuccess: (profile) {
-          ownerDisplayName = profile.fullName.isNotEmpty ? profile.fullName : profile.nickName;
-        },
-        onFailure: (_) {},
-      );
-    } catch (_) {}
-
     final post = ItemModel(
       id: '',
       ownerId: uid,
-      ownerName: ownerDisplayName,
       title: title,
       description: description,
       category: _category ?? 'Other',
       isLost: _isLostItem,
-      reward: _rewardCtrl.text.trim().isEmpty ? null : _rewardCtrl.text.trim(),
-      location: _locationCtrl.text.trim().isEmpty
-          ? 'Unknown Location'
-          : _locationCtrl.text.trim(),
-      lastSeenAt: _locationCtrl.text.trim().isEmpty
+      reward: (!_isLostItem || _rewardCtrl.text.trim().isEmpty)
           ? null
+          : _rewardCtrl.text.trim(),
+      location: _locationCtrl.text.trim().isEmpty
+          ? 'Unknown location'
           : _locationCtrl.text.trim(),
       lostOn: _dateCtrl.text.trim().isEmpty ? null : _dateCtrl.text.trim(),
       imagePath: _imagePath,
@@ -739,19 +711,52 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     );
 
     try {
-      await ref.read(postServiceProvider).createPost(post);
+      final created = await ref.read(postServiceProvider).createPost(post);
+      if (_usePhone) await _sharePhone(_phoneCtrl.text.trim());
       if (!mounted) return;
       _clearDraft();
-      _showMessage('Post published successfully.');
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+      ref.read(myPostsProvider.notifier).prepend(created);
+      ref.invalidate(postsStreamProvider);
+      _resetForm();
+      ActionFeedback.showSuccess(context, 'Your post is live.');
+      Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: created);
     } catch (e) {
       if (!mounted) return;
-      _showMessage(e.toString(), isError: true);
+      _showMessage(describeError(e), isError: true);
     }
 
     if (mounted) {
       setState(() => _isSubmitting = false);
     }
+  }
+
+  /// Stores the phone on the profile and un-hides it in privacy settings.
+  Future<void> _sharePhone(String phone) async {
+    try {
+      final profileCtrl = ref.read(profileControllerProvider.notifier);
+      final current = ref.read(profileControllerProvider).value;
+      if (current != null && current.phone != phone) {
+        await profileCtrl.updateProfile(current.copyWith(phone: phone));
+      }
+      final privacy = ref.read(privacySettingsProvider).value;
+      if (privacy == null || privacy.hidePhone) {
+        await ref.read(privacySettingsProvider.notifier).updateSettings(
+              (privacy ?? const PrivacySettings(showProfile: true, allowMessages: true, showLocation: false, hidePhone: true)).copyWith(hidePhone: false),
+            );
+      }
+    } catch (_) {
+      // The post itself succeeded; phone sharing can be fixed in settings.
+    }
+  }
+
+  void _resetForm() {
+    _titleCtrl.clear();
+    _descCtrl.clear();
+    _locationCtrl.clear();
+    _rewardCtrl.clear();
+    _imagePath = '';
+    _selectedDateTime = DateTime.now();
+    _dateCtrl.text = _formatDateTime(_selectedDateTime!);
   }
 
   Future<void> _pickAndUploadImage() async {
@@ -765,10 +770,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       );
       if (url != null && mounted) {
         setState(() => _imagePath = url);
-        _showMessage('Image uploaded successfully!');
+        _showMessage('Photo added.');
       }
     } catch (e) {
-      if (mounted) _showMessage('Upload failed: $e');
+      if (mounted) _showMessage('Upload failed. ${describeError(e)}', isError: true);
     } finally {
       if (mounted) setState(() => _isUploadingImage = false);
     }
@@ -783,13 +788,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       'location': _locationCtrl.text,
       'dateTime': _selectedDateTime?.millisecondsSinceEpoch,
       'reward': _rewardCtrl.text,
-      'useInApp': _useInApp,
       'usePhone': _usePhone,
-      'useEmail': _useEmail,
       'phone': _phoneCtrl.text,
-      'email': _emailCtrl.text,
       'publicSearch': _publicSearch,
-      'hideLocation': _hideLocation,
       'imagePath': _imagePath,
     };
     _showMessage('Draft saved locally.');
@@ -812,13 +813,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
 
     _rewardCtrl.text = draft['reward']?.toString() ?? '';
-    _useInApp = draft['useInApp'] as bool? ?? _useInApp;
     _usePhone = draft['usePhone'] as bool? ?? _usePhone;
-    _useEmail = draft['useEmail'] as bool? ?? _useEmail;
     _phoneCtrl.text = draft['phone']?.toString() ?? '';
-    _emailCtrl.text = draft['email']?.toString() ?? '';
     _publicSearch = draft['publicSearch'] as bool? ?? _publicSearch;
-    _hideLocation = draft['hideLocation'] as bool? ?? _hideLocation;
     _imagePath = draft['imagePath']?.toString() ?? '';
   }
 
@@ -836,13 +833,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   void _showMessage(String message, {bool isError = false}) {
     if (!mounted) return;
-    final t = AppColorTokens.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? t.error : t.success,
-      ),
-    );
+    isError
+        ? ActionFeedback.showError(context, message)
+        : ActionFeedback.showInfo(context, message);
   }
 }
 

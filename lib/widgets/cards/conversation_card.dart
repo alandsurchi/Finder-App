@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:finder/core/utils/relative_time.dart';
+import 'package:finder/features/chat/presentation/open_chat.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/routes.dart';
@@ -11,14 +13,6 @@ class ConversationCard extends StatelessWidget {
 
   const ConversationCard({super.key, required this.convo});
 
-  String _formatTimeAgo(DateTime dateTime) {
-    final diff = DateTime.now().difference(dateTime);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
@@ -29,16 +23,16 @@ class ConversationCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: BeaconSpace.md),
       padding: const EdgeInsets.all(BeaconSpace.md),
       onTap: () {
-        final chatId = convo.chatId.isEmpty
-            ? convo.name.toLowerCase().replaceAll(' ', '_')
-            : convo.chatId;
         Navigator.pushNamed(
           context,
           AppRoutes.chat,
           arguments: {
-            'userName': convo.name,
-            'itemName': convo.itemName,
-            'chatId': chatId,
+            ChatArgs.chatId: convo.chatId,
+            ChatArgs.userName: convo.name,
+            ChatArgs.itemName: convo.itemName,
+            ChatArgs.peerId: convo.peerId,
+            ChatArgs.peerAvatarUrl: convo.avatarUrl,
+            ChatArgs.postId: convo.postId,
           },
         );
       },
@@ -49,7 +43,6 @@ class ConversationCard extends StatelessWidget {
             url: convo.avatarUrl,
             name: convo.name,
             size: 52,
-            online: convo.isOnline,
           ),
           const SizedBox(width: BeaconSpace.md),
           Expanded(
@@ -78,7 +71,7 @@ class ConversationCard extends StatelessWidget {
                     ),
                     const SizedBox(width: BeaconSpace.sm),
                     Text(
-                      _formatTimeAgo(convo.lastUpdatedAt.toDate()),
+                      relativeTime(convo.lastUpdatedAt.millisecondsSinceEpoch),
                       style: text.bodySmall?.copyWith(
                         color: unread ? t.primary : t.onSurfaceMuted,
                       ),
@@ -108,7 +101,7 @@ class ConversationCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        convo.message,
+                        convo.message.isEmpty ? 'No messages yet' : convo.message,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: text.bodyMedium?.copyWith(

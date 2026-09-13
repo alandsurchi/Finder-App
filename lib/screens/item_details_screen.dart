@@ -2,18 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/models/item_model.dart';
+import 'package:finder/models/user_model.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
+import 'package:finder/features/chat/presentation/open_chat.dart';
+import 'package:finder/features/posts/presentation/saved_items_controller.dart';
 import 'package:finder/features/posts/presentation/similar_items_provider.dart';
+import 'package:finder/features/profile/presentation/blocked_users_controller.dart';
 import 'package:finder/widgets/cards/similar_card.dart';
 import 'package:finder/widgets/ui/ui.dart';
-import 'package:finder/providers/chat_provider.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
+import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/providers/user_provider.dart';
 import 'package:finder/providers/post_provider.dart';
+import 'package:finder/screens/edit_post_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ItemDetailsScreen extends ConsumerWidget {
@@ -22,7 +27,13 @@ class ItemDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final args = ModalRoute.of(context)?.settings.arguments;
-    final item = (args is ItemModel) ? args : ItemModel.empty();
+    final argItem = (args is ItemModel) ? args : ItemModel.empty();
+    // Refresh from the server so status / edits made elsewhere show up.
+    final fresh = argItem.id.isEmpty
+        ? const AsyncValue<ItemModel>.loading()
+        : ref.watch(postByIdProvider(argItem.id));
+    final item = fresh.value ?? argItem;
+
     final title = item.title.isEmpty ? 'Item Details' : item.title;
     final description = item.description.isEmpty
         ? 'No description provided yet.'
@@ -38,8 +49,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // ── Hero image + app bar ──────────────────────────────────────
-          _buildSliverAppBar(context, item),
+          _buildSliverAppBar(context, ref, item, isOwner),
 
           SliverToBoxAdapter(
             child: Padding(
@@ -55,7 +65,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                       runSpacing: BeaconSpace.sm,
                       children: [
                         StatusBadge.signal(kind, withIcon: true),
-                        if (item.reward != null)
+                        if (item.hasReward)
                           StatusBadge.reward('REWARD \$${item.reward}'),
                         if (item.isResolved) StatusBadge.resolved(),
                         if (item.isVerified) StatusBadge.verified(small: false),
@@ -65,7 +75,6 @@ class ItemDetailsScreen extends ConsumerWidget {
 
                   const SizedBox(height: BeaconSpace.md),
 
-                  // ── Title ───────────────────────────────────────────
                   StaggeredEntrance(
                     index: 1,
                     child: Text(
@@ -101,7 +110,6 @@ class ItemDetailsScreen extends ConsumerWidget {
 
                   const SizedBox(height: BeaconSpace.lg),
 
-                  // ── Description ─────────────────────────────────────
                   StaggeredEntrance(
                     index: 2,
                     child: Text(description, style: text.bodyLarge),
@@ -109,59 +117,46 @@ class ItemDetailsScreen extends ConsumerWidget {
 
                   const SizedBox(height: BeaconSpace.xxl),
 
-                  // ── "I Found This Item" button ───────────────────────
-                  if (item.isLost)
+                  // ── Primary call to action ───────────────────────────
+                  if (!isOwner && !item.isResolved)
                     StaggeredEntrance(
                       index: 3,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: BeaconSpace.xxl),
                         child: AppButton(
-                          label: 'I found this item',
-                          icon: Icons.volunteer_activism_outlined,
+                          label: item.isLost ? 'I found this item' : 'This is mine',
+                          icon: item.isLost
+                              ? Icons.volunteer_activism_outlined
+                              : Icons.front_hand_outlined,
                           variant: AppButtonVariant.accent,
-                          onPressed: () async {
-                            final ownerName =
-                                (item.ownerName == null ||
-                                    item.ownerName!.isEmpty)
-                                ? 'Finder User'
-                                : item.ownerName!;
-
-                            final ownerId = item.ownerId;
-                            final currentUserId = ref.read(authStateProvider).userId ?? '';
-                            if (currentUserId.isEmpty) {
-                              ActionFeedback.showInfo(context, 'Please log in to message the owner.');
-                              return;
-                            }
-                            if (ownerId.isEmpty || ownerId == currentUserId) {
-                              ActionFeedback.showInfo(context, 'You cannot message yourself.');
-                              return;
-                            }
-
-                            try {
-                              // Show loading visually if you want, but for now just await
-                              final chatService = ref.read(chatServiceProvider);
-                              final chatId = await chatService.createOrGetChat(currentUserId, ownerId, item.id, item.title);
-                              if (context.mounted) {
-                                Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.chat,
-                                  arguments: {
-                                    'chatId': chatId,
-                                    'userName': ownerName,
-                                  },
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ActionFeedback.showInfo(context, 'Error creating chat: $e');
-                              }
-                            }
-                          },
+                          onPressed: () => _startChat(context, ref, item, ownerProfileAsync.value),
                         ),
                       ),
                     ),
 
-                  // ── Detail rows card ─────────────────────────────────
+                  if (isOwner && item.isResolved)
+                    StaggeredEntrance(
+                      index: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: BeaconSpace.xxl),
+                        child: SurfaceCard(
+                          tone: SurfaceTone.low,
+                          child: Row(
+                            children: [
+                              Icon(Icons.task_alt_rounded, color: t.found),
+                              const SizedBox(width: BeaconSpace.md),
+                              Expanded(
+                                child: Text(
+                                  'This post is resolved and hidden from the feed.',
+                                  style: text.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
                   StaggeredEntrance(
                     index: 3,
                     child: _buildDetailsCard(item, context, t),
@@ -169,23 +164,20 @@ class ItemDetailsScreen extends ConsumerWidget {
 
                   const SizedBox(height: BeaconSpace.xxl),
 
-                  // ── Owner card ───────────────────────────────────────
                   StaggeredEntrance(
                     index: 4,
-                    child: _buildOwnerCard(item, ownerProfileAsync, context, ref, t),
+                    child: _buildOwnerCard(item, ownerProfileAsync, context, ref, t, isOwner),
                   ),
 
                   const SizedBox(height: BeaconSpace.xl),
 
-                  // ── Safety / Owner actions ───────────────────────────────────
                   StaggeredEntrance(
                     index: 5,
-                    child: _buildSafetyActions(context, ref, item, isOwner, t),
+                    child: _buildActions(context, ref, item, isOwner, ownerProfileAsync.value, t),
                   ),
 
                   const SizedBox(height: BeaconSpace.xxxl),
 
-                  // ── Similar Lost Items ───────────────────────────────
                   StaggeredEntrance(
                     index: 6,
                     child: _buildSimilarSection(context, ref, item),
@@ -201,11 +193,35 @@ class ItemDetailsScreen extends ConsumerWidget {
     );
   }
 
+  // ── Chat ───────────────────────────────────────────────────────────────────
+  Future<void> _startChat(
+    BuildContext context,
+    WidgetRef ref,
+    ItemModel item,
+    UserModel? owner,
+  ) {
+    final name = owner?.displayName ??
+        ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User');
+    return openChatWith(
+      context,
+      ref,
+      peerId: item.ownerId,
+      peerName: name,
+      peerAvatarUrl: owner?.avatarUrl ?? item.ownerAvatarUrl,
+      postId: item.id,
+      itemName: item.title,
+    );
+  }
+
   // ── Sliver app bar with hero image ─────────────────────────────────────────
-  Widget _buildSliverAppBar(BuildContext context, ItemModel item) {
+  Widget _buildSliverAppBar(
+      BuildContext context, WidgetRef ref, ItemModel item, bool isOwner) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final topPad = MediaQuery.paddingOf(context).top;
+    final saved = ref.watch(savedItemsProvider.select(
+        (s) => (s.value ?? const []).any((i) => i.id == item.id)));
+
     return SliverAppBar(
       expandedHeight: 380,
       pinned: true,
@@ -244,32 +260,27 @@ class ItemDetailsScreen extends ConsumerWidget {
         ),
       ),
       actions: [
+        if (!isOwner)
+          AppIconButton(
+            icon: saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+            tooltip: saved ? 'Remove from saved' : 'Save item',
+            variant: AppIconButtonVariant.glass,
+            selected: saved,
+            onPressed: () => _toggleSaved(context, ref, item),
+          ),
+        if (!isOwner) const SizedBox(width: BeaconSpace.sm),
         AppIconButton(
           icon: Icons.share_outlined,
           tooltip: 'Copy item details',
           variant: AppIconButtonVariant.glass,
-          onPressed: () async {
-            final text =
-                '${item.isLost ? 'Lost' : 'Found'} item: ${item.title}\n'
-                'Location: ${item.location}\n'
-                'Details: ${item.description}';
-            await Clipboard.setData(ClipboardData(text: text));
-            if (!context.mounted) return;
-            ActionFeedback.showInfo(
-              context,
-              'Item details copied to clipboard.',
-            );
-          },
+          onPressed: () => _copyDetails(context, item),
         ),
         const SizedBox(width: BeaconSpace.sm),
         AppIconButton(
           icon: Icons.more_vert_rounded,
           tooltip: 'More actions',
           variant: AppIconButtonVariant.glass,
-          onPressed: () => ActionFeedback.showInfo(
-            context,
-            'More item actions will appear here.',
-          ),
+          onPressed: () => _showMoreSheet(context, ref, item, isOwner),
         ),
         const SizedBox(width: BeaconSpace.md),
       ],
@@ -281,7 +292,7 @@ class ItemDetailsScreen extends ConsumerWidget {
             stretchModes: const [StretchMode.zoomBackground],
             centerTitle: false,
             titlePadding: const EdgeInsetsDirectional.only(
-                start: 64, end: 120, bottom: 18),
+                start: 64, end: 150, bottom: 18),
             title: AnimatedOpacity(
               duration: BeaconMotion.scaled(context, BeaconMotion.state),
               opacity: collapsed ? 1 : 0,
@@ -300,7 +311,6 @@ class ItemDetailsScreen extends ConsumerWidget {
                   heroTag: 'item-image-${item.id}',
                   fallbackIcon: categoryIcon(item.category),
                 ),
-                // Top scrim keeps the glass controls legible over any photo.
                 DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -321,12 +331,243 @@ class ItemDetailsScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _copyDetails(BuildContext context, ItemModel item) async {
+    final text = '${item.isLost ? 'Lost' : 'Found'} item: ${item.title}\n'
+        'Location: ${item.location}\n'
+        'Details: ${item.description}';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!context.mounted) return;
+    ActionFeedback.showInfo(context, 'Item details copied to clipboard.');
+  }
+
+  Future<void> _toggleSaved(BuildContext context, WidgetRef ref, ItemModel item) async {
+    final result = await ref.read(savedItemsProvider.notifier).toggleSaved(item);
+    if (!context.mounted) return;
+    result.fold(
+      onSuccess: (saved) => ActionFeedback.showSuccess(
+        context,
+        saved ? 'Saved to your list.' : 'Removed from saved items.',
+      ),
+      onFailure: (f) => ActionFeedback.showError(context, f.message),
+    );
+  }
+
+  // ── More sheet ─────────────────────────────────────────────────────────────
+  void _showMoreSheet(BuildContext context, WidgetRef ref, ItemModel item, bool isOwner) {
+    AppBottomSheet.show<void>(
+      context,
+      builder: (sheetCtx) => AppBottomSheet(
+        title: isOwner ? 'Manage post' : 'More',
+        scrollable: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SheetOption(
+              icon: Icons.copy_rounded,
+              label: 'Copy details',
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _copyDetails(context, item);
+              },
+            ),
+            if (isOwner) ...[
+              if (!item.isResolved)
+                SheetOption(
+                  icon: Icons.edit_outlined,
+                  label: 'Edit post',
+                  onTap: () async {
+                    Navigator.pop(sheetCtx);
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => EditPostScreen(post: item)),
+                    );
+                    ref.invalidate(postByIdProvider(item.id));
+                  },
+                ),
+              SheetOption(
+                icon: item.isResolved
+                    ? Icons.replay_rounded
+                    : Icons.check_circle_outline_rounded,
+                label: item.isResolved ? 'Reopen post' : 'Mark as resolved',
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  item.isResolved
+                      ? _reopen(context, ref, item)
+                      : _resolve(context, ref, item);
+                },
+              ),
+              SheetOption(
+                icon: Icons.delete_outline_rounded,
+                label: 'Delete post',
+                destructive: true,
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _confirmDelete(context, ref, item);
+                },
+              ),
+            ] else ...[
+              SheetOption(
+                icon: Icons.flag_outlined,
+                label: 'Report post',
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _report(context, ref, item);
+                },
+              ),
+              SheetOption(
+                icon: Icons.block_rounded,
+                label: 'Block this member',
+                destructive: true,
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _confirmBlock(context, ref, item);
+                },
+              ),
+            ],
+            const SizedBox(height: BeaconSpace.lg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Owner / safety actions ─────────────────────────────────────────────────
+  Future<void> _resolve(BuildContext context, WidgetRef ref, ItemModel item) async {
+    final result = await ref.read(myPostsProvider.notifier).markResolved(item.id);
+    if (!context.mounted) return;
+    result.fold(
+      onSuccess: (_) {
+        ref.invalidate(postByIdProvider(item.id));
+        ActionFeedback.showSuccess(context, 'Post marked as resolved.');
+      },
+      onFailure: (f) => ActionFeedback.showError(context, f.message),
+    );
+  }
+
+  Future<void> _reopen(BuildContext context, WidgetRef ref, ItemModel item) async {
+    final result = await ref.read(myPostsProvider.notifier).reopen(item.id);
+    if (!context.mounted) return;
+    result.fold(
+      onSuccess: (_) {
+        ref.invalidate(postByIdProvider(item.id));
+        ActionFeedback.showSuccess(context, 'Post is active again.');
+      },
+      onFailure: (f) => ActionFeedback.showError(context, f.message),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, ItemModel item) {
+    final t = AppColorTokens.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete post?'),
+        content: Text('"${item.title}" will be removed for everyone. This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: t.error,
+              foregroundColor: t.onError,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final result = await ref.read(myPostsProvider.notifier).deletePost(item.id);
+              if (!context.mounted) return;
+              result.fold(
+                onSuccess: (_) {
+                  ActionFeedback.showSuccess(context, 'Post deleted.');
+                  Navigator.pop(context);
+                },
+                onFailure: (f) => ActionFeedback.showError(context, f.message),
+              );
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _report(BuildContext context, WidgetRef ref, ItemModel item) async {
+    const reasons = [
+      'Spam or scam',
+      'Inappropriate content',
+      'Wrong or misleading information',
+      'Something else',
+    ];
+    final reason = await AppBottomSheet.show<String>(
+      context,
+      builder: (sheetCtx) => AppBottomSheet(
+        title: 'Report this post',
+        subtitle: 'Tell us what is wrong. Reports are reviewed by the team.',
+        scrollable: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final r in reasons)
+              SheetOption(
+                icon: Icons.flag_outlined,
+                label: r,
+                onTap: () => Navigator.pop(sheetCtx, r),
+              ),
+            const SizedBox(height: BeaconSpace.lg),
+          ],
+        ),
+      ),
+    );
+    if (reason == null || !context.mounted) return;
+    try {
+      await ref.read(postServiceProvider).reportPost(item.id, reason);
+      if (!context.mounted) return;
+      ActionFeedback.showSuccess(context, 'Thanks, the post has been reported.');
+    } catch (e) {
+      if (!context.mounted) return;
+      ActionFeedback.showError(context, describeError(e));
+    }
+  }
+
+  void _confirmBlock(BuildContext context, WidgetRef ref, ItemModel item) {
+    final t = AppColorTokens.of(context);
+    final name = (item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'this member';
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Block $name?'),
+        content: const Text(
+            'You will no longer see each other\'s posts or messages. You can undo this in Privacy & safety.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: t.error,
+              foregroundColor: t.onError,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final result = await ref.read(blockedUsersProvider.notifier).blockUser(
+                    item.ownerId,
+                    name: item.ownerName,
+                    avatarUrl: item.ownerAvatarUrl,
+                  );
+              if (!context.mounted) return;
+              result.fold(
+                onSuccess: (_) {
+                  ActionFeedback.showSuccess(context, '$name has been blocked.');
+                  Navigator.pop(context);
+                },
+                onFailure: (f) => ActionFeedback.showError(context, f.message),
+              );
+            },
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Detail rows card ────────────────────────────────────────────────────────
-  Widget _buildDetailsCard(
-    ItemModel item,
-    BuildContext context,
-    AppColorTokens t,
-  ) {
+  Widget _buildDetailsCard(ItemModel item, BuildContext context, AppColorTokens t) {
     return SurfaceCard(
       padding: const EdgeInsets.all(BeaconSpace.sm),
       child: Column(
@@ -349,13 +590,6 @@ class ItemDetailsScreen extends ConsumerWidget {
             label: 'Location',
             value: item.location.isEmpty ? null : item.location,
           ),
-          if (item.lastSeenAt != null && item.lastSeenAt!.isNotEmpty)
-            _detailRow(
-              context,
-              icon: Icons.near_me_outlined,
-              label: 'Last seen at',
-              value: item.lastSeenAt,
-            ),
           const SizedBox(height: BeaconSpace.sm),
           MapPlaceholder(
             height: 140,
@@ -374,9 +608,8 @@ class ItemDetailsScreen extends ConsumerWidget {
   }) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
-    final displayValue = (value == null || value.trim().isEmpty)
-        ? 'Not provided'
-        : value;
+    final displayValue =
+        (value == null || value.trim().isEmpty) ? 'Not provided' : value;
     return Padding(
       padding: const EdgeInsets.symmetric(
           horizontal: BeaconSpace.sm, vertical: BeaconSpace.sm),
@@ -408,33 +641,29 @@ class ItemDetailsScreen extends ConsumerWidget {
     );
   }
 
+  // ── Owner card ──────────────────────────────────────────────────────────────
   Widget _buildOwnerCard(
     ItemModel item,
-    AsyncValue ownerProfileAsync,
+    AsyncValue<UserModel?> ownerProfileAsync,
     BuildContext context,
     WidgetRef ref,
     AppColorTokens t,
+    bool isOwner,
   ) {
     final text = Theme.of(context).textTheme;
-    final resolvedProfile = ownerProfileAsync.value;
+    final profile = ownerProfileAsync.value;
 
-    // Name: prefer fresh profile, fall back to snapshot on the post
-    final ownerName = resolvedProfile?.fullName.isNotEmpty == true
-        ? resolvedProfile!.fullName
-        : (resolvedProfile?.nickName.isNotEmpty == true
-            ? resolvedProfile!.nickName
-            : (item.ownerName?.isNotEmpty == true
-                ? item.ownerName!
-                : 'Unknown Owner'));
-
-    // Trust score stored on the post document
-    final trustScore = item.ownerTrustScore == null
-        ? (resolvedProfile != null ? '–' : 'N/A')
-        : item.ownerTrustScore!.toStringAsFixed(1);
-
-    final avatarUrl = resolvedProfile?.avatarUrl ?? '';
-    final phone = resolvedProfile?.phone ?? '';
-    final email = resolvedProfile?.email ?? '';
+    final ownerName = isOwner
+        ? 'You'
+        : (profile?.displayName ??
+            ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User'));
+    final avatarUrl = profile?.avatarUrl.isNotEmpty == true
+        ? profile!.avatarUrl
+        : item.ownerAvatarUrl;
+    final verified = item.isVerified || (profile?.identityVerified ?? false);
+    final phone = profile?.phone ?? '';
+    final memberSince = profile == null ? null : _monthYear(profile.createdAt.toDate());
+    final postsCount = profile?.postsCount;
 
     return SurfaceCard(
       child: Column(
@@ -445,14 +674,13 @@ class ItemDetailsScreen extends ConsumerWidget {
             style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
           ),
           const SizedBox(height: BeaconSpace.md),
-          // ── Avatar + name + trust score ──────────────────────────────────
           Row(
             children: [
               Stack(
                 clipBehavior: Clip.none,
                 children: [
                   AppAvatar(url: avatarUrl, name: ownerName, size: 56),
-                  if (item.isVerified)
+                  if (verified)
                     Positioned(
                       right: -2,
                       bottom: -2,
@@ -476,171 +704,77 @@ class ItemDetailsScreen extends ConsumerWidget {
                   children: [
                     Text(ownerName, style: text.titleMedium),
                     const SizedBox(height: 2),
-                    // Trust score
-                    Row(
-                      children: [
-                        Icon(Icons.star_rounded, color: t.accent, size: 16),
-                        const SizedBox(width: BeaconSpace.xs),
-                        Text('$trustScore trust score', style: text.bodySmall),
-                      ],
-                    ),
+                    if (ownerProfileAsync.isLoading && profile == null)
+                      Text('Loading profile…', style: text.bodySmall)
+                    else if (profile == null)
+                      Text('Profile not available', style: text.bodySmall)
+                    else
+                      Text(
+                        [
+                          if (verified) 'Verified member',
+                          if (memberSince != null) 'Member since $memberSince',
+                          if (postsCount != null)
+                            '$postsCount post${postsCount == 1 ? '' : 's'}',
+                        ].join(' · '),
+                        style: text.bodySmall,
+                      ),
                   ],
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: BeaconSpace.lg),
-
-          // ── Contact info rows ────────────────────────────────────────────
-          if (phone.isNotEmpty)
-            _contactRow(
-              context,
-              icon: Icons.phone_outlined,
-              label: 'Phone',
-              value: phone,
-              onTap: () async {
-                final url = Uri.parse('tel:$phone');
-                if (await canLaunchUrl(url)) await launchUrl(url);
-              },
-            ),
-
-          if (email.isNotEmpty)
-            _contactRow(
-              context,
-              icon: Icons.mail_outline_rounded,
-              label: 'Email',
-              value: email,
-              onTap: () async {
-                final url = Uri.parse('mailto:$email');
-                if (await canLaunchUrl(url)) await launchUrl(url);
-              },
-            ),
-
-          if (phone.isEmpty && email.isEmpty && ownerProfileAsync.isLoading)
-            Padding(
-              padding: const EdgeInsets.only(bottom: BeaconSpace.md),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: t.primary),
-                  ),
-                  const SizedBox(width: BeaconSpace.sm),
-                  Text('Loading contact info…', style: text.bodySmall),
-                ],
+          if (!isOwner) ...[
+            const SizedBox(height: BeaconSpace.lg),
+            if (phone.isNotEmpty)
+              _contactRow(
+                context,
+                icon: Icons.phone_outlined,
+                label: 'Phone',
+                value: phone,
+                onTap: () => _launch(context, 'tel:$phone', 'Could not open the phone dialer.'),
               ),
+            AppButton(
+              label: item.isLost ? 'Chat with owner' : 'Chat with finder',
+              icon: Icons.chat_bubble_outline_rounded,
+              size: AppButtonSize.medium,
+              onPressed: () => _startChat(context, ref, item, profile),
             ),
-
-          if (phone.isEmpty && email.isEmpty && !ownerProfileAsync.isLoading)
-            Padding(
-              padding: const EdgeInsets.only(bottom: BeaconSpace.md),
-              child: Text(
-                'Contact info not provided',
-                style: text.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            if (phone.isNotEmpty) ...[
+              const SizedBox(height: BeaconSpace.md),
+              AppButton.secondary(
+                label: 'Call',
+                icon: Icons.phone_outlined,
+                size: AppButtonSize.medium,
+                onPressed: () => _launch(context, 'tel:$phone', 'Could not open the phone dialer.'),
               ),
-            ),
-
-          // ── Chat button ──────────────────────────────────────────────────
-          AppButton(
-            label: item.isLost ? 'Chat with owner' : 'Chat with finder',
-            icon: Icons.chat_bubble_outline_rounded,
-            size: AppButtonSize.medium,
-            onPressed: () async {
-              final ownerId = item.ownerId;
-              final currentUserId =
-                  ref.read(authStateProvider).userId ?? '';
-              if (currentUserId.isEmpty) {
-                ActionFeedback.showInfo(
-                    context, 'Please log in to message the owner.');
-                return;
-              }
-              if (ownerId.isEmpty || ownerId == currentUserId) {
-                ActionFeedback.showInfo(
-                    context, 'You cannot message yourself.');
-                return;
-              }
-              try {
-                final chatService = ref.read(chatServiceProvider);
-                final chatId = await chatService.createOrGetChat(
-                    currentUserId, ownerId, item.id, item.title);
-                if (context.mounted) {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.chat,
-                    arguments: {
-                      'chatId': chatId,
-                      'userName': ownerName,
-                    },
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ActionFeedback.showInfo(
-                      context, 'Error creating chat: $e');
-                }
-              }
-            },
-          ),
-
-          const SizedBox(height: BeaconSpace.md),
-
-          // ── Call / Email buttons ──────────────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: AppButton.secondary(
-                  label: 'Call',
-                  icon: Icons.phone_outlined,
-                  size: AppButtonSize.medium,
-                  onPressed: () async {
-                    if (phone.isEmpty) {
-                      ActionFeedback.showInfo(
-                          context, 'Owner phone number is not available.');
-                      return;
-                    }
-                    final url = Uri.parse('tel:$phone');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url);
-                    } else if (context.mounted) {
-                      ActionFeedback.showInfo(
-                          context, 'Could not launch phone dialer.');
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: BeaconSpace.md),
-              Expanded(
-                child: AppButton.secondary(
-                  label: 'Email',
-                  icon: Icons.mail_outline_rounded,
-                  size: AppButtonSize.medium,
-                  onPressed: () async {
-                    if (email.isEmpty) {
-                      ActionFeedback.showInfo(
-                          context, 'Owner email is not available.');
-                      return;
-                    }
-                    final url = Uri.parse('mailto:$email');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url);
-                    } else if (context.mounted) {
-                      ActionFeedback.showInfo(
-                          context, 'Could not launch email client.');
-                    }
-                  },
-                ),
+            ] else ...[
+              const SizedBox(height: BeaconSpace.sm),
+              Text(
+                'Phone number not shared. In-app chat is the safest way to coordinate.',
+                style: text.bodySmall,
               ),
             ],
-          ),
+          ],
         ],
       ),
     );
   }
 
-  // ── Contact info row helper ─────────────────────────────────────────────────
+  static String _monthYear(DateTime d) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[d.month - 1]} ${d.year}';
+  }
+
+  Future<void> _launch(BuildContext context, String url, String failure) async {
+    final uri = Uri.parse(url);
+    final ok = await canLaunchUrl(uri) && await launchUrl(uri);
+    if (!ok && context.mounted) ActionFeedback.showInfo(context, failure);
+  }
+
   Widget _contactRow(
     BuildContext context, {
     required IconData icon,
@@ -651,7 +785,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: BeaconSpace.sm),
+      padding: const EdgeInsets.only(bottom: BeaconSpace.md),
       child: Material(
         color: t.surfaceLow,
         borderRadius: BeaconRadius.rMd,
@@ -671,8 +805,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                     children: [
                       Text(label.toUpperCase(),
                           style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
-                      Text(value,
-                          style: text.titleSmall?.copyWith(color: t.primary)),
+                      Text(value, style: text.titleSmall?.copyWith(color: t.primary)),
                     ],
                   ),
                 ),
@@ -685,8 +818,15 @@ class ItemDetailsScreen extends ConsumerWidget {
     );
   }
 
-  // ── Safety actions ──────────────────────────────────────────────────────────
-  Widget _buildSafetyActions(BuildContext context, WidgetRef ref, ItemModel item, bool isOwner, AppColorTokens t) {
+  // ── Owner / safety actions ──────────────────────────────────────────────────
+  Widget _buildActions(
+    BuildContext context,
+    WidgetRef ref,
+    ItemModel item,
+    bool isOwner,
+    UserModel? owner,
+    AppColorTokens t,
+  ) {
     final text = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -704,64 +844,45 @@ class ItemDetailsScreen extends ConsumerWidget {
               AppButton.ghost(
                 label: 'Report post',
                 icon: Icons.flag_outlined,
-                onPressed: () async {
-                  final reporterId = ref.read(authStateProvider).userId ?? '';
-                  if (reporterId.isEmpty) {
-                    ActionFeedback.showInfo(context, 'Please log in to report.');
-                    return;
-                  }
-                  try {
-                    await ref.read(postServiceProvider).reportPost(item.id, reporterId, 'Inappropriate content or spam');
-                    if (context.mounted) {
-                      ActionFeedback.showInfo(context, 'Post reported successfully.');
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ActionFeedback.showInfo(context, 'Error reporting post: $e');
-                    }
-                  }
-                },
+                onPressed: () => _report(context, ref, item),
+              ),
+              AppButton.ghost(
+                label: 'Block member',
+                icon: Icons.block_rounded,
+                onPressed: () => _confirmBlock(context, ref, item),
               ),
             ] else ...[
+              if (!item.isResolved)
+                AppButton.tonal(
+                  label: 'Edit',
+                  icon: Icons.edit_outlined,
+                  size: AppButtonSize.medium,
+                  expand: false,
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => EditPostScreen(post: item)),
+                    );
+                    ref.invalidate(postByIdProvider(item.id));
+                  },
+                ),
               AppButton.tonal(
-                label: item.isResolved ? 'Resolved' : 'Mark as resolved',
-                icon: Icons.check_circle_outline_rounded,
+                label: item.isResolved ? 'Reopen' : 'Mark as resolved',
+                icon: item.isResolved
+                    ? Icons.replay_rounded
+                    : Icons.check_circle_outline_rounded,
                 size: AppButtonSize.medium,
                 expand: false,
-                onPressed: item.isResolved
-                    ? null
-                    : () async {
-                        try {
-                          await ref.read(postServiceProvider).markAsResolved(item.id);
-                          if (context.mounted) {
-                            ActionFeedback.showInfo(context, 'Post marked as resolved!');
-                            Navigator.pop(context); // Go back to refresh
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ActionFeedback.showInfo(context, 'Error resolving post: $e');
-                          }
-                        }
-                      },
+                onPressed: () => item.isResolved
+                    ? _reopen(context, ref, item)
+                    : _resolve(context, ref, item),
               ),
               AppButton.danger(
                 label: 'Delete post',
                 icon: Icons.delete_outline_rounded,
                 size: AppButtonSize.medium,
                 expand: false,
-                onPressed: () async {
-                  try {
-                    await ref.read(postServiceProvider).deletePost(item.id);
-                    if (context.mounted) {
-                      ActionFeedback.showInfo(context, 'Post deleted successfully.');
-                      Navigator.pop(context);
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ActionFeedback.showInfo(context, 'Error deleting post: $e');
-                    }
-                  }
-                },
+                onPressed: () => _confirmDelete(context, ref, item),
               ),
             ]
           ],
@@ -771,11 +892,7 @@ class ItemDetailsScreen extends ConsumerWidget {
   }
 
   // ── Similar items section ───────────────────────────────────────────────────
-  Widget _buildSimilarSection(
-    BuildContext context,
-    WidgetRef ref,
-    ItemModel item,
-  ) {
+  Widget _buildSimilarSection(BuildContext context, WidgetRef ref, ItemModel item) {
     final similarState = ref.watch(similarItemsProvider(item.id));
 
     return Column(
@@ -783,14 +900,16 @@ class ItemDetailsScreen extends ConsumerWidget {
       children: [
         SectionHeader(
           title: 'Similar items',
-          eyebrow: 'Found recently in the area',
+          eyebrow: item.isLost ? 'Found items in this category' : 'Lost items in this category',
           actionLabel: 'View all',
           onAction: () => Navigator.pushNamed(context, AppRoutes.search),
         ),
         similarState.when(
-          loading: () =>
-              const LoadingWidget(message: 'Loading similar items...'),
-          error: (err, _) => ErrorStateWidget(message: err.toString()),
+          loading: () => const LoadingWidget(message: 'Loading similar items...'),
+          error: (err, _) => ErrorStateWidget(
+            message: describeError(err),
+            onRetry: () => ref.invalidate(similarItemsProvider(item.id)),
+          ),
           data: (items) {
             if (items.isEmpty) {
               return const EmptyWidget(
@@ -806,9 +925,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                 clipBehavior: Clip.none,
                 itemCount: items.length,
                 separatorBuilder: (_, __) => const SizedBox(width: BeaconSpace.md),
-                itemBuilder: (context, index) {
-                  return SimilarCard(item: items[index]);
-                },
+                itemBuilder: (context, index) => SimilarCard(item: items[index]),
               ),
             );
           },

@@ -10,7 +10,6 @@ class RouteNames {
   static const String editProfile = '/edit-profile';
   static const String getVerified = '/get-verified';
   static const String helpSupport = '/help-support';
-  static const String managePost = '/manage-post';
   static const String messages = '/messages';
   static const String myPosts = '/my-posts';
   static const String notificationSettings = '/notification-settings';

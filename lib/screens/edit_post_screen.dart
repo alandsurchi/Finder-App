@@ -6,6 +6,7 @@ import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/services/image_upload_service.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/widgets/common/action_feedback.dart';
 
 class EditPostScreen extends ConsumerStatefulWidget {
   final ItemModel post;
@@ -74,49 +75,36 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
 
     setState(() => _isSaving = true);
 
-    final updated = ItemModel(
-      id: widget.post.id,
-      ownerId: widget.post.ownerId,
-      ownerName: widget.post.ownerName,
+    final updated = widget.post.copyWith(
       title: title,
       description: desc,
       category: _category ?? 'Other',
       isLost: _isLostItem,
-      location:
-          _locationCtrl.text.trim().isEmpty ? 'Unknown' : _locationCtrl.text.trim(),
-      lastSeenAt: _locationCtrl.text.trim().isEmpty
-          ? widget.post.lastSeenAt
+      location: _locationCtrl.text.trim().isEmpty
+          ? 'Unknown location'
           : _locationCtrl.text.trim(),
-      lostOn:
-          _lostOnCtrl.text.trim().isEmpty ? null : _lostOnCtrl.text.trim(),
+      lostOn: _lostOnCtrl.text.trim().isEmpty ? null : _lostOnCtrl.text.trim(),
       reward: _rewardCtrl.text.trim().isEmpty ? null : _rewardCtrl.text.trim(),
+      clearReward: _rewardCtrl.text.trim().isEmpty,
       imagePath: _imageCtrl.text.trim(),
-      timeAgo: widget.post.timeAgo,
-      createdAt: widget.post.createdAt,
-      isVerified: widget.post.isVerified,
-      ownerTrustScore: widget.post.ownerTrustScore,
-      isResolved: widget.post.isResolved,
     );
 
-    await ref.read(myPostsProvider.notifier).updatePost(updated);
-
-    if (mounted) {
-      setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Post updated successfully!'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      Navigator.pop(context, true); // return true = refresh needed
-    }
-  }
-
-  void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+    final result = await ref.read(myPostsProvider.notifier).updatePost(updated);
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+    result.fold(
+      onSuccess: (_) {
+        Navigator.pop(context, true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = Navigator.of(context, rootNavigator: true).context;
+          ActionFeedback.showSuccess(ctx, 'Post updated.');
+        });
+      },
+      onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
   }
+
+  void _snack(String msg) => ActionFeedback.showError(context, msg);
 
   @override
   Widget build(BuildContext context) {
@@ -315,7 +303,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
         : DateTime(
             picked.year, picked.month, picked.day, time.hour, time.minute);
     _lostOnCtrl.text =
-        '${combined.day}/${combined.month}/${combined.year} '
+        '${combined.year}-${combined.month.toString().padLeft(2, '0')}-${combined.day.toString().padLeft(2, '0')} '
         '${combined.hour.toString().padLeft(2, '0')}:'
         '${combined.minute.toString().padLeft(2, '0')}';
   }
@@ -414,12 +402,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
         setState(() => _imageCtrl.text = url);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Upload failed: $e'),
-          behavior: SnackBarBehavior.floating,
-        ));
-      }
+      if (mounted) ActionFeedback.showError(context, 'Upload failed. $e');
     } finally {
       if (mounted) setState(() => _isUploadingImage = false);
     }
