@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:finder/widgets/ui/app_text_field.dart';
 
+/// Legacy entry point kept for the auth screens; renders an [AppTextField].
 class CustomTextField extends StatelessWidget {
   final String hintText;
   final IconData prefixIcon;
@@ -8,9 +10,13 @@ class CustomTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
+  final String? label;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
+  final ValueChanged<String>? onSubmitted;
 
   const CustomTextField({
-    Key? key,
+    super.key,
     required this.hintText,
     required this.prefixIcon,
     this.obscureText = false,
@@ -18,31 +24,27 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType,
     this.controller,
     this.onChanged,
-  }) : super(key: key);
+    this.label,
+    this.textInputAction,
+    this.autofillHints,
+    this.onSubmitted,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        onChanged: onChanged,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          prefixIcon: Icon(prefixIcon, color: Colors.white70),
-          suffixIcon: suffixIcon,
-          hintText: hintText,
-          hintStyle: const TextStyle(color: Colors.white60),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        ),
-      ),
+    return AppTextField(
+      controller: controller,
+      label: label,
+      hint: hintText,
+      prefixIcon: prefixIcon,
+      // The built-in eye toggle replaces any passed static eye icon.
+      suffix: obscureText ? null : suffixIcon,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
+      onSubmitted: onSubmitted,
+      textInputAction: textInputAction,
+      autofillHints: autofillHints,
     );
   }
 }

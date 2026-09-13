@@ -1,42 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:finder/theme/app_color_tokens.dart';
+import 'package:finder/theme/beacon_tokens.dart';
+import 'package:finder/widgets/ui/press_scale.dart';
 
+/// Round social sign-in button (Google asset or a brand icon).
 class SocialButton extends StatelessWidget {
   final IconData? icon;
   final Color? color;
   final String? imageAsset;
   final VoidCallback? onTap;
+  final String? semanticLabel;
 
   const SocialButton({
-    Key? key,
+    super.key,
     this.icon,
     this.color,
     this.imageAsset,
     this.onTap,
-  }) : super(key: key);
+    this.semanticLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
-        ),
-        child: Center(
-          child: imageAsset != null
-              ? Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: Image.asset(imageAsset!),
-                )
-              : Icon(
-                  icon,
-                  color: color,
-                  size: 30,
-                ),
+    final t = AppColorTokens.of(context);
+    final enabled = onTap != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: semanticLabel ?? 'Continue with social account',
+      child: PressScale(
+        enabled: enabled,
+        scale: 0.93,
+        child: Material(
+          color: t.surface,
+          shape: CircleBorder(side: BorderSide(color: t.outlineVariant)),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              width: 56,
+              height: 56,
+              child: Center(
+                child: imageAsset != null
+                    ? Padding(
+                        padding: const EdgeInsets.all(BeaconSpace.lg),
+                        child: Image.asset(imageAsset!),
+                      )
+                    : Icon(icon, color: color ?? t.onSurface, size: 26),
+              ),
+            ),
+          ),
         ),
       ),
     );
