@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/models/user_model.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/services/image_upload_service.dart';
+import 'package:finder/widgets/ui/ui.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+  const EditProfileScreen({super.key});
 
   @override
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -24,7 +24,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   bool _isSaving = false;
   bool _isUploadingAvatar = false;
-  int _editingIndex = -1;
 
   @override
   void initState() {
@@ -58,14 +57,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   // ── Field definitions ──────────────────────────────────────────────────────
   List<_FieldDef> get _fields => [
-        _FieldDef('Full Name', Icons.person_outline, _fullNameCtrl),
-        _FieldDef('Nick Name', Icons.alternate_email, _nickNameCtrl),
+        _FieldDef('Full name', Icons.person_outline_rounded, _fullNameCtrl,
+            hint: 'Your name', capitalization: TextCapitalization.words,
+            autofill: AutofillHints.name),
+        _FieldDef('Nickname', Icons.alternate_email_rounded, _nickNameCtrl,
+            hint: 'How friends know you', autofill: AutofillHints.nickname),
         _FieldDef('Email', Icons.mail_outline_rounded, _emailCtrl,
-            type: TextInputType.emailAddress),
+            type: TextInputType.emailAddress, hint: 'you@example.com',
+            autofill: AutofillHints.email),
         _FieldDef('Phone', Icons.phone_outlined, _phoneCtrl,
-            type: TextInputType.phone),
-        _FieldDef('Address', Icons.location_on_outlined, _addressCtrl),
-        _FieldDef('Job / Occupation', Icons.work_outline_rounded, _jobCtrl),
+            type: TextInputType.phone, hint: '+1 234 567 8900',
+            autofill: AutofillHints.telephoneNumber),
+        _FieldDef('Address', Icons.place_outlined, _addressCtrl,
+            hint: 'City, country', capitalization: TextCapitalization.words,
+            autofill: AutofillHints.addressCity),
+        _FieldDef('Job / occupation', Icons.work_outline_rounded, _jobCtrl,
+            hint: 'What do you do?', capitalization: TextCapitalization.sentences,
+            autofill: AutofillHints.jobTitle),
       ];
 
   @override
@@ -73,86 +81,76 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final t = AppColorTokens.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Edit Profile',
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20)),
-        centerTitle: true,
-        actions: [
-          _isSaving
-              ? const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    ),
-                  ),
-                )
-              : TextButton(
-                  onPressed: _saveProfile,
-                  child: const Text('Save',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold)),
-                ),
-        ],
-      ),
-      body: GestureDetector(
-        // Dismiss keyboard / editing on tap outside
-        onTap: () => setState(() => _editingIndex = -1),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 60),
-          child: Column(
-            children: [
-              // ── Avatar section ──
-              _buildAvatarSection(t),
-              const SizedBox(height: 28),
-
-              // ── Fields ──
-              ...List.generate(_fields.length, (i) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildFieldCard(i, t),
-                );
-              }),
-
-              const SizedBox(height: 12),
-
-              // ── Save full button ──
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            AppPageHeader(
+              title: 'Edit profile',
+              actions: [
+                AppButton.ghost(
+                  label: 'Save',
+                  icon: Icons.check_rounded,
+                  isLoading: _isSaving,
                   onPressed: _isSaving ? null : _saveProfile,
-                  icon: const Icon(Icons.save_outlined, size: 18),
-                  label: const Text('Save Changes',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: t.primary,
-                    foregroundColor:
-                        t.isDark ? Colors.black : Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
-                  ),
+                ),
+              ],
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                    BeaconSpace.page, 0, BeaconSpace.page, BeaconSpace.xxl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Avatar section ──
+                    _buildAvatarSection(t),
+                    const SizedBox(height: BeaconSpace.xxxl),
+
+                    // ── Fields ──
+                    AutofillGroup(
+                      child: SurfaceCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (var i = 0; i < _fields.length; i++) ...[
+                              if (i > 0) const SizedBox(height: BeaconSpace.lg),
+                              AppTextField(
+                                controller: _fields[i].ctrl,
+                                label: _fields[i].label,
+                                hint: _fields[i].hint,
+                                prefixIcon: _fields[i].icon,
+                                keyboardType: _fields[i].type,
+                                textCapitalization: _fields[i].capitalization,
+                                autofillHints: _fields[i].autofill == null
+                                    ? null
+                                    : [_fields[i].autofill!],
+                                textInputAction: i == _fields.length - 1
+                                    ? TextInputAction.done
+                                    : TextInputAction.next,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              BeaconSpace.page, BeaconSpace.sm, BeaconSpace.page, BeaconSpace.lg),
+          child: AppButton(
+            label: 'Save changes',
+            icon: Icons.check_rounded,
+            isLoading: _isSaving,
+            onPressed: _isSaving ? null : _saveProfile,
           ),
         ),
       ),
@@ -162,70 +160,47 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   // ── Avatar section ─────────────────────────────────────────────────────────
   Widget _buildAvatarSection(AppColorTokens t) {
     final url = _avatarCtrl.text.trim();
+    final name = _fullNameCtrl.text.trim();
     return Center(
       child: Column(
         children: [
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: t.primaryContainer,
-                  border: Border.all(color: t.primary, width: 2),
-                  image: url.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(url),
-                          fit: BoxFit.cover,
-                          onError: (_, __) {},
-                        )
-                      : null,
-                ),
-                child: url.isEmpty
-                    ? Icon(Icons.person, color: t.onSurfaceVar, size: 60)
-                    : null,
-              ),
+              AppAvatar(url: url, name: name, size: 112, ring: true),
               Positioned(
-                right: 2,
-                bottom: 2,
-                child: GestureDetector(
-                  onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: t.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: _isUploadingAvatar
-                        ? const Padding(
-                            padding: EdgeInsets.all(6),
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.camera_alt,
-                            color: Colors.white, size: 16),
-                  ),
-                ),
+                right: 0,
+                bottom: 0,
+                child: _isUploadingAvatar
+                    ? Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: t.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: t.surface, width: 2),
+                        ),
+                        padding: const EdgeInsets.all(9),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: t.onPrimary),
+                      )
+                    : AppIconButton(
+                        icon: Icons.camera_alt_rounded,
+                        tooltip: 'Change profile photo',
+                        size: 36,
+                        iconSize: 18,
+                        variant: AppIconButtonVariant.filled,
+                        onPressed: _pickAndUploadAvatar,
+                      ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          GestureDetector(
-            onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
-            child: Text(
-              _isUploadingAvatar
-                  ? 'Uploading…'
-                  : (url.isEmpty ? 'Add profile photo' : 'Change profile photo'),
-              style: TextStyle(
-                color: _isUploadingAvatar ? t.onSurfaceMuted : t.primary,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
+          const SizedBox(height: BeaconSpace.md),
+          AppButton.ghost(
+            label: _isUploadingAvatar
+                ? 'Uploading…'
+                : (url.isEmpty ? 'Add profile photo' : 'Change profile photo'),
+            onPressed: _isUploadingAvatar ? null : _pickAndUploadAvatar,
           ),
         ],
       ),
@@ -258,107 +233,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
   }
 
-  // ── Field card ─────────────────────────────────────────────────────────────
-  Widget _buildFieldCard(int index, AppColorTokens t) {
-    final def = _fields[index];
-    final isEditing = _editingIndex == index;
-
-    return GestureDetector(
-      onTap: () => setState(() => _editingIndex = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: t.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isEditing ? t.primary : t.divider,
-            width: isEditing ? 1.5 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: isEditing
-                    ? t.primary.withOpacity(0.1)
-                    : t.surfaceHigh,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(def.icon,
-                  color: isEditing ? t.primary : t.onSurfaceMuted,
-                  size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    def.label,
-                    style: TextStyle(
-                      color: t.onSurfaceMuted,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  isEditing
-                      ? TextField(
-                          controller: def.ctrl,
-                          autofocus: true,
-                          keyboardType: def.type,
-                          style:
-                              TextStyle(color: t.onSurface, fontSize: 14),
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                            border: InputBorder.none,
-                          ),
-                          onSubmitted: (_) =>
-                              setState(() => _editingIndex = -1),
-                        )
-                      : Text(
-                          def.ctrl.text.isEmpty ? 'Tap to add' : def.ctrl.text,
-                          style: TextStyle(
-                            color: def.ctrl.text.isEmpty
-                                ? t.onSurfaceMuted
-                                : t.onSurface,
-                            fontSize: 14,
-                            fontStyle: def.ctrl.text.isEmpty
-                                ? FontStyle.italic
-                                : FontStyle.normal,
-                          ),
-                        ),
-                ],
-              ),
-            ),
-            Icon(
-              isEditing ? Icons.check_circle : Icons.edit_outlined,
-              color: isEditing ? t.primary : t.onSurfaceMuted,
-              size: 18,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ── Save ───────────────────────────────────────────────────────────────────
   Future<void> _saveProfile() async {
     setState(() {
-      _editingIndex = -1;
       _isSaving = true;
     });
 
@@ -397,6 +274,16 @@ class _FieldDef {
   final IconData icon;
   final TextEditingController ctrl;
   final TextInputType type;
-  const _FieldDef(this.label, this.icon, this.ctrl,
-      {this.type = TextInputType.text});
+  final String? hint;
+  final TextCapitalization capitalization;
+  final String? autofill;
+  const _FieldDef(
+    this.label,
+    this.icon,
+    this.ctrl, {
+    this.type = TextInputType.text,
+    this.hint,
+    this.capitalization = TextCapitalization.none,
+    this.autofill,
+  });
 }

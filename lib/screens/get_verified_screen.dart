@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:finder/theme/app_color_tokens.dart';
+import 'package:finder/widgets/ui/ui.dart';
 
 enum _DocType { passport, identityCard, driversLicense }
 
 class GetVerifiedScreen extends StatefulWidget {
-  const GetVerifiedScreen({Key? key}) : super(key: key);
+  const GetVerifiedScreen({super.key});
 
   @override
   State<GetVerifiedScreen> createState() => _GetVerifiedScreenState();
@@ -17,15 +17,6 @@ class _GetVerifiedScreenState extends State<GetVerifiedScreen> {
   bool _backUploaded = false;
   bool _cameraOpened = false;
   bool _submitted = false;
-
-  AppColorTokens get t => AppColorTokens.of(context);
-  Color get _bg => t.bg;
-  Color get _blue => t.primary;
-  Color get _blueLight => t.primaryContainer;
-  Color get _white => t.surface;
-  Color get _divider => t.divider;
-  Color get _textLight => t.onSurfaceMuted;
-  Color get _textDark => t.onSurface;
 
   // ── Progress ────────────────────────────────────────────────────────────────
   int get _completedSteps {
@@ -42,321 +33,273 @@ class _GetVerifiedScreenState extends State<GetVerifiedScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: Colors.transparent,
       // ── Bottom submit button ────────────────────────────────────────────────
       bottomNavigationBar: _buildBottomBar(context),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── App bar ───────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(4, 8, 16, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Text(
-                      'Verify Identity',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ── Hero banner ───────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: t.primary,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Security badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.shield_outlined,
-                              color: Colors.white,
-                              size: 13,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              'Security Standards',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Verified accounts\nhelp build a safer\ncommunity for\neveryone.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Your data is encrypted and stored securely. Verification only takes a few minutes.',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ── Step 1: Document Selection ─────────────────────────────────
-              _buildSectionHeader(
-                stepIndex: 1,
-                icon: Icons.description_outlined,
-                title: 'Step 1: Document Selection',
-                subtitle: 'Choose the ID you wish to use for verification',
-              ),
-
-              const SizedBox(height: 12),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: t.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: t.divider),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildDocOption(
-                        label: 'Passport',
-                        icon: Icons.book_outlined,
-                        value: _DocType.passport,
-                      ),
-                      Divider(color: t.divider, height: 1),
-                      _buildDocOption(
-                        label: 'Identity Card',
-                        icon: Icons.badge_outlined,
-                        value: _DocType.identityCard,
-                      ),
-                      Divider(color: t.divider, height: 1),
-                      _buildDocOption(
-                        label: "Driver's License",
-                        icon: Icons.drive_eta_outlined,
-                        value: _DocType.driversLicense,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── Step 2: Upload Photos ──────────────────────────────────────
-              _buildSectionHeader(
-                stepIndex: 2,
-                icon: Icons.camera_alt_outlined,
-                title: 'Step 2: Upload Photos',
-                subtitle: 'Upload clear photos of both sides of your ID',
-              ),
-
-              const SizedBox(height: 12),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+        bottom: false,
+        child: Column(
+          children: [
+            AppPageHeader(
+              title: 'Verify identity',
+              subtitle: '$_completedSteps of 3 steps complete',
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                    BeaconSpace.page, 0, BeaconSpace.page, BeaconSpace.xxl),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildUploadBox(
-                      label: 'Front of ID',
-                      isUploaded: _frontUploaded,
-                      onTap: () => setState(() => _frontUploaded = true),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildUploadBox(
-                      label: 'Back of ID',
-                      isUploaded: _backUploaded,
-                      onTap: () => setState(() => _backUploaded = true),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── Step 3: Facial Verification ────────────────────────────────
-              _buildSectionHeader(
-                stepIndex: 3,
-                icon: Icons.face_outlined,
-                title: 'Step 3: Facial Verification',
-                subtitle:
-                    'We\'ll compare your selfie with your document photo.',
-              ),
-
-              const SizedBox(height: 12),
-
-              // Camera UI card
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 28),
-                  decoration: BoxDecoration(
-                    color: t.surface,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: t.divider),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: t.primary.withOpacity(0.1),
-                          border: Border.all(
-                            color: t.primary.withOpacity(0.3),
-                            width: 2,
+                    // ── Hero banner ───────────────────────────────────────
+                    StaggeredEntrance(
+                      child: Material(
+                        color: t.primary,
+                        borderRadius: BeaconRadius.rXl,
+                        child: Padding(
+                          padding: const EdgeInsets.all(BeaconSpace.xl),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Security badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: BeaconSpace.md,
+                                  vertical: BeaconSpace.xs + 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: t.onPrimary.withValues(alpha: 0.15),
+                                  borderRadius: BeaconRadius.rPill,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.shield_outlined, color: t.onPrimary, size: 14),
+                                    const SizedBox(width: BeaconSpace.xs + 1),
+                                    Text(
+                                      'Security standards',
+                                      style: text.labelSmall?.copyWith(color: t.onPrimary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: BeaconSpace.lg),
+                              Text(
+                                'Verified accounts help build a safer community for everyone.',
+                                style: text.headlineSmall?.copyWith(color: t.onPrimary),
+                              ),
+                              const SizedBox(height: BeaconSpace.md),
+                              Text(
+                                'Your data is encrypted and stored securely. Verification only takes a few minutes.',
+                                style: text.bodyMedium?.copyWith(
+                                  color: t.onPrimary.withValues(alpha: 0.85),
+                                ),
+                              ),
+                              const SizedBox(height: BeaconSpace.lg),
+                              ClipRRect(
+                                borderRadius: BeaconRadius.rPill,
+                                child: LinearProgressIndicator(
+                                  value: _completedSteps / 3,
+                                  minHeight: 6,
+                                  color: t.accent,
+                                  backgroundColor: t.onPrimary.withValues(alpha: 0.2),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Stack(
-                          alignment: Alignment.center,
+                      ),
+                    ),
+
+                    const SizedBox(height: BeaconSpace.xxl),
+
+                    // ── Step 1: Document Selection ─────────────────────────
+                    StaggeredEntrance(
+                      index: 1,
+                      child: _buildSectionHeader(
+                        stepIndex: 1,
+                        done: true,
+                        icon: Icons.description_outlined,
+                        title: 'Document selection',
+                        subtitle: 'Choose the ID you wish to use for verification',
+                      ),
+                    ),
+
+                    const SizedBox(height: BeaconSpace.md),
+
+                    StaggeredEntrance(
+                      index: 1,
+                      child: SurfaceCard(
+                        padding: const EdgeInsets.all(BeaconSpace.sm),
+                        child: Column(
                           children: [
-                            // Corner brackets
-                            _CameraCorners(),
-                            // Camera icon
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: _blue.withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                _cameraOpened
-                                    ? Icons.check_circle_outline
-                                    : Icons.camera_alt_outlined,
-                                color: _blue,
-                                size: 26,
-                              ),
+                            _buildDocOption(
+                              label: 'Passport',
+                              icon: Icons.book_outlined,
+                              value: _DocType.passport,
+                            ),
+                            _buildDocOption(
+                              label: 'Identity card',
+                              icon: Icons.badge_outlined,
+                              value: _DocType.identityCard,
+                            ),
+                            _buildDocOption(
+                              label: "Driver's license",
+                              icon: Icons.drive_eta_outlined,
+                              value: _DocType.driversLicense,
                             ),
                           ],
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 20),
+                    const SizedBox(height: BeaconSpace.xxl),
 
-                      // Open Camera button
-                      SizedBox(
-                        width: 200,
-                        height: 48,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: t.primary,
-                            foregroundColor: t.isDark
-                                ? Colors.black
-                                : Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                    // ── Step 2: Upload Photos ──────────────────────────────
+                    StaggeredEntrance(
+                      index: 2,
+                      child: _buildSectionHeader(
+                        stepIndex: 2,
+                        done: _frontUploaded && _backUploaded,
+                        icon: Icons.camera_alt_outlined,
+                        title: 'Upload photos',
+                        subtitle: 'Upload clear photos of both sides of your ID',
+                      ),
+                    ),
+
+                    const SizedBox(height: BeaconSpace.md),
+
+                    StaggeredEntrance(
+                      index: 2,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildUploadBox(
+                              label: 'Front of ID',
+                              isUploaded: _frontUploaded,
+                              onTap: () => setState(() => _frontUploaded = true),
                             ),
                           ),
-                          onPressed: () => setState(() => _cameraOpened = true),
-                          icon: const Icon(Icons.camera_alt_outlined, size: 18),
-                          label: Text(
-                            _cameraOpened ? 'Retake Selfie' : 'Open Camera',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                          const SizedBox(width: BeaconSpace.md),
+                          Expanded(
+                            child: _buildUploadBox(
+                              label: 'Back of ID',
+                              isUploaded: _backUploaded,
+                              onTap: () => setState(() => _backUploaded = true),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: BeaconSpace.xxl),
+
+                    // ── Step 3: Facial Verification ────────────────────────
+                    StaggeredEntrance(
+                      index: 3,
+                      child: _buildSectionHeader(
+                        stepIndex: 3,
+                        done: _cameraOpened,
+                        icon: Icons.face_outlined,
+                        title: 'Facial verification',
+                        subtitle:
+                            "We'll compare your selfie with your document photo.",
+                      ),
+                    ),
+
+                    const SizedBox(height: BeaconSpace.md),
+
+                    // Camera UI card
+                    StaggeredEntrance(
+                      index: 3,
+                      child: SurfaceCard(
+                        padding: const EdgeInsets.symmetric(vertical: BeaconSpace.xxl),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 128,
+                              height: 128,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: t.primaryContainer,
+                                boxShadow: [
+                                  BoxShadow(color: t.accentGlow, blurRadius: 30, spreadRadius: 4),
+                                ],
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Corner brackets
+                                  SizedBox(
+                                    width: 92,
+                                    height: 92,
+                                    child: CustomPaint(
+                                      painter: _CornerPainter(color: t.primary),
+                                    ),
+                                  ),
+                                  // Camera icon
+                                  Container(
+                                    width: 52,
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: _cameraOpened ? t.found : t.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      _cameraOpened
+                                          ? Icons.check_rounded
+                                          : Icons.camera_alt_outlined,
+                                      color: _cameraOpened ? t.onFound : t.onPrimary,
+                                      size: 26,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: BeaconSpace.xl),
+
+                            // Open Camera button
+                            AppButton(
+                              label: _cameraOpened ? 'Retake selfie' : 'Open camera',
+                              icon: Icons.camera_alt_outlined,
+                              expand: false,
+                              size: AppButtonSize.medium,
+                              variant: _cameraOpened
+                                  ? AppButtonVariant.tonal
+                                  : AppButtonVariant.primary,
+                              onPressed: () => setState(() => _cameraOpened = true),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
 
-              const SizedBox(height: 16),
+                    const SizedBox(height: BeaconSpace.lg),
 
-              // ── Tip row ────────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.lightbulb_outline, color: t.primary, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Make sure you are in a well-lit area and not wearing a hat or glasses.',
-                        style: TextStyle(
-                          color: t.onSurfaceVar,
-                          fontSize: 12,
-                          height: 1.5,
-                        ),
+                    // ── Tip row ────────────────────────────────────────────
+                    StaggeredEntrance(
+                      index: 4,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.lightbulb_outline_rounded, color: t.accent, size: 18),
+                          const SizedBox(width: BeaconSpace.sm),
+                          Expanded(
+                            child: Text(
+                              'Make sure you are in a well-lit area and not wearing a hat or glasses.',
+                              style: text.bodySmall,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -365,49 +308,40 @@ class _GetVerifiedScreenState extends State<GetVerifiedScreen> {
   // ── Section header ─────────────────────────────────────────────────────────
   Widget _buildSectionHeader({
     required int stepIndex,
+    required bool done,
     required IconData icon,
     required String title,
     required String subtitle,
   }) {
     final t = AppColorTokens.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: t.iconBg, shape: BoxShape.circle),
-            child: Icon(icon, color: t.primary, size: 20),
+    final text = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: done ? t.foundContainer : t.primaryContainer,
+            shape: BoxShape.circle,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: t.onSurface,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: t.onSurfaceVar,
-                    fontSize: 12,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
+          child: Icon(done ? Icons.check_rounded : icon,
+              color: done ? t.found : t.primary, size: 20),
+        ),
+        const SizedBox(width: BeaconSpace.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('STEP $stepIndex',
+                  style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
+              Text(title, style: text.titleMedium),
+              const SizedBox(height: 2),
+              Text(subtitle, style: text.bodySmall),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -417,47 +351,12 @@ class _GetVerifiedScreenState extends State<GetVerifiedScreen> {
     required IconData icon,
     required _DocType value,
   }) {
-    final t = AppColorTokens.of(context);
     final selected = _selectedDoc == value;
-    return GestureDetector(
+    return SheetOption(
+      label: label,
+      icon: icon,
+      selected: selected,
       onTap: () => setState(() => _selectedDoc = value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: selected ? t.primary.withOpacity(0.08) : t.surface,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: selected ? t.primary : t.onSurfaceVar, size: 20),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: selected ? t.primary : t.onSurface,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: selected ? t.primary : t.surface,
-                border: Border.all(
-                  color: selected ? t.primary : t.divider,
-                  width: 2,
-                ),
-              ),
-              child: selected
-                  ? const Icon(Icons.check, color: Colors.white, size: 13)
-                  : null,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -467,53 +366,57 @@ class _GetVerifiedScreenState extends State<GetVerifiedScreen> {
     required bool isUploaded,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        height: 120,
-        decoration: BoxDecoration(
-          color: isUploaded ? _blueLight : _white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isUploaded ? _blue : _divider,
-            width: isUploaded ? 1.5 : 1,
-            style: isUploaded ? BorderStyle.solid : BorderStyle.solid,
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: isUploaded ? '$label uploaded, tap to replace' : 'Upload $label',
+      child: PressScale(
+        child: AnimatedContainer(
+          duration: BeaconMotion.scaled(context, BeaconMotion.state),
+          curve: BeaconMotion.standard,
+          height: 132,
+          decoration: BoxDecoration(
+            color: isUploaded ? t.foundContainer : t.surface,
+            borderRadius: BeaconRadius.rXl,
+            border: Border.all(
+              color: isUploaded ? t.found : t.outlineVariant,
+              width: isUploaded ? 1.5 : 1,
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isUploaded
-                  ? Icons.check_circle_outline
-                  : Icons.insert_drive_file_outlined,
-              color: isUploaded ? _blue : _textLight,
-              size: 30,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isUploaded ? '✓ $label Uploaded' : label,
-              style: TextStyle(
-                color: isUploaded ? _blue : _textDark,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BeaconRadius.rXl,
+              onTap: onTap,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isUploaded
+                        ? Icons.check_circle_rounded
+                        : Icons.upload_file_outlined,
+                    color: isUploaded ? t.found : t.onSurfaceVar,
+                    size: 30,
+                  ),
+                  const SizedBox(height: BeaconSpace.sm),
+                  Text(
+                    isUploaded ? '$label uploaded' : label,
+                    style: text.titleSmall?.copyWith(
+                      color: isUploaded ? t.found : t.onSurface,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isUploaded ? 'Tap to replace' : 'JPG, PNG up to 10MB',
+                    style: text.bodySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              isUploaded ? 'Tap to replace' : 'JPG, PNG up to 10MB',
-              style: TextStyle(color: _textLight, fontSize: 11),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -521,115 +424,89 @@ class _GetVerifiedScreenState extends State<GetVerifiedScreen> {
 
   // ── Bottom submit bar ──────────────────────────────────────────────────────
   Widget _buildBottomBar(BuildContext context) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
     return Container(
       decoration: BoxDecoration(
-        color: _white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, -3),
-          ),
-        ],
+        color: t.surface,
+        border: Border(top: BorderSide(color: t.outlineVariant)),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Submit button
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _blue,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              BeaconSpace.page, BeaconSpace.md, BeaconSpace.page, BeaconSpace.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Submit button
+              AppButton(
+                label: _submitted
+                    ? 'Verification submitted'
+                    : 'Submit for verification',
+                icon: _submitted ? Icons.check_rounded : Icons.verified_user_outlined,
+                onPressed: _submitted
+                    ? null
+                    : () {
+                        setState(() => _submitted = true);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle_outline,
+                                  color: t.found,
+                                ),
+                                const SizedBox(width: 10),
+                                const Expanded(
+                                  child: Text(
+                                    'Verification submitted! We\'ll review shortly.',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+              ),
+
+              const SizedBox(height: BeaconSpace.md),
+
+              // Terms text
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: text.bodySmall,
+                  children: [
+                    const TextSpan(text: 'By submitting, you agree to our '),
+                    TextSpan(
+                      text: 'Verification Terms',
+                      style: TextStyle(
+                        color: t.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                      recognizer: TapGestureRecognizer()..onTap = () {},
+                    ),
+                  ],
                 ),
               ),
-              onPressed: _submitted
-                  ? null
-                  : () {
-                      setState(() => _submitted = true);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle_outline,
-                                color: Colors.white,
-                              ),
-                              SizedBox(width: 10),
-                              Text(
-                                'Verification submitted! We\'ll review shortly.',
-                              ),
-                            ],
-                          ),
-                          backgroundColor: _blue,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      );
-                    },
-              child: Text(
-                _submitted
-                    ? 'Verification Submitted ✓'
-                    : 'Submit for Verification',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
+            ],
           ),
-
-          const SizedBox(height: 10),
-
-          // Terms text
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: TextStyle(color: _textLight, fontSize: 11),
-              children: [
-                const TextSpan(text: 'By submitting, you agree to our '),
-                TextSpan(
-                  text: 'Verification Terms',
-                  style: TextStyle(
-                    color: _blue,
-                    decoration: TextDecoration.underline,
-                  ),
-                  recognizer: TapGestureRecognizer()..onTap = () {},
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
 // ─── Camera corner brackets ────────────────────────────────────────────────────
-class _CameraCorners extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 90,
-      height: 90,
-      child: CustomPaint(painter: _CornerPainter()),
-    );
-  }
-}
-
 class _CornerPainter extends CustomPainter {
+  final Color color;
+  _CornerPainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF2563EB)
+      ..color = color
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -679,5 +556,5 @@ class _CornerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _CornerPainter old) => old.color != color;
 }
