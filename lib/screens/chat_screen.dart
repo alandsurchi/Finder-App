@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:finder/theme/app_color_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
+import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/providers/chat_provider.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({Key? key}) : super(key: key);
+  const ChatScreen({super.key});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -40,12 +40,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUserId = ref.watch(authStateProvider).userId ?? '';
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           children: [
             _buildChatHeader(context, userName, itemName, t),
-            Divider(color: t.divider, height: 1, thickness: 1),
+            Divider(color: t.outlineVariant, height: 1, thickness: 1),
             Expanded(
               child: messagesState.when(
                 loading: () =>
@@ -54,6 +53,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 data: (messages) {
                   if (messages.isEmpty) {
                     return const EmptyWidget(
+                      icon: Icons.forum_outlined,
                       title: 'No messages yet',
                       subtitle: 'Start the conversation by sending a message.',
                     );
@@ -61,19 +61,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   return ListView.separated(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 20,
+                      horizontal: BeaconSpace.lg,
+                      vertical: BeaconSpace.xl,
                     ),
                     itemCount: messages.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, __) => const SizedBox(height: BeaconSpace.sm),
                     itemBuilder: (context, index) {
                       final msg = messages[index];
                       final isMe = msg.senderId == currentUserId;
+                      final prevSame = index > 0 &&
+                          messages[index - 1].senderId == msg.senderId;
                       return _ChatBubble(
                         message: msg.text,
                         time: _formatTime(msg.createdAt.millisecondsSinceEpoch),
                         isMe: isMe,
                         showDoubleTick: isMe,
+                        continued: prevSame,
                       );
                     },
                   );
@@ -93,100 +96,76 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     String itemName,
     AppColorTokens t,
   ) {
+    final text = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(
+          BeaconSpace.md, BeaconSpace.sm, BeaconSpace.sm, BeaconSpace.sm),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+          AppIconButton(
+            icon: Icons.arrow_back_rounded,
+            tooltip: 'Back',
+            variant: AppIconButtonVariant.ghost,
             onPressed: () => Navigator.maybePop(context),
           ),
-          Stack(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: t.surfaceHigh,
-                  border: Border.all(color: t.divider, width: 1.5),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Icon(Icons.person, color: t.onSurfaceVar, size: 26),
-              ),
-              Positioned(
-                right: 1,
-                bottom: 1,
-                child: Container(
-                  width: 11,
-                  height: 11,
-                  decoration: BoxDecoration(
-                    color: t.success,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: t.bg, width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 10),
+          const SizedBox(width: BeaconSpace.xs),
+          AppAvatar(name: userName, size: 44, online: true),
+          const SizedBox(width: BeaconSpace.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   userName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: text.titleMedium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (itemName.isNotEmpty)
-                  Text(
-                    'Re: $itemName',
-                    style: TextStyle(
-                      color: t.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Icon(Icons.inventory_2_outlined, size: 12, color: t.primary),
+                      const SizedBox(width: BeaconSpace.xs),
+                      Flexible(
+                        child: Text(
+                          itemName,
+                          style: text.labelSmall?.copyWith(color: t.primary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   )
                 else
                   Text(
                     'Online',
-                    style: TextStyle(
-                      color: t.success,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: text.labelSmall?.copyWith(color: t.found),
                   ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.phone_outlined, color: Colors.white, size: 22),
+          AppIconButton(
+            icon: Icons.phone_outlined,
+            tooltip: 'Voice call',
+            variant: AppIconButtonVariant.ghost,
             onPressed: () => ActionFeedback.showComingSoon(
               context,
               feature: 'Voice calling',
             ),
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.videocam_outlined,
-              color: Colors.white,
-              size: 22,
-            ),
+          AppIconButton(
+            icon: Icons.videocam_outlined,
+            tooltip: 'Video call',
+            variant: AppIconButtonVariant.ghost,
             onPressed: () => ActionFeedback.showComingSoon(
               context,
               feature: 'Video calling',
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.white, size: 22),
+          AppIconButton(
+            icon: Icons.more_vert_rounded,
+            tooltip: 'More options',
+            variant: AppIconButtonVariant.ghost,
             onPressed: () => ActionFeedback.showInfo(
               context,
               'More chat options will appear here.',
@@ -198,66 +177,70 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildInputArea(AppColorTokens t, String chatId) {
+    final text = Theme.of(context).textTheme;
     return Container(
-      color: t.bg,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      decoration: BoxDecoration(
+        color: t.surface,
+        border: Border(top: BorderSide(color: t.outlineVariant)),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+          BeaconSpace.md, BeaconSpace.md, BeaconSpace.md, BeaconSpace.lg),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Plus Button
-          GestureDetector(
-            onTap: () => _showAttachmentOptions(t),
-            child: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: t.primary.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(Icons.add, color: t.primary, size: 26),
-            ),
+          AppIconButton(
+            icon: Icons.add_rounded,
+            tooltip: 'Attach',
+            size: 48,
+            variant: AppIconButtonVariant.tonal,
+            onPressed: () => _showAttachmentOptions(t),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: BeaconSpace.sm),
           // Text Field
           Expanded(
             child: Container(
-              constraints: const BoxConstraints(minHeight: 50, maxHeight: 120),
+              constraints: const BoxConstraints(minHeight: 48, maxHeight: 132),
               decoration: BoxDecoration(
-                color: t.primary.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(25),
+                color: t.surfaceLow,
+                borderRadius: BeaconRadius.rXxl,
               ),
-              padding: const EdgeInsets.only(left: 20, right: 6),
+              padding: const EdgeInsets.only(left: BeaconSpace.lg, right: BeaconSpace.xs),
               alignment: Alignment.centerLeft,
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _controller,
                       maxLines: null,
-                      style: TextStyle(color: t.onSurface, fontSize: 15),
+                      textCapitalization: TextCapitalization.sentences,
+                      style: text.bodyLarge,
+                      cursorColor: t.primary,
                       decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        hintStyle: TextStyle(
-                          color: t.onSurfaceMuted,
-                          fontSize: 15,
-                        ),
+                        hintText: 'Type a message…',
+                        hintStyle: text.bodyLarge?.copyWith(color: t.onSurfaceMuted),
+                        filled: false,
                         border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14,
+                          vertical: BeaconSpace.md,
                         ),
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.mic, color: t.onSurfaceVar, size: 24),
+                    tooltip: 'Voice message',
+                    icon: Icon(Icons.mic_none_rounded, color: t.onSurfaceVar, size: 22),
                     onPressed: () => ActionFeedback.showComingSoon(
                       context,
                       feature: 'Voice message',
                     ),
                     constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
+                      minWidth: 44,
+                      minHeight: 44,
                     ),
                     padding: EdgeInsets.zero,
                   ),
@@ -265,55 +248,39 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: BeaconSpace.sm),
           // Send Button
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: t.primary,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: t.primary.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.send_rounded,
-                color: Colors.white,
-                size: 22,
-              ),
-              onPressed: () async {
-                final text = _controller.text.trim();
-                if (text.isEmpty) return;
-                
-                final currentUserId = ref.read(authStateProvider).userId ?? '';
-                if (currentUserId.isEmpty) return;
-                
-                final chatService = ref.read(chatServiceProvider);
-                try {
-                  await chatService.sendMessage(chatId, currentUserId, text);
-                  _controller.clear();
-                  
-                  // Auto-scroll to latest message
-                  if (_scrollController.hasClients) {
-                    _scrollController.animateTo(
-                      _scrollController.position.maxScrollExtent + 100,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOut,
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ActionFeedback.showInfo(context, 'Error sending message: $e');
-                  }
+          AppIconButton(
+            icon: Icons.send_rounded,
+            tooltip: 'Send message',
+            size: 48,
+            variant: AppIconButtonVariant.filled,
+            onPressed: () async {
+              final text = _controller.text.trim();
+              if (text.isEmpty) return;
+
+              final currentUserId = ref.read(authStateProvider).userId ?? '';
+              if (currentUserId.isEmpty) return;
+
+              final chatService = ref.read(chatServiceProvider);
+              try {
+                await chatService.sendMessage(chatId, currentUserId, text);
+                _controller.clear();
+
+                // Auto-scroll to latest message
+                if (_scrollController.hasClients) {
+                  _scrollController.animateTo(
+                    _scrollController.position.maxScrollExtent + 100,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
                 }
-              },
-            ),
+              } catch (e) {
+                if (context.mounted) {
+                  ActionFeedback.showInfo(context, 'Error sending message: $e');
+                }
+              }
+            },
           ),
         ],
       ),
@@ -330,43 +297,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _showAttachmentOptions(AppColorTokens t) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.only(top: 12, bottom: 20),
-        decoration: BoxDecoration(
-          color: t.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+      useSafeArea: true,
+      builder: (context) => AppBottomSheet(
+        title: 'Attach',
+        scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: t.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.camera_alt_outlined, color: t.primary),
-              title: Text('Take a photo', style: TextStyle(color: t.onSurface)),
+            SheetOption(
+              icon: Icons.camera_alt_outlined,
+              label: 'Take a photo',
               onTap: () => Navigator.pop(context),
             ),
-            ListTile(
-              leading: Icon(Icons.photo_library_outlined, color: t.primary),
-              title: Text('Send photos', style: TextStyle(color: t.onSurface)),
+            SheetOption(
+              icon: Icons.photo_library_outlined,
+              label: 'Send photos',
               onTap: () => Navigator.pop(context),
             ),
-            ListTile(
-              leading: Icon(Icons.attach_file_outlined, color: t.primary),
-              title: Text(
-                'Attach a file',
-                style: TextStyle(color: t.onSurface),
-              ),
+            SheetOption(
+              icon: Icons.attach_file_outlined,
+              label: 'Attach a file',
               onTap: () => Navigator.pop(context),
             ),
+            const SizedBox(height: BeaconSpace.lg),
           ],
         ),
       ),
@@ -379,150 +332,77 @@ class _ChatBubble extends StatelessWidget {
   final String time;
   final bool isMe;
   final bool showDoubleTick;
+  final bool continued;
 
   const _ChatBubble({
     required this.message,
     required this.time,
     required this.isMe,
     this.showDoubleTick = false,
+    this.continued = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    const r = Radius.circular(BeaconRadius.xl);
+    const tail = Radius.circular(6);
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78,
+          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
         ),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isMe ? t.primary.withOpacity(0.18) : t.surfaceHigh,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(18),
-              topRight: const Radius.circular(18),
-              bottomLeft: isMe
-                  ? const Radius.circular(18)
-                  : const Radius.circular(4),
-              bottomRight: isMe
-                  ? const Radius.circular(4)
-                  : const Radius.circular(18),
-            ),
-            border: Border.all(
-              color: isMe ? t.primary.withOpacity(0.3) : t.divider,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                message,
-                style: TextStyle(
-                  color: t.onSurface,
-                  fontSize: 14,
-                  height: 1.45,
-                ),
+        child: Semantics(
+          label: isMe ? 'You said' : 'They said',
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(
+                BeaconSpace.lg, BeaconSpace.md, BeaconSpace.lg, BeaconSpace.sm),
+            decoration: BoxDecoration(
+              color: isMe ? t.primary : t.surface,
+              borderRadius: BorderRadius.only(
+                topLeft: (!isMe && continued) ? tail : r,
+                topRight: (isMe && continued) ? tail : r,
+                bottomLeft: isMe ? r : tail,
+                bottomRight: isMe ? tail : r,
               ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    time,
-                    style: TextStyle(color: t.onSurfaceMuted, fontSize: 11),
+              border: isMe ? null : Border.all(color: t.outlineVariant),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: text.bodyLarge?.copyWith(
+                    color: isMe ? t.onPrimary : t.onSurface,
                   ),
-                  if (showDoubleTick) ...[
-                    const SizedBox(width: 4),
-                    Icon(Icons.done_all, color: t.primary, size: 14),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ImageBubble extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final t = AppColorTokens.of(context);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78,
-        ),
-        child: Container(
-          height: 180,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: t.divider, width: 1),
-            color: t.surfaceHigh,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            children: [
-              Center(
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: t.surface,
-                    boxShadow: [
-                      BoxShadow(
-                        color: t.primary.withOpacity(0.25),
-                        blurRadius: 30,
-                        spreadRadius: 8,
+                ),
+                const SizedBox(height: BeaconSpace.xs),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      time,
+                      style: text.labelSmall?.copyWith(
+                        color: isMe
+                            ? t.onPrimary.withValues(alpha: 0.7)
+                            : t.onSurfaceMuted,
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.lightbulb_outline,
-                    color: t.primary,
-                    size: 38,
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.transparent, t.bg],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
                     ),
-                  ),
+                    if (showDoubleTick) ...[
+                      const SizedBox(width: BeaconSpace.xs),
+                      Icon(Icons.done_all_rounded,
+                          color: t.onPrimary.withValues(alpha: 0.8), size: 14),
+                    ],
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ToolbarIcon extends StatelessWidget {
-  final IconData icon;
-  const _ToolbarIcon({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppColorTokens.of(context);
-    return GestureDetector(
-      onTap: () => ActionFeedback.showInfo(context, 'Toolbar action tapped.'),
-      child: Icon(icon, color: t.onSurfaceVar, size: 22),
     );
   }
 }
