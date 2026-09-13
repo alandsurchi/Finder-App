@@ -6,6 +6,7 @@ const crypto = require('crypto');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'finder_secret_key_12345';
+const { smtpConfigured, truthy } = require('../lib/helpers');
 
 // Middleware to verify JWT token
 function verifyToken(req, res, next) {
@@ -55,14 +56,23 @@ router.post('/signup', async (req, res) => {
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
+    // Demo mode: without SMTP there is no way to deliver a code, so accounts
+    // are verified immediately. Real verification returns once SMTP is set.
+    const autoVerify = !smtpConfigured();
+    const verifiedFlag = db.isPostgres ? autoVerify : (autoVerify ? 1 : 0);
+
     // Create user profile
     await db.exec(
       `INSERT INTO users (uid, email, password_hash, full_name, nick_name, phone, created_at, updated_at, is_verified, verification_code, verification_expires_at) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [uid, email.toLowerCase().trim(), passwordHash, resolvedName, resolvedNick, phone || '', now, now, db.isPostgres ? false : 0, verificationCode, verificationExpiresAt]
+      [uid, email.toLowerCase().trim(), passwordHash, resolvedName, resolvedNick, phone || '', now, now, verifiedFlag, autoVerify ? null : verificationCode, autoVerify ? null : verificationExpiresAt]
     );
 
-    console.log(`[SIGNUP VERIFICATION CODE] Email: ${email}, Code: ${verificationCode}`);
+    if (autoVerify) {
+      console.log(`[SIGNUP] ${email} auto-verified (SMTP not configured).`);
+    } else {
+      console.log(`[SIGNUP VERIFICATION CODE] Email: ${email}, Code: ${verificationCode}`);
+    }
 
     // Send email asynchronously
     if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
@@ -103,8 +113,7 @@ router.post('/signup', async (req, res) => {
       }
     }
 
-    // Sign JWT (unverified)
-    const token = jwt.sign({ userId: uid, isVerified: false }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ userId: uid, isVerified: autoVerify }, JWT_SECRET, { expiresIn: '30d' });
 
     res.status(201).json({
       token,
@@ -113,7 +122,7 @@ router.post('/signup', async (req, res) => {
         email: email.toLowerCase().trim(),
         displayName: resolvedName,
         photoUrl: '',
-        isVerified: false
+        isVerified: autoVerify
       }
     });
   } catch (err) {
@@ -174,7 +183,8 @@ router.get('/me', verifyToken, async (req, res) => {
       email: user.email,
       displayName: user.full_name,
       photoUrl: user.avatar_url,
-      isVerified: user.is_verified === 1 || user.is_verified === true || user.is_verified === 'true'
+      isVerified: truthy(user.is_verified),
+      identityVerified: truthy(user.identity_verified)
     });
   } catch (err) {
     console.error('Fetch me error:', err);
@@ -342,13 +352,16 @@ router.post('/verify-email', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Account is already verified.' });
     }
 
-    if (!user.verification_code || user.verification_code !== code.trim()) {
-      return res.status(400).json({ message: 'Invalid verification code.' });
-    }
+    // Demo mode (no SMTP): codes cannot be delivered, so any code is accepted.
+    if (smtpConfigured()) {
+      if (!user.verification_code || user.verification_code !== code.trim()) {
+        return res.status(400).json({ message: 'Invalid verification code.' });
+      }
 
-    const now = Date.now();
-    if (parseInt(user.verification_expires_at) < now) {
-      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+      const now = Date.now();
+      if (parseInt(user.verification_expires_at) < now) {
+        return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
+      }
     }
 
     // Update user status

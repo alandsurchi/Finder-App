@@ -2,81 +2,106 @@ const express = require('express');
 const db = require('../db');
 const { verifyToken } = require('./auth');
 const crypto = require('crypto');
+const { POST_SELECT, mapPost, bool, truthy, notify, blockedIdsFor } = require('../lib/helpers');
 
 const router = express.Router();
 
 // GET /posts
 router.get('/', verifyToken, async (req, res) => {
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = Math.min(parseInt(req.query.limit) || 20, 100);
   const cursor = req.query.cursor ? parseInt(req.query.cursor) : null;
   const category = req.query.category; // e.g. "All Items", "Lost", "Found"
   const ownerId = req.query.ownerId;
-  
-  let sql = 'SELECT * FROM posts';
-  const params = [];
+  const status = req.query.status; // optional: active | resolved
 
+  let sql = POST_SELECT;
+  const params = [];
   const conditions = [];
 
   if (cursor !== null) {
     params.push(cursor);
-    conditions.push(`created_at_ms < $${params.length}`);
+    conditions.push(`p.created_at_ms < $${params.length}`);
   }
 
   if (category && category !== 'All Items') {
     const isLost = category === 'Lost';
-    params.push(isLost);
-    conditions.push(`is_lost = $${params.length}`);
+    params.push(bool(isLost));
+    conditions.push(`p.is_lost = $${params.length}`);
   }
 
   if (ownerId) {
     params.push(ownerId);
-    conditions.push(`owner_id = $${params.length}`);
+    conditions.push(`p.owner_id = $${params.length}`);
   }
+
+  if (status) {
+    params.push(status);
+    conditions.push(`p.status = $${params.length}`);
+  }
+
+  // Hide posts from users blocked in either direction.
+  params.push(req.userId);
+  conditions.push(`p.owner_id NOT IN (SELECT blocked_user_id FROM blocked_users WHERE user_id = $${params.length})`);
+  params.push(req.userId);
+  conditions.push(`p.owner_id NOT IN (SELECT user_id FROM blocked_users WHERE blocked_user_id = $${params.length})`);
 
   if (conditions.length > 0) {
     sql += ' WHERE ' + conditions.join(' AND ');
   }
 
   params.push(limit);
-  sql += ` ORDER BY created_at_ms DESC LIMIT $${params.length}`;
+  sql += ` ORDER BY p.created_at_ms DESC LIMIT $${params.length}`;
 
   try {
-    const posts = await db.query(sql, params);
-    
-    // Map database fields (e.g. snake_case) to client-side model camelCase
-    const items = posts.map(post => ({
-      id: post.id,
-      title: post.title,
-      description: post.description,
-      category: post.category,
-      isLost: !!post.is_lost,
-      reward: post.reward,
-      ownerId: post.owner_id,
-      location: post.location,
-      imageUrl: post.image_url,
-      createdAtMs: parseInt(post.created_at_ms),
-      updatedAtMs: parseInt(post.updated_at_ms),
-      status: post.status
-    }));
-
+    const rows = await db.query(sql, params);
+    const items = rows.map(mapPost);
     const hasMore = items.length === limit;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAtMs.toString() : null;
-
-    res.status(200).json({
-      items,
-      nextCursor,
-      hasMore
-    });
+    res.status(200).json({ items, nextCursor, hasMore });
   } catch (err) {
     console.error('Fetch posts error:', err);
     res.status(500).json({ message: 'Error loading posts.' });
   }
 });
 
+// GET /posts/:id
+router.get('/:id', verifyToken, async (req, res) => {
+  try {
+    const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [req.params.id]);
+    if (!row) return res.status(404).json({ message: 'Post not found.' });
+    res.status(200).json(mapPost(row));
+  } catch (err) {
+    console.error('Fetch post error:', err);
+    res.status(500).json({ message: 'Error loading post.' });
+  }
+});
+
+// GET /posts/:id/similar — same category, opposite lost/found first, newest
+router.get('/:id/similar', verifyToken, async (req, res) => {
+  try {
+    const post = await db.queryOne('SELECT * FROM posts WHERE id = $1', [req.params.id]);
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+
+    const blocked = await blockedIdsFor(req.userId);
+    const rows = await db.query(
+      `${POST_SELECT}
+       WHERE p.category = $1 AND p.id != $2 AND p.status = 'active'
+       ORDER BY CASE WHEN p.is_lost = $3 THEN 1 ELSE 0 END ASC, p.created_at_ms DESC
+       LIMIT 12`,
+      [post.category, post.id, bool(truthy(post.is_lost))]
+    );
+    const items = rows.filter(r => !blocked.has(r.owner_id)).slice(0, 6).map(mapPost);
+    res.status(200).json(items);
+  } catch (err) {
+    console.error('Fetch similar posts error:', err);
+    res.status(500).json({ message: 'Error loading similar posts.' });
+  }
+});
+
 // POST /posts (Create)
 router.post('/', verifyToken, async (req, res) => {
-  const { title, description, category, isLost, reward, location, imageUrl } = req.body;
-  
+  const { title, description, category, isLost, reward, location, imageUrl, lostOn } = req.body;
+
   if (!title || !description || !category || !location) {
     return res.status(400).json({ message: 'Title, description, category, and location are required.' });
   }
@@ -87,25 +112,13 @@ router.post('/', verifyToken, async (req, res) => {
     const ownerId = req.userId;
 
     await db.exec(
-      `INSERT INTO posts (id, owner_id, title, description, category, is_lost, reward, location, image_url, status, created_at_ms, updated_at_ms)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-      [id, ownerId, title, description, category, isLost, reward || null, location, imageUrl || '', 'active', now, now]
+      `INSERT INTO posts (id, owner_id, title, description, category, is_lost, reward, location, image_url, lost_on, status, created_at_ms, updated_at_ms)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+      [id, ownerId, title, description, category, bool(!!isLost), reward || null, location, imageUrl || '', lostOn || null, 'active', now, now]
     );
 
-    res.status(201).json({
-      id,
-      title,
-      description,
-      category,
-      isLost,
-      reward,
-      ownerId,
-      location,
-      imageUrl: imageUrl || '',
-      createdAtMs: now,
-      updatedAtMs: now,
-      status: 'active'
-    });
+    const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [id]);
+    res.status(201).json(mapPost(row));
   } catch (err) {
     console.error('Create post error:', err);
     res.status(500).json({ message: 'Error creating post.' });
@@ -115,10 +128,13 @@ router.post('/', verifyToken, async (req, res) => {
 // PUT /posts/:id (Update)
 router.put('/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { title, description, category, isLost, reward, location, imageUrl, status } = req.body;
+  const { title, description, category, isLost, reward, location, imageUrl, lostOn, status } = req.body;
+
+  if (status !== undefined && !['active', 'resolved'].includes(status)) {
+    return res.status(400).json({ message: 'status must be active or resolved.' });
+  }
 
   try {
-    // Verify ownership
     const post = await db.queryOne('SELECT * FROM posts WHERE id = $1', [id]);
     if (!post) {
       return res.status(404).json({ message: 'Post not found.' });
@@ -128,38 +144,46 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
 
     const now = Date.now();
+    const nextStatus = status !== undefined ? status : post.status;
     await db.exec(
-      `UPDATE posts 
-       SET title = $1, description = $2, category = $3, is_lost = $4, reward = $5, location = $6, image_url = $7, status = $8, updated_at_ms = $9
-       WHERE id = $10`,
+      `UPDATE posts
+       SET title = $1, description = $2, category = $3, is_lost = $4, reward = $5, location = $6,
+           image_url = $7, lost_on = $8, status = $9, updated_at_ms = $10
+       WHERE id = $11`,
       [
         title !== undefined ? title : post.title,
         description !== undefined ? description : post.description,
         category !== undefined ? category : post.category,
-        isLost !== undefined ? isLost : post.is_lost,
+        isLost !== undefined ? bool(!!isLost) : post.is_lost,
         reward !== undefined ? reward : post.reward,
         location !== undefined ? location : post.location,
         imageUrl !== undefined ? imageUrl : post.image_url,
-        status !== undefined ? status : post.status,
+        lostOn !== undefined ? lostOn : post.lost_on,
+        nextStatus,
         now,
-        id
+        id,
       ]
     );
 
-    res.status(200).json({
-      id,
-      title: title !== undefined ? title : post.title,
-      description: description !== undefined ? description : post.description,
-      category: category !== undefined ? category : post.category,
-      isLost: isLost !== undefined ? isLost : !!post.is_lost,
-      reward: reward !== undefined ? reward : post.reward,
-      ownerId: post.owner_id,
-      location: location !== undefined ? location : post.location,
-      imageUrl: imageUrl !== undefined ? imageUrl : post.image_url,
-      createdAtMs: parseInt(post.created_at_ms),
-      updatedAtMs: now,
-      status: status !== undefined ? status : post.status
-    });
+    // Tell everyone who chatted about this item that it was resolved.
+    if (nextStatus === 'resolved' && post.status !== 'resolved') {
+      const peers = await db.query(
+        `SELECT DISTINCT cp.user_id FROM chat_participants cp
+         JOIN chats c ON c.id = cp.chat_id
+         WHERE c.post_id = $1 AND cp.user_id != $2`,
+        [id, req.userId]
+      );
+      for (const peer of peers) {
+        await notify(peer.user_id, {
+          title: 'Item resolved',
+          message: `"${post.title}" has been marked as resolved.`,
+          type: 'update',
+        });
+      }
+    }
+
+    const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [id]);
+    res.status(200).json(mapPost(row));
   } catch (err) {
     console.error('Update post error:', err);
     res.status(500).json({ message: 'Error updating post.' });
@@ -179,6 +203,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'You do not own this post.' });
     }
 
+    await db.exec('DELETE FROM saved_items WHERE post_id = $1', [id]);
     await db.exec('DELETE FROM posts WHERE id = $1', [id]);
     res.status(200).json({ message: 'Post deleted successfully.' });
   } catch (err) {
@@ -193,13 +218,21 @@ router.post('/:id/report', verifyToken, async (req, res) => {
   const { reason } = req.body;
 
   try {
-    const reportId = crypto.randomUUID();
-    const now = Date.now();
+    const post = await db.queryOne('SELECT id FROM posts WHERE id = $1', [id]);
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+
+    const existing = await db.queryOne(
+      'SELECT id FROM reports WHERE post_id = $1 AND reporter_id = $2',
+      [id, req.userId]
+    );
+    if (existing) {
+      return res.status(200).json({ message: 'You already reported this post.' });
+    }
 
     await db.exec(
       `INSERT INTO reports (id, post_id, reporter_id, reason, status, created_at_ms)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [reportId, id, req.userId, reason || '', 'pending', now]
+      [crypto.randomUUID(), id, req.userId, reason || '', 'pending', Date.now()]
     );
 
     res.status(201).json({ message: 'Report submitted successfully.' });

@@ -2,60 +2,62 @@ const express = require('express');
 const db = require('../db');
 const { verifyToken } = require('./auth');
 const crypto = require('crypto');
+const {
+  isBlocked,
+  blockedIdsFor,
+  getSettings,
+  notify,
+  displayName,
+  mapMessage,
+  bool,
+} = require('../lib/helpers');
 
 const router = express.Router();
 
-// GET /chats - Get user conversations
+// GET /chats - Get user conversations (one query, grouped in JS)
 router.get('/', verifyToken, async (req, res) => {
   const userId = req.userId;
 
   try {
-    // 1. Get all chats where this user is a participant
-    const chats = await db.query(
-      `SELECT c.*, cp.unread_count 
+    const rows = await db.query(
+      `SELECT c.id, c.post_id, c.item_name, c.last_message_text, c.last_sender_id,
+              c.updated_at_ms, me.unread_count AS my_unread,
+              cp.user_id AS p_user_id, u.full_name, u.nick_name, u.avatar_url
        FROM chats c
-       JOIN chat_participants cp ON c.id = cp.chat_id
-       WHERE cp.user_id = $1
+       JOIN chat_participants me ON me.chat_id = c.id AND me.user_id = $1
+       JOIN chat_participants cp ON cp.chat_id = c.id
+       JOIN users u ON u.uid = cp.user_id
        ORDER BY c.updated_at_ms DESC`,
       [userId]
     );
 
-    const conversations = [];
-
-    for (const chat of chats) {
-      // 2. Fetch all participants for this chat to get names/avatars
-      const participants = await db.query(
-        `SELECT cp.user_id, cp.unread_count, u.full_name, u.nick_name, u.avatar_url 
-         FROM chat_participants cp
-         JOIN users u ON cp.user_id = u.uid
-         WHERE cp.chat_id = $1`,
-        [chat.id]
-      );
-
-      const participantIds = participants.map(p => p.user_id);
-      const participantNames = {};
-      const participantAvatars = {};
-
-      participants.forEach(p => {
-        participantNames[p.user_id] = p.full_name || p.nick_name || 'User';
-        participantAvatars[p.user_id] = p.avatar_url || '';
-      });
-
-      conversations.push({
-        id: chat.id,
-        postId: chat.post_id,
-        itemName: chat.item_name,
-        participants: participantIds,
-        participantNames,
-        participantAvatars,
-        lastMessageText: chat.last_message_text || '',
-        lastSenderId: chat.last_sender_id || '',
-        updatedAtMs: parseInt(chat.updated_at_ms),
-        unreadCounts: {
-          [userId]: chat.unread_count
-        }
-      });
+    const blocked = await blockedIdsFor(userId);
+    const byId = new Map();
+    for (const r of rows) {
+      let convo = byId.get(r.id);
+      if (!convo) {
+        convo = {
+          id: r.id,
+          postId: r.post_id || '',
+          itemName: r.item_name,
+          participants: [],
+          participantNames: {},
+          participantAvatars: {},
+          lastMessageText: r.last_message_text || '',
+          lastSenderId: r.last_sender_id || '',
+          updatedAtMs: parseInt(r.updated_at_ms),
+          unreadCounts: { [userId]: parseInt(r.my_unread) || 0 },
+        };
+        byId.set(r.id, convo);
+      }
+      convo.participants.push(r.p_user_id);
+      convo.participantNames[r.p_user_id] = displayName(r);
+      convo.participantAvatars[r.p_user_id] = r.avatar_url || '';
     }
+
+    const conversations = [...byId.values()].filter(
+      c => !c.participants.some(p => p !== userId && blocked.has(p))
+    );
 
     res.status(200).json(conversations);
   } catch (err) {
@@ -67,11 +69,10 @@ router.get('/', verifyToken, async (req, res) => {
 // GET /chats/:id/messages - Get messages in a chat
 router.get('/:id/messages', verifyToken, async (req, res) => {
   const chatId = req.params.id;
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = Math.min(parseInt(req.query.limit) || 20, 200);
   const cursor = req.query.cursor ? parseInt(req.query.cursor) : null;
 
   try {
-    // Check if user is a participant
     const isParticipant = await db.queryOne(
       'SELECT * FROM chat_participants WHERE chat_id = $1 AND user_id = $2',
       [chatId, req.userId]
@@ -92,67 +93,66 @@ router.get('/:id/messages', verifyToken, async (req, res) => {
     sql += ` ORDER BY created_at_ms DESC LIMIT $${params.length}`;
 
     const messages = await db.query(sql, params);
+    const items = messages.map(mapMessage);
 
-    // Map fields to client-side camelCase
-    const items = messages.map(msg => ({
-      id: msg.id,
-      chatId: msg.chat_id,
-      senderId: msg.sender_id,
-      text: msg.text,
-      createdAtMs: parseInt(msg.created_at_ms),
-      isRead: !!msg.is_read
-    }));
-
-    // Reset unread count for current user
-    await db.exec(
-      'UPDATE chat_participants SET unread_count = 0 WHERE chat_id = $1 AND user_id = $2',
-      [chatId, req.userId]
-    );
+    // Reading the latest page clears the unread counter.
+    if (cursor === null) {
+      await db.exec(
+        'UPDATE chat_participants SET unread_count = 0 WHERE chat_id = $1 AND user_id = $2',
+        [chatId, req.userId]
+      );
+    }
 
     const hasMore = items.length === limit;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAtMs.toString() : null;
 
-    res.status(200).json({
-      items,
-      nextCursor,
-      hasMore
-    });
+    res.status(200).json({ items, nextCursor, hasMore });
   } catch (err) {
     console.error('Fetch messages error:', err);
     res.status(500).json({ message: 'Error loading messages.' });
   }
 });
 
-// POST /chats/initiate - Start or get a chat
+// POST /chats/initiate - Start or get a chat.
+// With postId: one chat per (post, pair). Without: a direct chat per pair.
 router.post('/initiate', verifyToken, async (req, res) => {
   const { peerId, postId, itemName } = req.body;
   const currentUserId = req.userId;
 
-  if (!peerId || !postId || !itemName) {
-    return res.status(400).json({ message: 'peerId, postId, and itemName are required.' });
+  if (!peerId) {
+    return res.status(400).json({ message: 'peerId is required.' });
+  }
+  if (peerId === currentUserId) {
+    return res.status(400).json({ message: 'You cannot message yourself.' });
   }
 
-  // Generate unique chatId
-  const ids = [currentUserId, peerId].sort();
-  const chatId = `${postId}_${ids[0]}_${ids[1]}`;
-
   try {
-    // Check if chat already exists
+    const peer = await db.queryOne('SELECT uid FROM users WHERE uid = $1', [peerId]);
+    if (!peer) return res.status(404).json({ message: 'User not found.' });
+
+    if (await isBlocked(currentUserId, peerId)) {
+      return res.status(403).json({ message: 'You cannot message this user.' });
+    }
+    const peerSettings = await getSettings(peerId);
+    if (!peerSettings.allow_messages) {
+      return res.status(403).json({ message: 'This user does not accept direct messages.' });
+    }
+
+    const ids = [currentUserId, peerId].sort();
+    const chatId = postId ? `${postId}_${ids[0]}_${ids[1]}` : `direct_${ids[0]}_${ids[1]}`;
+    const resolvedItemName = itemName || 'Direct message';
+
     const existingChat = await db.queryOne('SELECT * FROM chats WHERE id = $1', [chatId]);
     if (existingChat) {
       return res.status(200).json({ chatId });
     }
 
     const now = Date.now();
-
-    // 1. Create chat
     await db.exec(
       `INSERT INTO chats (id, post_id, item_name, last_message_text, last_sender_id, created_at_ms, updated_at_ms)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [chatId, postId, itemName, '', '', now, now]
+      [chatId, postId || null, resolvedItemName, '', '', now, now]
     );
-
-    // 2. Add participants
     await db.exec(
       'INSERT INTO chat_participants (chat_id, user_id, unread_count) VALUES ($1, $2, 0)',
       [chatId, currentUserId]
@@ -169,13 +169,14 @@ router.post('/initiate', verifyToken, async (req, res) => {
   }
 });
 
-// POST /chats/:id/messages - Send a message via REST
+// POST /chats/:id/messages - Send a text and/or image message
 router.post('/:id/messages', verifyToken, async (req, res) => {
   const chatId = req.params.id;
-  const { text } = req.body;
   const senderId = req.userId;
+  const text = typeof req.body.text === 'string' ? req.body.text.trim() : '';
+  const imageUrl = typeof req.body.imageUrl === 'string' ? req.body.imageUrl.trim() : '';
 
-  if (!text || text.trim().isEmpty) {
+  if (!text && !imageUrl) {
     return res.status(400).json({ message: 'Message cannot be empty.' });
   }
 
@@ -188,39 +189,57 @@ router.post('/:id/messages', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'You are not a participant.' });
     }
 
-    const msgId = crypto.randomUUID();
-    const now = Date.now();
-
-    // 1. Insert message
-    await db.exec(
-      `INSERT INTO messages (id, chat_id, sender_id, text, is_read, created_at_ms)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [msgId, chatId, senderId, text.trim(), false, now]
-    );
-
-    // 2. Update chat last message metadata
-    await db.exec(
-      `UPDATE chats 
-       SET last_message_text = $1, last_sender_id = $2, updated_at_ms = $3
-       WHERE id = $4`,
-      [text.trim(), senderId, now, chatId]
-    );
-
-    // 3. Increment unread count for other participants
-    await db.exec(
-      `UPDATE chat_participants 
-       SET unread_count = unread_count + 1 
-       WHERE chat_id = $1 AND user_id != $2`,
+    const others = await db.query(
+      'SELECT user_id FROM chat_participants WHERE chat_id = $1 AND user_id != $2',
       [chatId, senderId]
     );
+    for (const o of others) {
+      if (await isBlocked(senderId, o.user_id)) {
+        return res.status(403).json({ message: 'You cannot message this user.' });
+      }
+    }
+
+    const msgId = crypto.randomUUID();
+    const now = Date.now();
+    const preview = text || 'Sent a photo';
+
+    await db.exec(
+      `INSERT INTO messages (id, chat_id, sender_id, text, image_url, is_read, created_at_ms)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [msgId, chatId, senderId, text, imageUrl, bool(false), now]
+    );
+
+    await db.exec(
+      `UPDATE chats SET last_message_text = $1, last_sender_id = $2, updated_at_ms = $3 WHERE id = $4`,
+      [preview, senderId, now, chatId]
+    );
+
+    await db.exec(
+      `UPDATE chat_participants SET unread_count = unread_count + 1 WHERE chat_id = $1 AND user_id != $2`,
+      [chatId, senderId]
+    );
+
+    // Notify the other participants (respecting their notification setting).
+    const sender = await db.queryOne('SELECT full_name, nick_name FROM users WHERE uid = $1', [senderId]);
+    const chat = await db.queryOne('SELECT item_name FROM chats WHERE id = $1', [chatId]);
+    for (const o of others) {
+      const settings = await getSettings(o.user_id);
+      if (!settings.notify_messages) continue;
+      await notify(o.user_id, {
+        title: `${displayName(sender)} · ${chat ? chat.item_name : 'Message'}`,
+        message: preview.length > 120 ? `${preview.slice(0, 117)}...` : preview,
+        type: 'message',
+      });
+    }
 
     res.status(201).json({
       id: msgId,
       chatId,
       senderId,
-      text: text.trim(),
+      text,
+      imageUrl,
       createdAtMs: now,
-      isRead: false
+      isRead: false,
     });
   } catch (err) {
     console.error('Send message error:', err);

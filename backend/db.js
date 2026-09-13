@@ -197,6 +197,36 @@ async function initDb() {
     } catch (err) {
       console.error('Error altering users table for verification columns (Postgres):', err.message);
     }
+
+    try {
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS identity_verified BOOLEAN DEFAULT FALSE;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS lost_on TEXT;');
+      await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;');
+      await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_messages BOOLEAN DEFAULT TRUE;');
+      await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_matches BOOLEAN DEFAULT TRUE;');
+      await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_updates BOOLEAN DEFAULT TRUE;');
+      await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_marketing BOOLEAN DEFAULT FALSE;');
+      await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_email BOOLEAN DEFAULT TRUE;');
+      await pgPool.query(`
+        CREATE TABLE IF NOT EXISTS verification_requests (
+          id VARCHAR(255) PRIMARY KEY,
+          user_id VARCHAR(255) REFERENCES users(uid) ON DELETE CASCADE,
+          doc_type VARCHAR(64) NOT NULL,
+          front_url TEXT NOT NULL,
+          back_url TEXT NOT NULL,
+          selfie_url TEXT NOT NULL,
+          status VARCHAR(32) DEFAULT 'pending',
+          created_at_ms BIGINT NOT NULL
+        );`);
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at_ms DESC);');
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_owner ON posts(owner_id);');
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, created_at_ms DESC);');
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_chat_participants_user ON chat_participants(user_id);');
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at_ms DESC);');
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_saved_items_user ON saved_items(user_id);');
+    } catch (err) {
+      console.error('Error applying demo schema additions (Postgres):', err.message);
+    }
   } else {
     // SQLite syntax
     return new Promise((resolve, reject) => {
@@ -339,7 +369,36 @@ async function initDb() {
             hide_phone INTEGER DEFAULT 1,
             FOREIGN KEY (user_id) REFERENCES users(uid) ON DELETE CASCADE
           )
-        `, (err) => {
+        `);
+
+        // Demo schema additions (ignore "duplicate column" errors on re-runs)
+        sqliteDb.run('ALTER TABLE users ADD COLUMN identity_verified INTEGER DEFAULT 0', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN lost_on TEXT', () => {});
+        sqliteDb.run('ALTER TABLE messages ADD COLUMN image_url TEXT', () => {});
+        sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_messages INTEGER DEFAULT 1', () => {});
+        sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_matches INTEGER DEFAULT 1', () => {});
+        sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_updates INTEGER DEFAULT 1', () => {});
+        sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_marketing INTEGER DEFAULT 0', () => {});
+        sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_email INTEGER DEFAULT 1', () => {});
+        sqliteDb.run(`
+          CREATE TABLE IF NOT EXISTS verification_requests (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            doc_type TEXT NOT NULL,
+            front_url TEXT NOT NULL,
+            back_url TEXT NOT NULL,
+            selfie_url TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at_ms INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(uid) ON DELETE CASCADE
+          )
+        `);
+        sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at_ms DESC)');
+        sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_owner ON posts(owner_id)');
+        sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, created_at_ms DESC)');
+        sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_chat_participants_user ON chat_participants(user_id)');
+        sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at_ms DESC)');
+        sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_saved_items_user ON saved_items(user_id)', (err) => {
           if (err) reject(err);
           else resolve();
         });
