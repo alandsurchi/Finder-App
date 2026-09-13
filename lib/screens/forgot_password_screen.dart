@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/routes.dart';
-import 'package:finder/widgets/custom_text_field.dart';
+import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/core/validation/validators.dart';
 import 'package:finder/features/auth/presentation/auth_controller.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -21,8 +20,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   int _step = 1; // 1: Email Request, 2: Code verification, 3: Password Reset
   bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
 
   @override
   void initState() {
@@ -61,8 +58,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       onSuccess: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isResend 
-              ? 'New verification code sent! Check your inbox or console logs.' 
+            content: Text(isResend
+              ? 'New verification code sent! Check your inbox or console logs.'
               : 'Verification code sent! Check your inbox or console logs.'
             ),
           ),
@@ -155,295 +152,166 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     );
   }
 
+  void _goBack() {
+    if (_isLoading) return;
+    if (_step == 3) {
+      setState(() => _step = 2);
+    } else if (_step == 2) {
+      setState(() => _step = 1);
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final t = AppColorTokens.of(context);
-
     // Dynamic title, description and icon based on the active step
-    String titleText = 'Forgot Password';
+    String titleText = 'Forgot password';
     String descText = 'Enter your email address and we will send you a 6-digit verification code.';
     IconData headerIcon = Icons.lock_reset_rounded;
 
     if (_step == 2) {
-      titleText = 'Verification';
-      descText = 'Please enter the 6-digit verification code sent to ${_emailCtrl.text.trim()}.';
+      titleText = 'Check your inbox';
+      descText = 'Enter the 6-digit verification code sent to ${_emailCtrl.text.trim()}.';
       headerIcon = Icons.pin_outlined;
     } else if (_step == 3) {
-      titleText = 'Reset Password';
+      titleText = 'Set a new password';
       descText = 'Create a secure new password for your account.';
       headerIcon = Icons.password_rounded;
     }
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+    return AuthShell(
+      key: ValueKey('forgot-step-$_step'),
+      icon: headerIcon,
+      title: titleText,
+      subtitle: descText,
+      showBack: true,
+      onBack: _goBack,
+      aboveTitle: StepDots(count: 3, current: _step - 1),
+      children: [
+        AnimatedSwitcher(
+          duration: BeaconMotion.scaled(context, BeaconMotion.state),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Back Button / App bar helper
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
-                  onPressed: () {
-                    if (_isLoading) return;
-                    if (_step == 3) {
-                      setState(() => _step = 2);
-                    } else if (_step == 2) {
-                      setState(() => _step = 1);
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Decorative recovery icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: t.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  headerIcon,
-                  color: t.primary,
-                  size: 40,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Recovery title & description
-              Text(
-                titleText,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: t.onSurface,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                descText,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: t.onSurfaceVar, height: 1.5),
-              ),
-              const SizedBox(height: 36),
-
-              // Load form depending on step
-              if (_step == 1)
-                ..._buildEmailStep(t)
-              else if (_step == 2)
-                ..._buildCodeStep(t)
-              else
-                ..._buildResetStep(t),
-            ],
+            key: ValueKey(_step),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: _step == 1
+                ? _buildEmailStep()
+                : _step == 2
+                    ? _buildCodeStep()
+                    : _buildResetStep(),
           ),
         ),
-      ),
+      ],
     );
   }
 
-  List<Widget> _buildEmailStep(AppColorTokens t) {
+  List<Widget> _buildEmailStep() {
     return [
-      _label('Email Address', t),
-      const SizedBox(height: 8),
-      CustomTextField(
+      AppTextField(
         controller: _emailCtrl,
-        hintText: 'yourname@example.com',
-        prefixIcon: Icons.email_outlined,
+        label: 'Email address',
+        hint: 'yourname@example.com',
+        prefixIcon: Icons.mail_outline_rounded,
         keyboardType: TextInputType.emailAddress,
+        textInputAction: TextInputAction.done,
+        autofillHints: const [AutofillHints.email],
+        onSubmitted: (_) => _isLoading ? null : _handleSendResetCode(),
       ),
-      const SizedBox(height: 32),
-
-      SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : _handleSendResetCode,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: t.primary,
-            foregroundColor: t.isDark ? Colors.black : Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: _isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  'Send Verification Code',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-        ),
+      const SizedBox(height: BeaconSpace.xxxl),
+      AppButton(
+        label: 'Send verification code',
+        isLoading: _isLoading,
+        onPressed: _isLoading ? null : _handleSendResetCode,
       ),
-      const SizedBox(height: 24),
-
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: Text(
-          'Cancel and Log In',
-          style: TextStyle(color: t.primary, fontSize: 14, fontWeight: FontWeight.w600),
+      const SizedBox(height: BeaconSpace.lg),
+      Center(
+        child: AppButton.ghost(
+          label: 'Cancel and log in',
+          onPressed: () => Navigator.pop(context),
         ),
       ),
     ];
   }
 
-  List<Widget> _buildCodeStep(AppColorTokens t) {
+  List<Widget> _buildCodeStep() {
     return [
-      _label('Verification Code', t),
-      const SizedBox(height: 8),
-      CustomTextField(
+      AppTextField(
         controller: _codeCtrl,
-        hintText: '6-digit OTP',
-        prefixIcon: Icons.numbers_rounded,
+        label: 'Verification code',
+        hint: '6-digit code',
+        prefixIcon: Icons.pin_outlined,
         keyboardType: TextInputType.number,
+        maxLength: 6,
+        textInputAction: TextInputAction.done,
+        autofillHints: const [AutofillHints.oneTimeCode],
+        onSubmitted: (_) => _isLoading ? null : _handleVerifyCode(),
       ),
-      const SizedBox(height: 32),
-
-      SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : _handleVerifyCode,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: t.primary,
-            foregroundColor: t.isDark ? Colors.black : Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: _isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  'Verify Code',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-        ),
+      const SizedBox(height: BeaconSpace.xxxl),
+      AppButton(
+        label: 'Verify code',
+        isLoading: _isLoading,
+        onPressed: _isLoading ? null : _handleVerifyCode,
       ),
-      const SizedBox(height: 24),
-
+      const SizedBox(height: BeaconSpace.lg),
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          TextButton(
+          AppButton.ghost(
+            label: 'Change email',
             onPressed: () => setState(() => _step = 1),
-            child: Text(
-              'Change Email',
-              style: TextStyle(color: t.onSurfaceVar, fontSize: 13),
-            ),
           ),
-          TextButton(
+          AppButton.ghost(
+            label: 'Resend code',
+            icon: Icons.refresh_rounded,
             onPressed: _isLoading ? null : () => _handleSendResetCode(isResend: true),
-            child: Text(
-              'Resend Code',
-              style: TextStyle(color: t.primary, fontSize: 13, fontWeight: FontWeight.bold),
-            ),
           ),
         ],
       ),
     ];
   }
 
-  List<Widget> _buildResetStep(AppColorTokens t) {
+  List<Widget> _buildResetStep() {
     return [
-      _label('New Password', t),
-      const SizedBox(height: 8),
-      CustomTextField(
+      AppTextField(
         controller: _passwordCtrl,
-        hintText: 'Min. 6 characters',
-        prefixIcon: Icons.lock_outline,
-        obscureText: _obscurePassword,
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color: t.onSurfaceMuted,
-          ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-        ),
+        label: 'New password',
+        hint: 'Min. 6 characters',
+        prefixIcon: Icons.lock_outline_rounded,
+        obscureText: true,
+        textInputAction: TextInputAction.next,
+        autofillHints: const [AutofillHints.newPassword],
       ),
-      const SizedBox(height: 16),
-
-      _label('Confirm New Password', t),
-      const SizedBox(height: 8),
-      CustomTextField(
+      const SizedBox(height: BeaconSpace.lg),
+      AppTextField(
         controller: _confirmPasswordCtrl,
-        hintText: 'Retype new password',
-        prefixIcon: Icons.lock_outline,
-        obscureText: _obscureConfirmPassword,
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color: t.onSurfaceMuted,
-          ),
-          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-        ),
+        label: 'Confirm new password',
+        hint: 'Retype new password',
+        prefixIcon: Icons.lock_outline_rounded,
+        obscureText: true,
+        textInputAction: TextInputAction.done,
+        autofillHints: const [AutofillHints.newPassword],
+        onSubmitted: (_) => _isLoading ? null : _handleResetPassword(),
       ),
-      const SizedBox(height: 32),
-
-      SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : _handleResetPassword,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: t.primary,
-            foregroundColor: t.isDark ? Colors.black : Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: _isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  'Reset Password',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-        ),
+      const SizedBox(height: BeaconSpace.xxxl),
+      AppButton(
+        label: 'Reset password',
+        isLoading: _isLoading,
+        onPressed: _isLoading ? null : _handleResetPassword,
       ),
-      const SizedBox(height: 24),
-
-      TextButton(
-        onPressed: () => setState(() {
-          _codeCtrl.clear();
-          _passwordCtrl.clear();
-          _confirmPasswordCtrl.clear();
-          _step = 1;
-        }),
-        child: Text(
-          'Start Over / Change Email',
-          style: TextStyle(color: t.onSurfaceVar, fontSize: 13),
+      const SizedBox(height: BeaconSpace.lg),
+      Center(
+        child: AppButton.ghost(
+          label: 'Start over / change email',
+          onPressed: () => setState(() {
+            _codeCtrl.clear();
+            _passwordCtrl.clear();
+            _confirmPasswordCtrl.clear();
+            _step = 1;
+          }),
         ),
       ),
     ];
-  }
-
-  Widget _label(String text, AppColorTokens t) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: TextStyle(
-          color: t.onSurfaceVar,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
   }
 }
