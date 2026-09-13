@@ -1,6 +1,5 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:finder/theme/app_color_tokens.dart';
+import 'package:finder/widgets/ui/ui.dart';
 import '../routes.dart';
 
 class _OnboardingPage {
@@ -13,7 +12,7 @@ const _pages = [
   _OnboardingPage(
     title: 'Lost Something?',
     description:
-        'Report your missing essentials in seconds. Our neural network connects found items with their owners instantly.',
+        'Report your missing essentials in seconds. Finder connects found items with their owners instantly.',
   ),
   _OnboardingPage(
     title: 'Found Something?',
@@ -34,8 +33,7 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen>
-    with TickerProviderStateMixin {
+class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -63,186 +61,138 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
     final isLast = _currentPage == _pages.length - 1;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── Top bar: logo + skip
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(Icons.ac_unit_rounded, color: t.primary, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Finder',
-                    style: TextStyle(
-                      color: t.primary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: _skip,
-                    child: Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: t.onSurfaceVar,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── PageView
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (i) => setState(() => _currentPage = i),
-                itemCount: _pages.length,
-                itemBuilder: (context, index) => _buildSlide(context, index, t),
-              ),
-            ),
-
-            // ── Dots
-            Padding(
-              padding: const EdgeInsets.only(top: 24, bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  _pages.length,
-                  (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    height: 6,
-                    width: _currentPage == i ? 28 : 7,
-                    decoration: BoxDecoration(
-                      color: _currentPage == i ? t.primary : t.divider,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // ── Buttons
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      body: BeaconBackdrop(
+        secondary: true,
+        alignment: const Alignment(0.9, -1.2),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
               child: Column(
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isLast ? t.primary : t.surfaceHigh,
-                        foregroundColor: isLast
-                            ? (t.isDark ? Colors.black : Colors.white)
-                            : t.primary,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
-                          side: isLast
-                              ? BorderSide.none
-                              : BorderSide(color: t.divider, width: 1.5),
-                        ),
-                      ),
-                      onPressed: _nextPage,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            isLast ? 'Get Started' : 'Next',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: isLast
-                                  ? (t.isDark ? Colors.black : Colors.white)
-                                  : t.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: isLast
-                                ? (t.isDark ? Colors.black : Colors.white)
-                                : t.primary,
-                            size: 18,
-                          ),
-                        ],
-                      ),
+                  // ── Top bar: brand + skip
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        BeaconSpace.page, BeaconSpace.sm, BeaconSpace.sm, 0),
+                    child: Row(
+                      children: [
+                        const BeaconMark(size: 32),
+                        const SizedBox(width: BeaconSpace.sm),
+                        Text('Finder', style: text.titleLarge),
+                        const Spacer(),
+                        AppButton.ghost(label: 'Skip', onPressed: _skip),
+                      ],
                     ),
                   ),
-                  if (!isLast) ...[
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: _skip,
-                      child: Text(
-                        'Skip for now',
-                        style: TextStyle(
-                          color: t.onSurfaceVar,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+
+                  // ── PageView
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (i) => setState(() => _currentPage = i),
+                      itemCount: _pages.length,
+                      itemBuilder: (context, index) => _buildSlide(context, index, t),
                     ),
-                  ],
+                  ),
+
+                  // ── Dots
+                  Padding(
+                    padding: const EdgeInsets.only(top: BeaconSpace.lg, bottom: BeaconSpace.sm),
+                    child: StepDots(count: _pages.length, current: _currentPage),
+                  ),
+
+                  // ── Buttons
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        BeaconSpace.page, BeaconSpace.lg, BeaconSpace.page, BeaconSpace.xl),
+                    child: Column(
+                      children: [
+                        AppButton(
+                          label: isLast ? 'Get Started' : 'Next',
+                          icon: Icons.arrow_forward_rounded,
+                          iconTrailing: true,
+                          variant: isLast
+                              ? AppButtonVariant.primary
+                              : AppButtonVariant.tonal,
+                          onPressed: _nextPage,
+                        ),
+                        SizedBox(
+                          height: 48,
+                          child: AnimatedOpacity(
+                            duration: BeaconMotion.scaled(context, BeaconMotion.state),
+                            opacity: isLast ? 0 : 1,
+                            child: IgnorePointer(
+                              ignoring: isLast,
+                              child: Center(
+                                child: AppButton.ghost(
+                                  label: 'Skip for now',
+                                  onPressed: _skip,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildSlide(BuildContext context, int index, AppColorTokens t) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          Expanded(
-            flex: 5,
-            child: [
-              _LostIllustration(t: t),
-              _FoundIllustration(t: t),
-              _ConnectIllustration(t: t),
-            ][index],
-          ),
-          const SizedBox(height: 32),
-          Text(
-            _pages[index].title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: t.onSurface,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              height: 1.2,
+    final text = Theme.of(context).textTheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final illustrationSize =
+            (constraints.maxHeight * 0.48).clamp(160.0, 300.0);
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.xxl),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: BeaconSpace.sm),
+                SizedBox(
+                  height: illustrationSize,
+                  child: [
+                    _LostIllustration(t: t),
+                    _FoundIllustration(t: t),
+                    _ConnectIllustration(t: t),
+                  ][index],
+                ),
+                const SizedBox(height: BeaconSpace.xxxl),
+                Text(
+                  _pages[index].title,
+                  textAlign: TextAlign.center,
+                  style: text.headlineLarge,
+                ),
+                const SizedBox(height: BeaconSpace.md),
+                Text(
+                  _pages[index].description,
+                  textAlign: TextAlign.center,
+                  style: text.bodyLarge?.copyWith(color: t.onSurfaceVar),
+                ),
+                const SizedBox(height: BeaconSpace.sm),
+              ],
             ),
           ),
-          const SizedBox(height: 14),
-          Text(
-            _pages[index].description,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: t.onSurfaceVar, fontSize: 15, height: 1.6),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-// ── Slide 1: Spotlight illustration
+// ── Slide 1: Beacon spotlight
 class _LostIllustration extends StatelessWidget {
   final AppColorTokens t;
   const _LostIllustration({required this.t});
@@ -250,24 +200,34 @@ class _LostIllustration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SizedBox(
-        width: 280,
-        height: 280,
+      child: AspectRatio(
+        aspectRatio: 1,
         child: CustomPaint(
-          painter: _SpotlightPainter(primaryColor: t.primary),
+          painter: _BeaconRingsPainter(
+            ring: t.primary,
+            glow: t.accentGlow,
+            dot: t.accent,
+          ),
           child: Center(
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: t.surfaceHigh,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: t.primary.withOpacity(0.4),
-                  width: 1.5,
+            child: FractionallySizedBox(
+              widthFactor: 0.34,
+              heightFactor: 0.34,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: t.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: t.accent, width: 3),
+                  boxShadow: [
+                    BoxShadow(color: t.accentGlow, blurRadius: 40, spreadRadius: 8),
+                  ],
+                ),
+                child: FittedBox(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Icon(Icons.watch_outlined, color: t.onPrimary),
+                  ),
                 ),
               ),
-              child: Icon(Icons.watch_outlined, color: t.primary, size: 40),
             ),
           ),
         ),
@@ -276,51 +236,55 @@ class _LostIllustration extends StatelessWidget {
   }
 }
 
-class _SpotlightPainter extends CustomPainter {
-  final Color primaryColor;
-  const _SpotlightPainter({required this.primaryColor});
+class _BeaconRingsPainter extends CustomPainter {
+  final Color ring;
+  final Color glow;
+  final Color dot;
+  const _BeaconRingsPainter({required this.ring, required this.glow, required this.dot});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    final circlePaint = Paint()
-      ..color = primaryColor.withOpacity(0.1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    canvas.drawCircle(center, radius, circlePaint);
-
-    final spotPaint = Paint()
+    final glowPaint = Paint()
       ..shader = RadialGradient(
-        center: Alignment.topCenter,
-        radius: 0.8,
-        colors: [primaryColor.withOpacity(0.20), Colors.transparent],
+        colors: [glow, glow.withValues(alpha: 0)],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
-    canvas.drawCircle(center, radius, spotPaint);
+    canvas.drawCircle(center, radius, glowPaint);
 
-    final conePaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [primaryColor.withOpacity(0.18), Colors.transparent],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    for (var i = 1; i <= 3; i++) {
+      final paint = Paint()
+        ..color = ring.withValues(alpha: 0.32 / i)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5;
+      canvas.drawCircle(center, radius * (0.3 + 0.22 * i), paint);
+    }
 
-    final conePath = Path()
-      ..moveTo(center.dx, center.dy - radius + 8)
-      ..lineTo(center.dx - 60, center.dy + 40)
-      ..lineTo(center.dx + 60, center.dy + 40)
-      ..close();
-    canvas.drawPath(conePath, conePaint);
+    // Sweep
+    final sweep = Paint()
+      ..shader = SweepGradient(
+        startAngle: -1.2,
+        endAngle: 0.4,
+        colors: [ring.withValues(alpha: 0), ring.withValues(alpha: 0.22)],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius * 0.96),
+      -1.2,
+      1.6,
+      true,
+      sweep,
+    );
 
-    final dotPaint = Paint()..color = primaryColor.withOpacity(0.4);
-    canvas.drawCircle(Offset(center.dx - 80, center.dy - 40), 3, dotPaint);
-    canvas.drawCircle(Offset(center.dx + 90, center.dy + 10), 2.5, dotPaint);
-    canvas.drawCircle(Offset(center.dx + 40, center.dy - 70), 2, dotPaint);
+    final dotPaint = Paint()..color = dot;
+    canvas.drawCircle(Offset(center.dx - radius * 0.55, center.dy - radius * 0.3), 4, dotPaint);
+    canvas.drawCircle(Offset(center.dx + radius * 0.62, center.dy + radius * 0.12), 3, dotPaint);
+    canvas.drawCircle(Offset(center.dx + radius * 0.28, center.dy - radius * 0.62), 3, dotPaint);
   }
 
   @override
-  bool shouldRepaint(_SpotlightPainter old) => old.primaryColor != primaryColor;
+  bool shouldRepaint(_BeaconRingsPainter old) =>
+      old.ring != ring || old.glow != glow || old.dot != dot;
 }
 
 // ── Slide 2: Found illustration
@@ -332,56 +296,68 @@ class _FoundIllustration extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: t.surfaceHigh,
-        border: Border.all(color: t.divider, width: 1),
+        borderRadius: BeaconRadius.rXxl,
+        color: t.surfaceLow,
+        border: Border.all(color: t.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
           Positioned.fill(
-            child: CustomPaint(painter: _FrostPainter(primaryColor: t.primary)),
+            child: CustomPaint(
+              painter: _DotGridPainter(color: t.outline),
+            ),
           ),
           Positioned(
             right: 16,
-            bottom: 20,
+            bottom: 12,
             child: Icon(
-              Icons.vpn_key_rounded,
-              color: t.onSurface.withOpacity(0.06),
-              size: 80,
+              Icons.key_rounded,
+              color: t.found.withValues(alpha: 0.12),
+              size: 120,
             ),
           ),
           Positioned(
             left: 24,
             bottom: 28,
             child: Container(
-              width: 70,
-              height: 70,
+              width: 76,
+              height: 76,
               decoration: BoxDecoration(
-                color: t.surface,
+                color: t.found,
                 shape: BoxShape.circle,
-                border: Border.all(color: t.divider, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: t.found.withValues(alpha: 0.35),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: Icon(Icons.handshake_outlined, color: t.primary, size: 36),
+              child: Icon(Icons.handshake_outlined, color: t.onFound, size: 36),
             ),
           ),
           Positioned(
             right: 28,
-            top: 60,
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: t.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: t.primary.withOpacity(0.4)),
-              ),
-              child: Icon(
-                Icons.manage_search_rounded,
-                color: t.primary,
-                size: 26,
+            top: 48,
+            child: SurfaceCard(
+              padding: const EdgeInsets.all(BeaconSpace.md),
+              radius: BeaconRadius.lg,
+              elevated: true,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.manage_search_rounded, color: t.primary, size: 24),
+                  const SizedBox(width: BeaconSpace.sm),
+                  StatusBadge.found(small: true),
+                ],
               ),
             ),
+          ),
+          Positioned(
+            left: 28,
+            top: 32,
+            child: StatusBadge.reward('REWARD \$50', small: true),
           ),
         ],
       ),
@@ -389,32 +365,23 @@ class _FoundIllustration extends StatelessWidget {
   }
 }
 
-class _FrostPainter extends CustomPainter {
-  final Color primaryColor;
-  const _FrostPainter({required this.primaryColor});
+class _DotGridPainter extends CustomPainter {
+  final Color color;
+  const _DotGridPainter({required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = primaryColor.withOpacity(0.04)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-    const step = 30.0;
-    for (double x = 0; x < size.width; x += step) {
-      for (double y = 0; y < size.height; y += step) {
-        canvas.drawLine(Offset(x, y), Offset(x + 10, y + 10), paint);
-        canvas.drawLine(Offset(x + 10, y), Offset(x, y + 10), paint);
+    final paint = Paint()..color = color.withValues(alpha: 0.5);
+    const step = 22.0;
+    for (double x = step / 2; x < size.width; x += step) {
+      for (double y = step / 2; y < size.height; y += step) {
+        canvas.drawCircle(Offset(x, y), 1.2, paint);
       }
     }
-    final glow = Paint()
-      ..shader = RadialGradient(
-        colors: [primaryColor.withOpacity(0.10), Colors.transparent],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), glow);
   }
 
   @override
-  bool shouldRepaint(_FrostPainter old) => old.primaryColor != primaryColor;
+  bool shouldRepaint(_DotGridPainter old) => old.color != color;
 }
 
 // ── Slide 3: Connect illustration
@@ -425,65 +392,31 @@ class _ConnectIllustration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(BeaconSpace.lg),
       decoration: BoxDecoration(
-        color: t.surfaceHigh,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: t.divider, width: 1),
+        color: t.surfaceLow,
+        borderRadius: BeaconRadius.rXxl,
+        border: Border.all(color: t.outlineVariant),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _chatBubble(
-            t: t,
-            isLeft: true,
-            avatarIcon: Icons.face_3,
-            avatarColor: const Color(0xFFD4927A),
-          ),
-          const SizedBox(height: 12),
-          _chatBubble(
-            t: t,
-            isLeft: false,
-            avatarIcon: Icons.face,
-            avatarColor: const Color(0xFF8B6E5A),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: t.surface,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: t.divider, width: 1),
-            ),
+          _chatBubble(t: t, isLeft: true, name: 'Sarah Ahmed'),
+          const SizedBox(height: BeaconSpace.md),
+          _chatBubble(t: t, isLeft: false, name: 'Alex Rivera'),
+          const SizedBox(height: BeaconSpace.xl),
+          SurfaceCard(
+            padding: const EdgeInsets.symmetric(
+                horizontal: BeaconSpace.lg, vertical: BeaconSpace.sm),
+            radius: BeaconRadius.pill,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.verified, color: t.primary, size: 18),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'TRUST',
-                      style: TextStyle(
-                        color: t.onSurface,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        height: 1,
-                      ),
-                    ),
-                    Text(
-                      'SECURED',
-                      style: TextStyle(
-                        color: t.onSurface,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        height: 1,
-                      ),
-                    ),
-                  ],
+                Icon(Icons.verified_rounded, color: t.primary, size: 18),
+                const SizedBox(width: BeaconSpace.sm),
+                Text(
+                  'TRUST SECURED',
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
             ),
@@ -496,26 +429,23 @@ class _ConnectIllustration extends StatelessWidget {
   Widget _chatBubble({
     required AppColorTokens t,
     required bool isLeft,
-    required IconData avatarIcon,
-    required Color avatarColor,
+    required String name,
   }) {
-    final avatar = Container(
-      width: 48,
-      height: 52,
-      decoration: BoxDecoration(
-        color: avatarColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(avatarIcon, color: Colors.white, size: 28),
-    );
+    final avatar = AppAvatar(name: name, size: 44);
 
     final textLines = Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+            horizontal: BeaconSpace.md, vertical: BeaconSpace.md),
         decoration: BoxDecoration(
-          color: t.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: t.divider),
+          color: isLeft ? t.surface : t.primary,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(isLeft ? 4 : 16),
+            bottomRight: Radius.circular(isLeft ? 16 : 4),
+          ),
+          border: isLeft ? Border.all(color: t.outlineVariant) : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -524,16 +454,18 @@ class _ConnectIllustration extends StatelessWidget {
               height: 8,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: t.onSurfaceVar,
+                color: isLeft ? t.onSurfaceVar : t.onPrimary.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
             const SizedBox(height: 6),
             Container(
               height: 8,
-              width: 120,
+              width: 110,
               decoration: BoxDecoration(
-                color: t.onSurfaceVar.withOpacity(0.5),
+                color: isLeft
+                    ? t.onSurfaceVar.withValues(alpha: 0.5)
+                    : t.onPrimary.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -545,8 +477,8 @@ class _ConnectIllustration extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: isLeft
-          ? [avatar, const SizedBox(width: 10), textLines]
-          : [textLines, const SizedBox(width: 10), avatar],
+          ? [avatar, const SizedBox(width: BeaconSpace.sm), textLines]
+          : [textLines, const SizedBox(width: BeaconSpace.sm), avatar],
     );
   }
 }

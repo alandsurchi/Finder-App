@@ -3,6 +3,9 @@ import 'package:finder/theme/beacon_tokens.dart';
 
 /// Fade + rise entrance. Pass an [index] to stagger siblings. Renders the
 /// child statically when the platform requests reduced motion.
+///
+/// The delay is folded into the animation controller as an [Interval] so no
+/// dart timers are created (keeps widget tests deterministic).
 class StaggeredEntrance extends StatefulWidget {
   final Widget child;
   final int index;
@@ -27,14 +30,24 @@ class StaggeredEntrance extends StatefulWidget {
 
 class _StaggeredEntranceState extends State<StaggeredEntrance>
     with SingleTickerProviderStateMixin {
+  late final Duration _delay = widget.delay ?? widget.baseDelay * widget.index;
+  late final Duration _total = _delay + widget.duration;
+  late final double _start =
+      _total.inMicroseconds == 0 ? 0 : _delay.inMicroseconds / _total.inMicroseconds;
+
   late final AnimationController _c =
-      AnimationController(vsync: this, duration: widget.duration);
-  late final Animation<double> _fade =
-      CurvedAnimation(parent: _c, curve: Curves.easeOut);
+      AnimationController(vsync: this, duration: _total);
+  late final Animation<double> _fade = CurvedAnimation(
+    parent: _c,
+    curve: Interval(_start, 1, curve: Curves.easeOut),
+  );
   late final Animation<Offset> _slide = Tween<Offset>(
     begin: Offset(0, widget.offset),
     end: Offset.zero,
-  ).animate(CurvedAnimation(parent: _c, curve: BeaconMotion.emphasized));
+  ).animate(CurvedAnimation(
+    parent: _c,
+    curve: Interval(_start, 1, curve: BeaconMotion.emphasized),
+  ));
 
   bool _started = false;
 
@@ -47,14 +60,7 @@ class _StaggeredEntranceState extends State<StaggeredEntrance>
       _c.value = 1;
       return;
     }
-    final delay = widget.delay ?? widget.baseDelay * widget.index;
-    if (delay == Duration.zero) {
-      _c.forward();
-    } else {
-      Future.delayed(delay, () {
-        if (mounted) _c.forward();
-      });
-    }
+    _c.forward();
   }
 
   @override
