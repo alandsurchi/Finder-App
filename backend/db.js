@@ -8,7 +8,10 @@ let pgPool = null;
 let sqliteDb = null;
 
 if (isPostgres) {
-  console.log('Connecting to PostgreSQL database at:', databaseUrl);
+  // Never log credentials; show host/database only.
+  let redacted = databaseUrl;
+  try { const u = new URL(databaseUrl); redacted = `${u.protocol}//${u.username || 'user'}:***@${u.host}${u.pathname}`; } catch (_) { redacted = '(unparseable URL)'; }
+  console.log('Connecting to PostgreSQL database at:', redacted);
   const useSsl = databaseUrl.includes('sslmode=disable') ? false : { rejectUnauthorized: false };
   pgPool = new Pool({
     connectionString: databaseUrl,
