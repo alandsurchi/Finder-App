@@ -67,6 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       body: BeaconBackdrop(
         secondary: true,
+        rings: true,
         alignment: const Alignment(0.9, -1.2),
         child: SafeArea(
           child: Center(

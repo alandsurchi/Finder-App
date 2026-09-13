@@ -37,6 +37,7 @@ class AuthShell extends StatelessWidget {
     return Scaffold(
       body: BeaconBackdrop(
         secondary: true,
+        rings: true,
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(

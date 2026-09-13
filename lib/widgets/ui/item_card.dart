@@ -10,18 +10,19 @@ enum ItemCardLayout { tile, row, compact }
 
 /// Presentational base for every post card in the app.
 ///
-/// * `tile`    — full-width, image on top, used on Home / Saved.
+/// * `tile`    — full-width "photo on paper" card with the signal **spine**:
+///               a colored edge carrying a vertical LOST / FOUND label.
 /// * `row`     — thumbnail left, text right, used in Search / My posts.
 /// * `compact` — 148dp wide mini card for horizontal rails.
 ///
-/// The Beacon signal rail (Lost = coral, Found = emerald) always sits on the
-/// leading edge so status is readable at a glance without reading the badge.
+/// Lost = coral, Found = emerald, everywhere, from one rule.
 class ItemCard extends StatelessWidget {
   final ItemModel item;
   final ItemCardLayout layout;
   final VoidCallback? onTap;
 
-  /// Badges drawn over the image (defaults to status + reward).
+  /// Badges drawn over the image (defaults to reward / resolved for tiles,
+  /// status + reward for rows).
   final List<Widget>? badges;
 
   /// Widget overlaid top-right on the image (e.g. a save button).
@@ -57,8 +58,10 @@ class ItemCard extends StatelessWidget {
     this.margin,
   });
 
-  List<Widget> _defaultBadges() => [
-        StatusBadge.fromItem(item, small: layout != ItemCardLayout.tile),
+  static const double spineWidth = 30;
+
+  List<Widget> _defaultBadges({required bool includeStatus}) => [
+        if (includeStatus) StatusBadge.fromItem(item, small: true),
         if (item.reward != null && item.reward!.isNotEmpty)
           StatusBadge.reward(_rewardLabel(item.reward!),
               small: layout != ItemCardLayout.tile),
@@ -87,6 +90,10 @@ class ItemCard extends StatelessWidget {
       ItemCardLayout.compact => _compact(context, t, kind),
     };
 
+    final edge = layout == ItemCardLayout.tile
+        ? _Spine(kind: kind)
+        : SignalRail(kind: kind);
+
     Widget card = Material(
       color: t.surface,
       shape: RoundedRectangleBorder(
@@ -103,7 +110,7 @@ class ItemCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SignalRail(kind: kind),
+                edge,
                 Expanded(child: body),
               ],
             ),
@@ -118,9 +125,14 @@ class ItemCard extends StatelessWidget {
           borderRadius: radius,
           boxShadow: [
             BoxShadow(
-              color: t.shadow.withValues(alpha: 0.05),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
+              color: t.shadow.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+            BoxShadow(
+              color: t.shadow.withValues(alpha: 0.06),
+              blurRadius: 28,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
@@ -137,61 +149,70 @@ class ItemCard extends StatelessWidget {
 
   Widget _tile(BuildContext context, AppColorTokens t, SignalKind kind) {
     final text = Theme.of(context).textTheme;
+    final overlays = badges ?? _defaultBadges(includeStatus: false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Stack(
-          children: [
-            ItemImage(
-              url: item.imagePath,
-              height: imageHeight,
-              fallbackIcon: categoryIcon(item.category),
-              heroTag: heroTag,
-            ),
-            Positioned(
-              top: BeaconSpace.md,
-              left: BeaconSpace.md,
-              right: 56,
-              child: Wrap(
-                spacing: BeaconSpace.sm,
-                runSpacing: BeaconSpace.sm,
-                children: badges ?? _defaultBadges(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              BeaconSpace.md, BeaconSpace.md, BeaconSpace.md, 0),
+          child: Stack(
+            children: [
+              ItemImage(
+                url: item.imagePath,
+                height: imageHeight,
+                borderRadius: BeaconRadius.rLg,
+                fallbackIcon: categoryIcon(item.category),
+                heroTag: heroTag,
               ),
-            ),
-            if (overlay != null)
-              Positioned(top: BeaconSpace.sm, right: BeaconSpace.sm, child: overlay!),
-            if (banner != null)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(
-                      BeaconSpace.lg, BeaconSpace.xxl, BeaconSpace.lg, BeaconSpace.md),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        t.shadow.withValues(alpha: 0),
-                        t.shadow.withValues(alpha: 0.55),
-                      ],
-                    ),
+              if (overlays.isNotEmpty)
+                Positioned(
+                  top: BeaconSpace.md,
+                  left: BeaconSpace.md,
+                  right: 56,
+                  child: Wrap(
+                    spacing: BeaconSpace.sm,
+                    runSpacing: BeaconSpace.sm,
+                    children: overlays,
                   ),
-                  child: Text(
-                    banner!,
-                    style: text.titleMedium?.copyWith(
-                      color: Colors.white,
-                      letterSpacing: 2,
+                ),
+              if (overlay != null)
+                Positioned(top: BeaconSpace.sm, right: BeaconSpace.sm, child: overlay!),
+              if (banner != null)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(
+                        BeaconSpace.lg, BeaconSpace.xxl, BeaconSpace.lg, BeaconSpace.md),
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(BeaconRadius.lg)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          t.shadow.withValues(alpha: 0),
+                          t.shadow.withValues(alpha: 0.55),
+                        ],
+                      ),
+                    ),
+                    child: Text(
+                      banner!,
+                      style: text.titleMedium?.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 2,
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(
-              BeaconSpace.lg, BeaconSpace.md, BeaconSpace.lg, BeaconSpace.lg),
+              BeaconSpace.lg, BeaconSpace.lg, BeaconSpace.lg, BeaconSpace.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -210,7 +231,7 @@ class ItemCard extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 3),
                     child: Text(item.timeAgo,
-                        style: text.bodySmall?.copyWith(color: t.onSurfaceMuted)),
+                        style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
                   ),
                 ],
               ),
@@ -270,9 +291,9 @@ class ItemCard extends StatelessWidget {
                   runSpacing: BeaconSpace.xs,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    ...(badges ?? _defaultBadges()),
+                    ...(badges ?? _defaultBadges(includeStatus: true)),
                     Text(item.timeAgo,
-                        style: text.bodySmall?.copyWith(color: t.onSurfaceMuted)),
+                        style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
                   ],
                 ),
                 const SizedBox(height: BeaconSpace.sm),
@@ -350,6 +371,51 @@ class ItemCard extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The signal spine: a 30dp colored edge with the status written vertically.
+class _Spine extends StatelessWidget {
+  final SignalKind kind;
+  const _Spine({required this.kind});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    return Container(
+      width: ItemCard.spineWidth,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [kind.color(t), kind.color(t).withValues(alpha: 0.82)],
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: BeaconSpace.lg),
+          Icon(kind.icon, size: 14, color: kind.onColor(t)),
+          const SizedBox(height: BeaconSpace.sm),
+          Expanded(
+            child: RotatedBox(
+              quarterTurns: 3,
+              child: Center(
+                child: Text(
+                  kind.label,
+                  style: text.labelSmall?.copyWith(
+                    color: kind.onColor(t),
+                    letterSpacing: 2.4,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: BeaconSpace.lg),
         ],
       ),
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
+import 'package:finder/widgets/ui/beacon_pulse.dart';
 import 'package:finder/widgets/ui/skeleton.dart';
 
 enum LoadingVariant { spinner, list, rows }
@@ -21,7 +21,6 @@ class LoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
 
     switch (variant) {
@@ -37,14 +36,7 @@ class LoadingWidget extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: t.primary,
-                  ),
-                ),
+                const BeaconPulse(size: 72),
                 if (message != null) ...[
                   const SizedBox(height: BeaconSpace.lg),
                   Text(

@@ -142,6 +142,15 @@ class AppButton extends StatelessWidget {
       ],
     );
 
+    // Primary and accent CTAs get the signature vertical gradient, a soft
+    // colored shadow and a hairline top highlight — the "lit object" look.
+    final Gradient? gradient = switch (variant) {
+      AppButtonVariant.primary => t.primaryGradient,
+      AppButtonVariant.accent => t.accentGradient,
+      _ => null,
+    };
+    final lit = gradient != null && enabled;
+
     return PressScale(
       enabled: enabled,
       child: AnimatedOpacity(
@@ -151,25 +160,54 @@ class AppButton extends StatelessWidget {
           button: true,
           enabled: enabled,
           label: label,
-          child: Material(
-            color: bg,
-            shape: RoundedRectangleBorder(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
               borderRadius: BeaconRadius.rPill,
-              side: border != null ? BorderSide(color: border) : BorderSide.none,
+              gradient: gradient,
+              boxShadow: lit
+                  ? [
+                      BoxShadow(
+                        color: bg.withValues(alpha: t.isDark ? 0.28 : 0.30),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ]
+                  : null,
             ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: enabled ? onPressed : null,
-              child: SizedBox(
-                height: _height,
-                width: expand ? double.infinity : null,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size == AppButtonSize.small
-                        ? BeaconSpace.md
-                        : BeaconSpace.xxl,
-                  ),
-                  child: child,
+            child: Material(
+              color: gradient != null ? Colors.transparent : bg,
+              shape: RoundedRectangleBorder(
+                borderRadius: BeaconRadius.rPill,
+                side: border != null ? BorderSide(color: border) : BorderSide.none,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: enabled ? onPressed : null,
+                child: Stack(
+                  children: [
+                    if (gradient != null)
+                      Positioned(
+                        top: 0,
+                        left: 12,
+                        right: 12,
+                        child: Container(
+                          height: 1,
+                          color: Colors.white.withValues(alpha: 0.22),
+                        ),
+                      ),
+                    SizedBox(
+                      height: _height,
+                      width: expand ? double.infinity : null,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: size == AppButtonSize.small
+                              ? BeaconSpace.md
+                              : BeaconSpace.xxl,
+                        ),
+                        child: child,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

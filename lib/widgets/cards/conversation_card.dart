@@ -58,19 +58,25 @@ class ConversationCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        convo.name,
-                        style: text.titleMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              convo.name,
+                              style: text.titleMedium,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (convo.isVerified) ...[
+                            const SizedBox(width: BeaconSpace.xs),
+                            Icon(Icons.verified_rounded, color: t.primary, size: 15),
+                          ],
+                        ],
                       ),
                     ),
-                    if (convo.isVerified) ...[
-                      const SizedBox(width: BeaconSpace.xs),
-                      Icon(Icons.verified_rounded, color: t.primary, size: 15),
-                    ],
-                    const Spacer(),
+                    const SizedBox(width: BeaconSpace.sm),
                     Text(
                       _formatTimeAgo(convo.lastUpdatedAt.toDate()),
                       style: text.bodySmall?.copyWith(

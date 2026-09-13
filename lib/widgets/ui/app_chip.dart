@@ -116,9 +116,10 @@ class SegmentedPills extends StatelessWidget {
                 width: w,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: t.surface,
+                    color: t.isDark ? t.surfaceHigh : t.surface,
                     borderRadius: BeaconRadius.rPill,
-                    border: Border.all(color: t.outlineVariant),
+                    border: Border.all(
+                        color: t.isDark ? t.glassBorder : t.outlineVariant),
                     boxShadow: [
                       BoxShadow(
                         color: t.shadow.withValues(alpha: t.isDark ? 0.4 : 0.08),

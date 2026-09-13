@@ -11,7 +11,9 @@ import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/widgets/ui/ui.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
-  const CreatePostScreen({super.key});
+  /// Optional preselection for the Lost / Found toggle (presentation only).
+  final bool? initialIsLost;
+  const CreatePostScreen({super.key, this.initialIsLost});
 
   @override
   ConsumerState<CreatePostScreen> createState() => _CreatePostScreenState();
@@ -50,6 +52,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     _selectedDateTime = DateTime.now();
     _dateCtrl.text = _formatDateTime(_selectedDateTime!);
     _restoreDraftIfAvailable();
+    if (widget.initialIsLost != null) _isLostItem = widget.initialIsLost!;
   }
 
   @override

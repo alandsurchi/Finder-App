@@ -44,7 +44,7 @@ class ItemDetailsScreen extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
-                  BeaconSpace.page, BeaconSpace.xl, BeaconSpace.page, 0),
+                  BeaconSpace.page, BeaconSpace.sm, BeaconSpace.page, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -204,11 +204,34 @@ class ItemDetailsScreen extends ConsumerWidget {
   // ── Sliver app bar with hero image ─────────────────────────────────────────
   Widget _buildSliverAppBar(BuildContext context, ItemModel item) {
     final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    final topPad = MediaQuery.paddingOf(context).top;
     return SliverAppBar(
-      expandedHeight: 320,
+      expandedHeight: 380,
       pinned: true,
       stretch: true,
       backgroundColor: t.bg,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(BeaconRadius.xxl + 4),
+        child: Container(
+          height: BeaconRadius.xxl + 4,
+          decoration: BoxDecoration(
+            color: t.bg,
+            borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(BeaconRadius.xxl + 4)),
+          ),
+          alignment: Alignment.topCenter,
+          padding: const EdgeInsets.only(top: BeaconSpace.md),
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: t.outline,
+              borderRadius: BeaconRadius.rPill,
+            ),
+          ),
+        ),
+      ),
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       leadingWidth: 64,
@@ -250,28 +273,50 @@ class ItemDetailsScreen extends ConsumerWidget {
         ),
         const SizedBox(width: BeaconSpace.md),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        stretchModes: const [StretchMode.zoomBackground],
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            ItemImage(
-              url: item.imagePath,
-              heroTag: 'item-image-${item.id}',
-              fallbackIcon: categoryIcon(item.category),
-            ),
-            // Bottom scrim so the image blends into the page.
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.center,
-                  end: Alignment.bottomCenter,
-                  colors: [t.bg.withValues(alpha: 0), t.bg],
-                ),
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          final collapsed =
+              constraints.biggest.height <= kToolbarHeight + topPad + 24;
+          return FlexibleSpaceBar(
+            stretchModes: const [StretchMode.zoomBackground],
+            centerTitle: false,
+            titlePadding: const EdgeInsetsDirectional.only(
+                start: 64, end: 120, bottom: 18),
+            title: AnimatedOpacity(
+              duration: BeaconMotion.scaled(context, BeaconMotion.state),
+              opacity: collapsed ? 1 : 0,
+              child: Text(
+                item.title.isEmpty ? 'Item details' : item.title,
+                style: text.titleMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ],
-        ),
+            background: Stack(
+              fit: StackFit.expand,
+              children: [
+                ItemImage(
+                  url: item.imagePath,
+                  heroTag: 'item-image-${item.id}',
+                  fallbackIcon: categoryIcon(item.category),
+                ),
+                // Top scrim keeps the glass controls legible over any photo.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: const Alignment(0, -0.4),
+                      colors: [
+                        t.shadow.withValues(alpha: 0.35),
+                        t.shadow.withValues(alpha: 0),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

@@ -17,6 +17,7 @@ class AppColorTokens {
 
   // ── Brand ─────────────────────────────────────────────────────────────────
   final Color primary;
+  final Color primaryDeep;
   final Color onPrimary;
   final Color primaryContainer;
   final Color onPrimaryContainer;
@@ -24,6 +25,7 @@ class AppColorTokens {
 
   // ── Beacon accent ─────────────────────────────────────────────────────────
   final Color accent;
+  final Color accentDeep;
   final Color onAccent;
   final Color accentContainer;
   final Color accentGlow;
@@ -63,6 +65,18 @@ class AppColorTokens {
   /// Underlying extension, for widgets that want the raw palette.
   final BeaconColors beacon;
 
+  /// Signature vertical gradients for primary / accent surfaces.
+  LinearGradient get primaryGradient => LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [primary, primaryDeep],
+      );
+  LinearGradient get accentGradient => LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [accent, accentDeep],
+      );
+
   const AppColorTokens._({
     required this.beacon,
     required this.isDark,
@@ -71,11 +85,13 @@ class AppColorTokens {
     required this.surface,
     required this.surfaceHigh,
     required this.primary,
+    required this.primaryDeep,
     required this.onPrimary,
     required this.primaryContainer,
     required this.onPrimaryContainer,
     required this.iconBg,
     required this.accent,
+    required this.accentDeep,
     required this.onAccent,
     required this.accentContainer,
     required this.accentGlow,
@@ -111,11 +127,13 @@ class AppColorTokens {
       surface: b.surface,
       surfaceHigh: b.surfaceHigh,
       primary: b.primary,
+      primaryDeep: b.primaryDeep,
       onPrimary: b.onPrimary,
       primaryContainer: b.primaryContainer,
       onPrimaryContainer: b.onPrimaryContainer,
       iconBg: b.primaryContainer,
       accent: b.accent,
+      accentDeep: b.accentDeep,
       onAccent: b.onAccent,
       accentContainer: b.accentContainer,
       accentGlow: b.accentGlow,

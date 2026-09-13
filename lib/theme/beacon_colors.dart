@@ -17,12 +17,14 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
 
   // ── Brand ─────────────────────────────────────────────────────────────────
   final Color primary;
+  final Color primaryDeep;
   final Color onPrimary;
   final Color primaryContainer;
   final Color onPrimaryContainer;
 
   // ── Beacon accent (amber) ─────────────────────────────────────────────────
   final Color accent;
+  final Color accentDeep;
   final Color onAccent;
   final Color accentContainer;
   final Color accentGlow;
@@ -59,10 +61,12 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
     required this.surface,
     required this.surfaceHigh,
     required this.primary,
+    required this.primaryDeep,
     required this.onPrimary,
     required this.primaryContainer,
     required this.onPrimaryContainer,
     required this.accent,
+    required this.accentDeep,
     required this.onAccent,
     required this.accentContainer,
     required this.accentGlow,
@@ -93,13 +97,15 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
     surface: Color(0xFFFFFFFF),
     surfaceHigh: Color(0xFFE6E3DB),
     primary: Color(0xFF0B6E6A),
+    primaryDeep: Color(0xFF064E4B),
     onPrimary: Color(0xFFFFFFFF),
     primaryContainer: Color(0xFFD7F0EC),
     onPrimaryContainer: Color(0xFF05302E),
     accent: Color(0xFFF2A33A),
+    accentDeep: Color(0xFFDD8A1F),
     onAccent: Color(0xFF3B2300),
     accentContainer: Color(0xFFFCEBD2),
-    accentGlow: Color(0x38F2A33A),
+    accentGlow: Color(0x5CF2A33A),
     lost: Color(0xFFD9483B),
     onLost: Color(0xFFFFFFFF),
     lostContainer: Color(0xFFFBE4E1),
@@ -127,13 +133,15 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
     surface: Color(0xFF121B1D),
     surfaceHigh: Color(0xFF1A2528),
     primary: Color(0xFF5FD4CB),
+    primaryDeep: Color(0xFF34B3A8),
     onPrimary: Color(0xFF062A28),
     primaryContainer: Color(0xFF163B39),
     onPrimaryContainer: Color(0xFFB8ECE6),
     accent: Color(0xFFF5B45C),
+    accentDeep: Color(0xFFDD9A3C),
     onAccent: Color(0xFF2B1A00),
     accentContainer: Color(0xFF3D2A0E),
-    accentGlow: Color(0x2EF5B45C),
+    accentGlow: Color(0x44F5B45C),
     lost: Color(0xFFFF7A6B),
     onLost: Color(0xFF2B0B07),
     lostContainer: Color(0xFF3A1A16),
@@ -161,10 +169,12 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
     Color? surface,
     Color? surfaceHigh,
     Color? primary,
+    Color? primaryDeep,
     Color? onPrimary,
     Color? primaryContainer,
     Color? onPrimaryContainer,
     Color? accent,
+    Color? accentDeep,
     Color? onAccent,
     Color? accentContainer,
     Color? accentGlow,
@@ -193,10 +203,12 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
       surface: surface ?? this.surface,
       surfaceHigh: surfaceHigh ?? this.surfaceHigh,
       primary: primary ?? this.primary,
+      primaryDeep: primaryDeep ?? this.primaryDeep,
       onPrimary: onPrimary ?? this.onPrimary,
       primaryContainer: primaryContainer ?? this.primaryContainer,
       onPrimaryContainer: onPrimaryContainer ?? this.onPrimaryContainer,
       accent: accent ?? this.accent,
+      accentDeep: accentDeep ?? this.accentDeep,
       onAccent: onAccent ?? this.onAccent,
       accentContainer: accentContainer ?? this.accentContainer,
       accentGlow: accentGlow ?? this.accentGlow,
@@ -231,10 +243,12 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
       surface: l(surface, other.surface),
       surfaceHigh: l(surfaceHigh, other.surfaceHigh),
       primary: l(primary, other.primary),
+      primaryDeep: l(primaryDeep, other.primaryDeep),
       onPrimary: l(onPrimary, other.onPrimary),
       primaryContainer: l(primaryContainer, other.primaryContainer),
       onPrimaryContainer: l(onPrimaryContainer, other.onPrimaryContainer),
       accent: l(accent, other.accent),
+      accentDeep: l(accentDeep, other.accentDeep),
       onAccent: l(onAccent, other.onAccent),
       accentContainer: l(accentContainer, other.accentContainer),
       accentGlow: l(accentGlow, other.accentGlow),

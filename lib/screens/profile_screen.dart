@@ -74,13 +74,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
       child: SurfaceCard(
-        padding: const EdgeInsets.fromLTRB(
-            BeaconSpace.lg, BeaconSpace.xxl, BeaconSpace.lg, BeaconSpace.lg),
-        child: Column(
+        padding: EdgeInsets.zero,
+        child: Stack(
           children: [
-            _buildProfileHeader(t, profile),
-            const SizedBox(height: BeaconSpace.xl),
-            _buildStats(t),
+            // Cover band: primary gradient with the beacon glow.
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              height: 104,
+              child: DecoratedBox(
+                decoration: BoxDecoration(gradient: t.primaryGradient),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: const [
+                    BeaconGlow(alignment: Alignment(1.1, -0.6), radius: 0.9),
+                    BeaconRings(alignment: Alignment(1.05, -0.5), radius: 180, opacity: 0.18),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  BeaconSpace.lg, 56, BeaconSpace.lg, BeaconSpace.lg),
+              child: Column(
+                children: [
+                  _buildProfileHeader(t, profile),
+                  const SizedBox(height: BeaconSpace.xl),
+                  _buildStats(t),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -95,7 +119,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Stack(
           clipBehavior: Clip.none,
           children: [
-            AppAvatar(url: profile.avatarUrl, name: name, size: 96, ring: true),
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(color: t.surface, shape: BoxShape.circle),
+              child: AppAvatar(url: profile.avatarUrl, name: name, size: 96, ring: true),
+            ),
             Positioned(
               bottom: 0,
               right: 0,

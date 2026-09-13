@@ -12,6 +12,7 @@ export 'app_page_header.dart';
 export 'app_text_field.dart';
 export 'auth_shell.dart';
 export 'beacon_glow.dart';
+export 'beacon_pulse.dart';
 export 'item_card.dart';
 export 'item_image.dart';
 export 'map_placeholder.dart';

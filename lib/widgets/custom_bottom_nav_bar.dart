@@ -6,10 +6,10 @@ import 'package:finder/theme/beacon_tokens.dart';
 
 /// Beacon notch navigation.
 ///
-/// A frosted-glass bar with a moving notch; the selected destination floats in
-/// the notch as a primary disc wrapped in an amber "beacon ring". The bar
-/// respects the bottom safe-area inset and every destination is a 48dp+
-/// target with an accessible label.
+/// A frosted-glass bar with a moving notch; the selected destination floats
+/// in the notch as a gradient primary disc wrapped in an amber "beacon ring"
+/// that breathes softly. The bar respects the bottom safe-area inset and every
+/// destination is a 48dp+ target with an accessible label.
 class CustomBottomNavBar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -23,8 +23,8 @@ class CustomBottomNavBar extends StatefulWidget {
   /// Height of the visible bar (excluding the safe-area inset and the lift of
   /// the floating disc). Pages use [totalHeight] to pad their scroll views.
   static const double barHeight = 68;
-  static const double lift = 24;
-  static const double discSize = 56;
+  static const double lift = 30;
+  static const double discSize = 62;
 
   static double totalHeight(BuildContext context) =>
       barHeight + lift + MediaQuery.paddingOf(context).bottom;
@@ -106,14 +106,13 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                 return Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Ambient shadow under the bar.
                     CustomPaint(
                       painter: _ShadowPainter(path: path, color: t.shadow),
                     ),
                     ClipPath(
                       clipper: _PathClipper(path),
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
                         child: ColoredBox(color: t.glassSurface),
                       ),
                     ),
@@ -191,39 +190,12 @@ class _Destination extends StatelessWidget {
             AnimatedPositioned(
               duration: duration,
               curve: BeaconMotion.emphasized,
-              top: selected ? 0 : lift + 10,
-              child: AnimatedContainer(
+              top: selected ? 0 : lift + 12,
+              child: _BeaconDisc(
+                selected: selected,
+                icon: selected ? item.activeIcon : item.icon,
+                size: selected ? disc : 40,
                 duration: duration,
-                curve: BeaconMotion.emphasized,
-                width: selected ? disc : 40,
-                height: selected ? disc : 40,
-                decoration: BoxDecoration(
-                  color: selected ? t.primary : Colors.transparent,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: selected ? t.accent : Colors.transparent,
-                    width: 2,
-                  ),
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(
-                            color: t.accentGlow,
-                            blurRadius: 22,
-                            spreadRadius: 4,
-                          ),
-                          BoxShadow(
-                            color: t.primary.withValues(alpha: 0.35),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
-                          ),
-                        ]
-                      : const [],
-                ),
-                child: Icon(
-                  selected ? item.activeIcon : item.icon,
-                  color: selected ? t.onPrimary : t.onSurfaceVar,
-                  size: selected ? 26 : 24,
-                ),
               ),
             ),
             // Label
@@ -245,12 +217,112 @@ class _Destination extends StatelessWidget {
   }
 }
 
+/// The selected-tab disc: gradient primary fill, amber ring, breathing glow.
+class _BeaconDisc extends StatefulWidget {
+  final bool selected;
+  final IconData icon;
+  final double size;
+  final Duration duration;
+  const _BeaconDisc({
+    required this.selected,
+    required this.icon,
+    required this.size,
+    required this.duration,
+  });
+
+  @override
+  State<_BeaconDisc> createState() => _BeaconDiscState();
+}
+
+class _BeaconDiscState extends State<_BeaconDisc>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _breath = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(covariant _BeaconDisc old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  void _sync() {
+    final reduced = BeaconMotion.reduced(context);
+    if (widget.selected && !reduced) {
+      if (!_breath.isAnimating) _breath.repeat(reverse: true);
+    } else {
+      _breath.stop();
+      _breath.value = 0.5;
+    }
+  }
+
+  @override
+  void dispose() {
+    _breath.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppColorTokens.of(context);
+    final selected = widget.selected;
+    return AnimatedBuilder(
+      animation: _breath,
+      builder: (context, child) {
+        final k = Curves.easeInOut.transform(_breath.value);
+        return AnimatedContainer(
+          duration: widget.duration,
+          curve: BeaconMotion.emphasized,
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            gradient: selected ? t.primaryGradient : null,
+            color: selected ? null : Colors.transparent,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: selected ? t.accent : Colors.transparent,
+              width: 2.5,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: t.accentGlow.withValues(alpha: t.accentGlow.a * (0.7 + 0.6 * k)),
+                      blurRadius: 18 + 10 * k,
+                      spreadRadius: 3 + 3 * k,
+                    ),
+                    BoxShadow(
+                      color: t.primary.withValues(alpha: 0.30),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : const [],
+          ),
+          child: child,
+        );
+      },
+      child: Icon(
+        widget.icon,
+        color: selected ? t.onPrimary : t.onSurfaceVar,
+        size: selected ? 27 : 24,
+      ),
+    );
+  }
+}
+
 // ── Geometry ────────────────────────────────────────────────────────────────
 
 class _NavShape {
-  static const double notchRadius = 36;
-  static const double notchDepth = 40;
-  static const double corner = 24;
+  static const double notchRadius = 40;
+  static const double notchDepth = 44;
+  static const double corner = 26;
 
   static Path path(Size size,
       {required double position, required double itemWidth}) {
@@ -259,7 +331,7 @@ class _NavShape {
     final p = Path()
       ..moveTo(0, corner)
       ..quadraticBezierTo(0, top, corner, top)
-      ..lineTo(center - notchRadius - 12, top)
+      ..lineTo(center - notchRadius - 14, top)
       ..cubicTo(
         center - notchRadius + 2, top,
         center - notchRadius + 8, notchDepth,
@@ -268,7 +340,7 @@ class _NavShape {
       ..cubicTo(
         center + notchRadius - 8, notchDepth,
         center + notchRadius - 2, top,
-        center + notchRadius + 12, top,
+        center + notchRadius + 14, top,
       )
       ..lineTo(size.width - corner, top)
       ..quadraticBezierTo(size.width, top, size.width, corner)
@@ -294,7 +366,7 @@ class _ShadowPainter extends CustomPainter {
   _ShadowPainter({required this.path, required this.color});
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawShadow(path, color.withValues(alpha: 0.35), 10, true);
+    canvas.drawShadow(path, color.withValues(alpha: 0.35), 12, true);
   }
 
   @override

@@ -29,11 +29,18 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
+  bool? _createIsLost;
 
   List<Widget> get _pages => [
-    _HomeContent(onProfileTap: () => setState(() => _currentIndex = 4)),
+    _HomeContent(
+      onProfileTap: () => setState(() => _currentIndex = 4),
+      onReport: (isLost) => setState(() {
+        _createIsLost = isLost;
+        _currentIndex = 2;
+      }),
+    ),
     const SearchScreen(),
-    const CreatePostScreen(),
+    CreatePostScreen(initialIsLost: _createIsLost),
     const MessagesScreen(),
     const ProfileScreen(),
   ];
@@ -72,7 +79,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 // ─── Home content ────────────────────────────────────────────────────────────
 class _HomeContent extends ConsumerStatefulWidget {
   final VoidCallback? onProfileTap;
-  const _HomeContent({this.onProfileTap});
+  final ValueChanged<bool>? onReport;
+  const _HomeContent({this.onProfileTap, this.onReport});
 
   @override
   ConsumerState<_HomeContent> createState() => _HomeContentState();
@@ -96,9 +104,39 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
           children: [
             StaggeredEntrance(child: _buildHeader(t, profileState)),
 
-            // ── Filter — pinned, never scrolls ───────────────────────────────
+            // ── Quick actions — the two things this app is for ──────────────
             StaggeredEntrance(
               index: 1,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    BeaconSpace.page, 0, BeaconSpace.page, BeaconSpace.lg),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _ReportTile(
+                        kind: SignalKind.lost,
+                        title: 'Report lost',
+                        subtitle: 'Ask the community',
+                        onTap: () => widget.onReport?.call(true),
+                      ),
+                    ),
+                    const SizedBox(width: BeaconSpace.md),
+                    Expanded(
+                      child: _ReportTile(
+                        kind: SignalKind.found,
+                        title: 'Report found',
+                        subtitle: 'Return it home',
+                        onTap: () => widget.onReport?.call(false),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Filter — pinned, never scrolls ───────────────────────────────
+            StaggeredEntrance(
+              index: 2,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
                 child: SegmentedPills(
@@ -250,5 +288,92 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
   String _categoryLabel(String category) {
     if (category == 'All Items') return 'All';
     return category;
+  }
+}
+
+/// Signal-colored hero tile: gradient fill, icon disc, title + subtitle.
+class _ReportTile extends StatelessWidget {
+  final SignalKind kind;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ReportTile({
+    required this.kind,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    final color = kind.color(t);
+    final on = kind.onColor(t);
+    return Semantics(
+      button: true,
+      label: title,
+      child: PressScale(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BeaconRadius.rXl,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [color, Color.lerp(color, t.shadow, 0.18)!],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: t.isDark ? 0.25 : 0.28),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BeaconRadius.rXl,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              child: Stack(
+                children: [
+                  Positioned(
+                    right: -18,
+                    bottom: -22,
+                    child: Icon(kind.icon, size: 96,
+                        color: on.withValues(alpha: 0.10)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(BeaconSpace.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: on.withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(kind.icon, size: 18, color: on),
+                        ),
+                        const SizedBox(height: BeaconSpace.lg),
+                        Text(title, style: text.titleMedium?.copyWith(color: on)),
+                        const SizedBox(height: 2),
+                        Text(subtitle,
+                            style: text.bodySmall?.copyWith(
+                                color: on.withValues(alpha: 0.82))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

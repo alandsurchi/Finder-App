@@ -42,17 +42,22 @@ class HomeItemCard extends ConsumerWidget {
     this.rewardBadgeColor,
   });
 
+  /// The tile layout shows LOST / FOUND on its spine, so those legacy badges
+  /// are dropped here; everything else keeps rendering over the image.
   List<Widget>? _badges() {
     if (badges.isEmpty) return null;
-    return badges.map((b) {
-      final upper = b.label.toUpperCase();
-      if (upper == 'LOST') return StatusBadge.lost();
-      if (upper == 'FOUND') return StatusBadge.found();
-      if (item.reward != null && b.label == item.reward) {
-        return StatusBadge.reward('REWARD ${b.label}');
-      }
-      return StatusBadge.custom(label: upper, color: b.color);
-    }).toList();
+    return badges
+        .where((b) {
+          final upper = b.label.toUpperCase();
+          return upper != 'LOST' && upper != 'FOUND';
+        })
+        .map((b) {
+          if (item.reward != null && b.label == item.reward) {
+            return StatusBadge.reward('REWARD ${b.label}');
+          }
+          return StatusBadge.custom(label: b.label.toUpperCase(), color: b.color);
+        })
+        .toList();
   }
 
   @override
