@@ -11,16 +11,20 @@ class SimilarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ItemCard(
-      item: item,
-      layout: ItemCardLayout.compact,
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.itemDetails,
-          arguments: item,
-        );
-      },
+    // The rail is a horizontal list, so the card must bring its own width.
+    return SizedBox(
+      width: 300,
+      child: ItemCard(
+        item: item,
+        layout: ItemCardLayout.compact,
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.itemDetails,
+            arguments: item,
+          );
+        },
+      ),
     );
   }
 }

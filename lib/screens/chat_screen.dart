@@ -43,7 +43,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   String _arg(String key, [String fallback = '']) =>
-      _args[key]?.toString().trim().isNotEmpty == true ? _args[key].toString() : fallback;
+      _args[key]?.toString().trim().isNotEmpty == true
+      ? _args[key].toString()
+      : fallback;
 
   @override
   Widget build(BuildContext context) {
@@ -90,14 +92,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildChatHeader(context, userName, itemName, peerId, peerAvatarUrl, postId, t),
+            _buildChatHeader(
+              context,
+              userName,
+              itemName,
+              peerId,
+              peerAvatarUrl,
+              postId,
+              t,
+            ),
             Divider(color: t.outlineVariant, height: 1, thickness: 1),
             Expanded(
               child: messagesState.when(
-                loading: () => const LoadingWidget(message: 'Loading messages...'),
+                loading: () =>
+                    const LoadingWidget(message: 'Loading messages...'),
                 error: (err, _) => ErrorStateWidget(
                   message: describeError(err),
-                  onRetry: () => ref.read(chatMessagesProvider(chatId).notifier).load(),
+                  onRetry: () =>
+                      ref.read(chatMessagesProvider(chatId).notifier).load(),
                 ),
                 data: (messages) {
                   if (messages.isEmpty) {
@@ -116,11 +128,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       vertical: BeaconSpace.xl,
                     ),
                     itemCount: messages.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: BeaconSpace.sm),
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: BeaconSpace.sm),
                     itemBuilder: (context, index) {
                       final msg = messages[index];
                       final isMe = msg.senderId == currentUserId;
-                      final prevSame = index > 0 &&
+                      final prevSame =
+                          index > 0 &&
                           messages[index - 1].senderId == msg.senderId;
                       return _ChatBubble(
                         message: msg,
@@ -131,8 +145,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             : null,
                         onDiscard: msg.failed
                             ? () => ref
-                                .read(chatMessagesProvider(chatId).notifier)
-                                .discard(msg.messageId)
+                                  .read(chatMessagesProvider(chatId).notifier)
+                                  .discard(msg.messageId)
                             : null,
                       );
                     },
@@ -170,7 +184,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          BeaconSpace.md, BeaconSpace.sm, BeaconSpace.sm, BeaconSpace.sm),
+        BeaconSpace.md,
+        BeaconSpace.sm,
+        BeaconSpace.sm,
+        BeaconSpace.sm,
+      ),
       child: Row(
         children: [
           AppIconButton(
@@ -195,7 +213,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 if (itemName.isNotEmpty)
                   Row(
                     children: [
-                      Icon(Icons.inventory_2_outlined, size: 12, color: t.primary),
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 12,
+                        color: t.primary,
+                      ),
                       const SizedBox(width: BeaconSpace.xs),
                       Flexible(
                         child: Text(
@@ -226,7 +248,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _showMoreSheet(String userName, String peerId, String postId, String itemName) {
+  void _showMoreSheet(
+    String userName,
+    String peerId,
+    String postId,
+    String itemName,
+  ) {
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
@@ -243,9 +270,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   try {
-                    final post = await ref.read(postServiceProvider).fetchById(postId);
+                    final post = await ref
+                        .read(postServiceProvider)
+                        .fetchById(postId);
                     if (!mounted) return;
-                    Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: post);
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.itemDetails,
+                      arguments: post,
+                    );
                   } catch (e) {
                     if (!mounted) return;
                     ActionFeedback.showError(context, describeError(e));
@@ -259,9 +292,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   try {
-                    await ref.read(postServiceProvider).reportPost(postId, 'Reported from chat');
+                    await ref
+                        .read(postServiceProvider)
+                        .reportPost(postId, 'Reported from chat');
                     if (!mounted) return;
-                    ActionFeedback.showSuccess(context, 'Thanks, the post has been reported.');
+                    ActionFeedback.showSuccess(
+                      context,
+                      'Thanks, the post has been reported.',
+                    );
                   } catch (e) {
                     if (!mounted) return;
                     ActionFeedback.showError(context, describeError(e));
@@ -292,9 +330,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (ctx) => AlertDialog(
         title: Text('Block $userName?'),
         content: const Text(
-            'This conversation will disappear and neither of you can message the other. Undo it any time in Privacy & safety.'),
+          'This conversation will disappear and neither of you can message the other. Undo it any time in Privacy & safety.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: t.error,
@@ -308,7 +350,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               if (!mounted) return;
               result.fold(
                 onSuccess: (_) {
-                  ActionFeedback.showSuccess(context, '$userName has been blocked.');
+                  ActionFeedback.showSuccess(
+                    context,
+                    '$userName has been blocked.',
+                  );
                   Navigator.pop(context);
                 },
                 onFailure: (f) => ActionFeedback.showError(context, f.message),
@@ -329,7 +374,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         border: Border(top: BorderSide(color: t.outlineVariant)),
       ),
       padding: const EdgeInsets.fromLTRB(
-          BeaconSpace.md, BeaconSpace.md, BeaconSpace.md, BeaconSpace.lg),
+        BeaconSpace.md,
+        BeaconSpace.md,
+        BeaconSpace.md,
+        BeaconSpace.lg,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -354,31 +403,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
           const SizedBox(width: BeaconSpace.sm),
           Expanded(
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 48, maxHeight: 132),
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 color: t.surfaceLow,
                 borderRadius: BeaconRadius.rXxl,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.lg),
-              alignment: Alignment.centerLeft,
-              child: TextField(
-                controller: _controller,
-                maxLines: null,
-                textCapitalization: TextCapitalization.sentences,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendText(chatId),
-                style: text.bodyLarge,
-                cursorColor: t.primary,
-                decoration: InputDecoration(
-                  hintText: 'Type a message…',
-                  hintStyle: text.bodyLarge?.copyWith(color: t.onSurfaceMuted),
-                  filled: false,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: BeaconSpace.md),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.lg),
+                child: TextField(
+                  controller: _controller,
+                  minLines: 1,
+                  maxLines: 5,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _sendText(chatId),
+                  style: text.bodyLarge,
+                  cursorColor: t.primary,
+                  decoration: InputDecoration(
+                    hintText: 'Type a message…',
+                    hintStyle: text.bodyLarge?.copyWith(
+                      color: t.onSurfaceMuted,
+                    ),
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: BeaconSpace.md,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -401,7 +455,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (value.isEmpty || _sending) return;
     _controller.clear();
     setState(() => _sending = true);
-    final result = await ref.read(chatMessagesProvider(chatId).notifier).send(text: value);
+    final result = await ref
+        .read(chatMessagesProvider(chatId).notifier)
+        .send(text: value);
     if (!mounted) return;
     setState(() => _sending = false);
     result.fold(
@@ -418,22 +474,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         fileName: 'chat_${DateTime.now().millisecondsSinceEpoch}',
       );
       if (url == null || !mounted) return;
-      final result =
-          await ref.read(chatMessagesProvider(chatId).notifier).send(imageUrl: url);
+      final result = await ref
+          .read(chatMessagesProvider(chatId).notifier)
+          .send(imageUrl: url);
       if (!mounted) return;
       result.fold(
         onSuccess: (_) => ref.invalidate(conversationsStreamProvider),
         onFailure: (f) => ActionFeedback.showError(context, f.message),
       );
     } catch (e) {
-      if (mounted) ActionFeedback.showError(context, 'Photo upload failed. ${describeError(e)}');
+      if (mounted) {
+        ActionFeedback.showError(
+          context,
+          'Photo upload failed. ${describeError(e)}',
+        );
+      }
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
   }
 
   Future<void> _retry(String chatId, String localId) async {
-    final result = await ref.read(chatMessagesProvider(chatId).notifier).retry(localId);
+    final result = await ref
+        .read(chatMessagesProvider(chatId).notifier)
+        .retry(localId);
     if (!mounted) return;
     result.fold(
       onSuccess: (_) {},
@@ -474,7 +538,11 @@ class _ChatBubble extends StatelessWidget {
       padding: message.hasImage
           ? const EdgeInsets.all(BeaconSpace.xs)
           : const EdgeInsets.fromLTRB(
-              BeaconSpace.lg, BeaconSpace.md, BeaconSpace.lg, BeaconSpace.sm),
+              BeaconSpace.lg,
+              BeaconSpace.md,
+              BeaconSpace.lg,
+              BeaconSpace.sm,
+            ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.only(
@@ -483,7 +551,9 @@ class _ChatBubble extends StatelessWidget {
           bottomLeft: isMe ? r : tail,
           bottomRight: isMe ? tail : r,
         ),
-        border: (isMe && !failed) ? null : Border.all(color: failed ? t.error : t.outlineVariant),
+        border: (isMe && !failed)
+            ? null
+            : Border.all(color: failed ? t.error : t.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,14 +574,25 @@ class _ChatBubble extends StatelessWidget {
             Padding(
               padding: message.hasImage
                   ? const EdgeInsets.fromLTRB(
-                      BeaconSpace.md, BeaconSpace.sm, BeaconSpace.md, 0)
+                      BeaconSpace.md,
+                      BeaconSpace.sm,
+                      BeaconSpace.md,
+                      0,
+                    )
                   : EdgeInsets.zero,
-              child: Text(message.text, style: text.bodyLarge?.copyWith(color: fg)),
+              child: Text(
+                message.text,
+                style: text.bodyLarge?.copyWith(color: fg),
+              ),
             ),
           Padding(
             padding: message.hasImage
                 ? const EdgeInsets.fromLTRB(
-                    BeaconSpace.md, BeaconSpace.xs, BeaconSpace.md, BeaconSpace.xs)
+                    BeaconSpace.md,
+                    BeaconSpace.xs,
+                    BeaconSpace.md,
+                    BeaconSpace.xs,
+                  )
                 : const EdgeInsets.only(top: BeaconSpace.xs),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -525,7 +606,9 @@ class _ChatBubble extends StatelessWidget {
                 if (isMe && !failed) ...[
                   const SizedBox(width: BeaconSpace.xs),
                   Icon(
-                    message.isPending ? Icons.schedule_rounded : Icons.done_all_rounded,
+                    message.isPending
+                        ? Icons.schedule_rounded
+                        : Icons.done_all_rounded,
                     color: meta,
                     size: 14,
                   ),
@@ -546,7 +629,9 @@ class _ChatBubble extends StatelessWidget {
         child: Semantics(
           label: isMe ? 'You said' : 'They said',
           child: Column(
-            crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               AnimatedOpacity(
                 duration: BeaconMotion.scaled(context, BeaconMotion.state),
