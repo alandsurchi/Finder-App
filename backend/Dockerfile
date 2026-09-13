@@ -9,9 +9,9 @@ RUN npm ci --omit=dev
 
 COPY . .
 
+# Railway mounts the persistent volume at /data (VOLUME instructions are not allowed by its builder).
 ENV UPLOADS_DIR=/data/uploads
 RUN mkdir -p /data/uploads
-VOLUME ["/data"]
 
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
