@@ -7,16 +7,19 @@
 
 If you screenshot any screen without the logo, you know it is Finder by:
 
-1. **Signal rail** — every item card carries a 6dp edge on its leading side:
-   coral for *Lost*, emerald for *Found*. The same two colors drive every
-   LOST/FOUND badge. There is exactly one rule, implemented once in
-   `lib/widgets/ui/status_badge.dart`.
-2. **Beacon glow** — a soft amber radial glow behind page headers, empty
-   states, the brand mark, and the selected navigation item
-   (`lib/widgets/ui/beacon_glow.dart`).
-3. **Glass notch nav** — a frosted bar with a moving notch; the active
-   destination floats as a primary disc wrapped in an amber ring
-   (`lib/widgets/custom_bottom_nav_bar.dart`).
+1. **Signal spine** — every feed card is a "photo on paper" with a 30dp
+   colored spine on its leading edge carrying a vertical LOST / FOUND label:
+   coral for *Lost*, emerald for *Found*. Row and compact cards keep a 6dp
+   rail. The same two colors drive every badge and the Home hero tiles
+   (`lib/widgets/ui/item_card.dart`, `status_badge.dart`).
+2. **Beacon glow + rings** — a warm amber radial glow with a hairline radar
+   ring texture behind auth, onboarding, the profile cover and empty states
+   (`lib/widgets/ui/beacon_glow.dart`). Loading is a `BeaconPulse` radar,
+   never a bare spinner.
+3. **Lit CTAs and the notch nav** — primary and accent buttons carry a
+   vertical gradient, hairline top highlight and a colored shadow; the nav's
+   active destination floats in the notch as a gradient disc wrapped in a
+   breathing amber ring (`lib/widgets/custom_bottom_nav_bar.dart`).
 
 ## 2. Color
 
