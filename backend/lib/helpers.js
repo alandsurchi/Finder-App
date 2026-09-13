@@ -5,7 +5,7 @@ const db = require('../db');
 /** True when outgoing e-mail is configured. Without SMTP the app runs in
  *  "demo mode": signups are auto-verified and codes are printed to stdout. */
 function smtpConfigured() {
-  return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+  return require('./mailer').mailConfigured();
 }
 
 function truthy(v) {

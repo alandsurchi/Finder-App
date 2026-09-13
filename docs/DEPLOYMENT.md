@@ -14,7 +14,7 @@ The API is a single Node process. It needs Postgres, a JWT secret, SMTP for e-ma
 | `JWT_SECRET` | yes | ≥ 32 random chars. `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | `CORS_ORIGINS` | web only | Comma-separated origins of the web app, e.g. `https://app.finder.app` |
 | `PUBLIC_URL` | yes | Public https URL of the API (used in seed links and legal pages) |
-| `SMTP_HOST/PORT/USER/PASS/FROM` | yes | Without them signups auto-verify (demo mode). Resend: host `smtp.resend.com`, port `465`, user `resend`, pass = API key |
+| `RESEND_API_KEY` or `SMTP_*` | yes | Without e-mail settings signups auto-verify (demo mode). Railway trial/hobby plans block outbound SMTP, so use Resend's HTTPS API: either `RESEND_API_KEY=re_…`, or `SMTP_HOST=smtp.resend.com` + `SMTP_PASS=re_…` (detected automatically). `SMTP_FROM` sets the sender; it must be on a domain verified in Resend, otherwise only the Resend account owner receives mail |
 | `UPLOADS_DIR` | yes | Directory on a persistent volume for photos, e.g. `/data/uploads` (the Dockerfile default) |
 | `SUPPORT_EMAIL` | no | Shown in error texts |
 | `RATE_LIMIT_*` | no | Per 15 minutes per IP: general 600, auth 30, reset 5 |

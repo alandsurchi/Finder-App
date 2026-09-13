@@ -9,6 +9,7 @@ const config = require('../config');
 const JWT_SECRET = config.jwtSecret;
 const { smtpConfigured, truthy } = require('../lib/helpers');
 const { validate, schemas } = require('../lib/validate');
+const mailer = require('../lib/mailer');
 
 // Middleware to verify JWT token
 function verifyToken(req, res, next) {
@@ -74,42 +75,19 @@ router.post('/signup', validate(schemas.signup), async (req, res) => {
     }
 
     // Send email asynchronously
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      try {
-        const nodemailer = require('nodemailer');
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT) || 587,
-          secure: process.env.SMTP_PORT == '465',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
-          }
-        });
-
-        const fromEmail = process.env.SMTP_FROM || (process.env.SMTP_USER.includes('@') ? process.env.SMTP_USER : 'onboarding@resend.dev');
-
-        transporter.sendMail({
-          from: `"Finder Support" <${fromEmail}>`,
-          to: email.toLowerCase().trim(),
-          subject: 'Welcome to Finder! Verify your email',
-          text: `Welcome to Finder! Your verification code is: ${verificationCode}.`,
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-              <h2>Welcome to Finder!</h2>
-              <p>Please use the following 6-digit code to verify your account email address:</p>
-              <h1 style="background: #f4f4f4; padding: 10px 20px; display: inline-block; font-size: 28px; letter-spacing: 4px; color: #28a745; border-radius: 4px;">${verificationCode}</h1>
-              <p>If you did not create a Finder account, please ignore this email.</p>
-            </div>
-          `
-        }).then(() => {
-          console.log(`Signup verification email sent to ${email}`);
-        }).catch((mailErr) => {
-          console.error('Failed to send verification email via SMTP:', mailErr.message);
-        });
-      } catch (mailErr) {
-        console.error('Failed to setup verification transport:', mailErr.message);
-      }
+    if (mailer.mailConfigured()) {
+      const body = mailer.codeEmail({
+        title: 'Welcome to Finder!',
+        intro: 'Use this 6-digit code to verify your e-mail address:',
+        code: verificationCode,
+        footer: 'The code expires in 24 hours. If you did not create a Finder account, ignore this e-mail.',
+        color: '#0B6E6A',
+      });
+      mailer.sendMailInBackground('signup verification', {
+        to: email.toLowerCase().trim(),
+        subject: 'Verify your Finder e-mail',
+        ...body,
+      });
     }
 
     const token = jwt.sign({ userId: uid, isVerified: autoVerify }, JWT_SECRET, { expiresIn: config.jwtExpiresIn });
@@ -213,43 +191,19 @@ router.post('/forgot-password', validate(schemas.forgotPassword), async (req, re
     console.log(`[PASSWORD RESET CODE] Email: ${email}, Code: ${code}`);
 
     // Attempt to send email via SMTP if SMTP configuration is set in env
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      try {
-        const nodemailer = require('nodemailer');
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT) || 587,
-          secure: process.env.SMTP_PORT == '465',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
-          }
-        });
-
-        const fromEmail = process.env.SMTP_FROM || (process.env.SMTP_USER.includes('@') ? process.env.SMTP_USER : 'onboarding@resend.dev');
-
-        // Send asynchronously to avoid blocking the HTTP response
-        transporter.sendMail({
-          from: `"Finder Support" <${fromEmail}>`,
-          to: email.toLowerCase().trim(),
-          subject: 'Finder Password Reset Verification',
-          text: `Your password reset verification code is: ${code}. It expires in 15 minutes.`,
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-              <h2>Finder Password Reset</h2>
-              <p>You requested a password reset. Please use the following 6-digit verification code to complete your reset:</p>
-              <h1 style="background: #f4f4f4; padding: 10px 20px; display: inline-block; font-size: 28px; letter-spacing: 4px; color: #007bff; border-radius: 4px;">${code}</h1>
-              <p>This code will expire in 15 minutes. If you did not request this, you can ignore this email.</p>
-            </div>
-          `
-        }).then(() => {
-          console.log(`Reset email sent to ${email}`);
-        }).catch((mailErr) => {
-          console.error('Failed to send reset email via SMTP:', mailErr.message);
-        });
-      } catch (mailErr) {
-        console.error('Failed to setup nodemailer transport:', mailErr.message);
-      }
+    if (mailer.mailConfigured()) {
+      const body = mailer.codeEmail({
+        title: 'Reset your Finder password',
+        intro: 'Use this 6-digit code to reset your password:',
+        code,
+        footer: 'The code expires in 15 minutes. If you did not request a reset, ignore this e-mail.',
+        color: '#0B6E6A',
+      });
+      mailer.sendMailInBackground('password reset', {
+        to: email.toLowerCase().trim(),
+        subject: 'Finder password reset code',
+        ...body,
+      });
     }
 
     res.status(200).json({ message: 'Verification code sent successfully.' });
@@ -402,41 +356,19 @@ router.post('/resend-verification', verifyToken, async (req, res) => {
     console.log(`[RESEND VERIFICATION CODE] Email: ${user.email}, Code: ${verificationCode}`);
 
     // Send email asynchronously
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      try {
-        const nodemailer = require('nodemailer');
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT) || 587,
-          secure: process.env.SMTP_PORT == '465',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
-          }
-        });
-
-        const fromEmail = process.env.SMTP_FROM || (process.env.SMTP_USER.includes('@') ? process.env.SMTP_USER : 'onboarding@resend.dev');
-
-        transporter.sendMail({
-          from: `"Finder Support" <${fromEmail}>`,
-          to: user.email,
-          subject: 'Finder - Verify your email',
-          text: `Your verification code is: ${verificationCode}.`,
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-              <h2>Verify your account email address</h2>
-              <p>Please use the following 6-digit code to verify your account email:</p>
-              <h1 style="background: #f4f4f4; padding: 10px 20px; display: inline-block; font-size: 28px; letter-spacing: 4px; color: #28a745; border-radius: 4px;">${verificationCode}</h1>
-            </div>
-          `
-        }).then(() => {
-          console.log(`Resent verification email to ${user.email}`);
-        }).catch((mailErr) => {
-          console.error('Failed to resend verification email via SMTP:', mailErr.message);
-        });
-      } catch (mailErr) {
-        console.error('Failed to setup verification transport:', mailErr.message);
-      }
+    if (mailer.mailConfigured()) {
+      const body = mailer.codeEmail({
+        title: 'Verify your Finder e-mail',
+        intro: 'Use this 6-digit code to verify your e-mail address:',
+        code: verificationCode,
+        footer: 'The code expires in 24 hours.',
+        color: '#0B6E6A',
+      });
+      mailer.sendMailInBackground('verification resend', {
+        to: user.email,
+        subject: 'Verify your Finder e-mail',
+        ...body,
+      });
     }
 
     res.status(200).json({ message: 'Verification code resent successfully.' });
