@@ -1,247 +1,352 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'beacon_colors.dart';
+import 'beacon_tokens.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// APP THEME TOKENS
-// Light  → "The Empathetic Curator"  (DESIGN White Mode.md)
-// Dark   → "Glacier / Frozen Light"  (DESIGN Dark Mode.md)
+// BEACON THEME
+// Light → "Daylight"   · Dark → "Nightwatch"
+// Typography: Sora (display / headline / title-large) + Inter (everything else)
+// This is the only file that talks to google_fonts.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-class AppColors {
-  // ── Light (Empathetic Curator) ────────────────────────────────────────────
-  static const lightBg              = Color(0xFFF8F9FF);   // surface
-  static const lightSurface         = Color(0xFFFFFFFF);   // surface-container-lowest
-  static const lightContainer       = Color(0xFFE6EEFF);   // surface-container
-  static const lightContainerHigh   = Color(0xFFD5E3FC);   // surface-container-highest
-  static const lightPrimary         = Color(0xFF2563EB);   // primary (CTA gradient end)
-  static const lightPrimaryDark     = Color(0xFF004AC6);   // primary (CTA gradient start)
-  static const lightPrimaryContainer= Color(0xFFEFF6FF);   // primary-container
-  static const lightSecondary       = Color(0xFFFEA619);   // reward secondary
-  static const lightTertiary        = Color(0xFFA65900);   // lost / alert orange
-  static const lightOnSurface       = Color(0xFF0D1C2E);   // body text
-  static const lightOnSurfaceVar    = Color(0xFF434655);   // secondary text
-  static const lightOutline         = Color(0xFFC3C6D7);   // ghost borders
-  static const lightError           = Color(0xFFBA1A1A);
-  static const lightSuccess         = Color(0xFF22C55E);
-
-  // ── Dark (Glacier) ───────────────────────────────────────────────────────
-  static const darkBg               = Color(0xFF0A0E1A);   // deep navy-black
-  static const darkSurface          = Color(0xFF0F1524);   // glass layer 1
-  static const darkSurfaceHigh      = Color(0xFF111827);   // glass layer 2
-  static const darkGlass            = Color(0x990F1524);   // glass @ 60%
-  static const darkPrimary          = Color(0xFF7DD3FC);   // ice-blue
-  static const darkPrimaryContainer = Color(0xFF172030);   // dark primary bg
-  static const darkTertiary         = Color(0xFFC8A0F0);   // soft lavender
-  static const darkOnSurface        = Color(0xFFE2E8F0);   // light text
-  static const darkOnSurfaceVar     = Color(0xFF8EA3B8);   // muted text
-  static const darkBorder           = Color(0x1A7DD3FC);   // primary @ 10%
-  static const darkError            = Color(0xFFFF6B6B);
-  static const darkSuccess          = Color(0xFF4ADE80);
-}
-
-// ── ThemeData factories ────────────────────────────────────────────────────────
 class AppTheme {
-  static ThemeData light() {
-    final base = ThemeData.light(useMaterial3: true);
-    return base.copyWith(
-      scaffoldBackgroundColor: AppColors.lightBg,
-      colorScheme: const ColorScheme.light(
-        primary:          AppColors.lightPrimary,
-        onPrimary:        Colors.white,
-        primaryContainer: AppColors.lightPrimaryContainer,
-        secondary:        AppColors.lightSecondary,
-        tertiary:         AppColors.lightTertiary,
-        surface:          AppColors.lightSurface,
-        surfaceContainerHighest: AppColors.lightContainerHigh,
-        onSurface:        AppColors.lightOnSurface,
-        onSurfaceVariant: AppColors.lightOnSurfaceVar,
-        outline:          AppColors.lightOutline,
-        error:            AppColors.lightError,
-      ),
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(base.textTheme).copyWith(
-        displayLarge: GoogleFonts.manrope(
-          fontSize: 56, fontWeight: FontWeight.bold,
-          color: AppColors.lightOnSurface,
-        ),
-        headlineMedium: GoogleFonts.manrope(
-          fontSize: 28, fontWeight: FontWeight.bold,
-          color: AppColors.lightOnSurface,
-        ),
-        titleSmall: GoogleFonts.plusJakartaSans(
-          fontSize: 14, fontWeight: FontWeight.bold,
-          color: AppColors.lightOnSurface,
-        ),
-        bodyLarge: GoogleFonts.plusJakartaSans(
-          fontSize: 16, color: AppColors.lightOnSurface,
-        ),
-        bodyMedium: GoogleFonts.plusJakartaSans(
-          fontSize: 14, color: AppColors.lightOnSurfaceVar,
-        ),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        titleTextStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-        iconTheme: IconThemeData(color: Colors.white),
-        actionsIconTheme: IconThemeData(color: Colors.white),
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.lightPrimary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 15),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: false,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-              color: AppColors.lightPrimary.withOpacity(0.4),
-              width: 1.5),
-        ),
-        hintStyle: TextStyle(
-            color: AppColors.lightOnSurfaceVar.withOpacity(0.6),
-            fontSize: 14),
-      ),
-      cardTheme: CardThemeData(
-        color: AppColors.lightSurface,
-        elevation: 0,
-        shadowColor: AppColors.lightOnSurface.withOpacity(0.06),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
-      ),
-      iconTheme: const IconThemeData(color: AppColors.lightOnSurfaceVar),
-      dividerColor: AppColors.lightOutline.withOpacity(0.15),
-      switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected)
-                ? AppColors.lightPrimary
-                : AppColors.lightOutline),
-        trackColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected)
-                ? AppColors.lightPrimary.withOpacity(0.3)
-                : AppColors.lightOutline.withOpacity(0.3)),
-      ),
+  static ThemeData light() => _build(BeaconColors.light, Brightness.light);
+  static ThemeData dark() => _build(BeaconColors.dark, Brightness.dark);
+
+  // ── Typography ────────────────────────────────────────────────────────────
+  static TextTheme textTheme(BeaconColors c) {
+    TextStyle sora(double size, FontWeight w, {double h = 1.2, double ls = 0}) =>
+        GoogleFonts.sora(
+          fontSize: size,
+          fontWeight: w,
+          height: h,
+          letterSpacing: ls,
+          color: c.onSurface,
+        );
+    TextStyle inter(double size, FontWeight w,
+            {double h = 1.5, double ls = 0, Color? color}) =>
+        GoogleFonts.inter(
+          fontSize: size,
+          fontWeight: w,
+          height: h,
+          letterSpacing: ls,
+          color: color ?? c.onSurface,
+        );
+
+    return TextTheme(
+      displayLarge: sora(44, FontWeight.w700, h: 1.1, ls: -1),
+      displayMedium: sora(36, FontWeight.w700, h: 1.1, ls: -0.8),
+      displaySmall: sora(30, FontWeight.w700, h: 1.15, ls: -0.5),
+      headlineLarge: sora(28, FontWeight.w700, h: 1.2, ls: -0.4),
+      headlineMedium: sora(24, FontWeight.w700, h: 1.2, ls: -0.3),
+      headlineSmall: sora(20, FontWeight.w600, h: 1.25, ls: -0.2),
+      titleLarge: sora(18, FontWeight.w600, h: 1.3),
+      titleMedium: inter(16, FontWeight.w600, h: 1.4),
+      titleSmall: inter(14, FontWeight.w600, h: 1.4),
+      bodyLarge: inter(16, FontWeight.w400),
+      bodyMedium: inter(14, FontWeight.w400, color: c.onSurfaceVariant),
+      bodySmall: inter(12, FontWeight.w400, h: 1.4, color: c.onSurfaceVariant),
+      labelLarge: inter(14, FontWeight.w600, h: 1.2),
+      labelMedium: inter(12, FontWeight.w600, h: 1.2, ls: 0.3),
+      labelSmall: inter(11, FontWeight.w600, h: 1.2, ls: 0.6),
     );
   }
 
-  static ThemeData dark() {
-    final base = ThemeData.dark(useMaterial3: true);
-    return base.copyWith(
-      scaffoldBackgroundColor: AppColors.darkBg,
-      colorScheme: const ColorScheme.dark(
-        primary:          AppColors.darkPrimary,
-        onPrimary:        AppColors.darkBg,
-        primaryContainer: AppColors.darkPrimaryContainer,
-        secondary:        AppColors.darkTertiary,
-        tertiary:         AppColors.darkTertiary,
-        surface:          AppColors.darkSurface,
-        surfaceContainerHighest: AppColors.darkSurfaceHigh,
-        onSurface:        AppColors.darkOnSurface,
-        onSurfaceVariant: AppColors.darkOnSurfaceVar,
-        outline:          AppColors.darkBorder,
-        error:            AppColors.darkError,
+  // ── Builder ───────────────────────────────────────────────────────────────
+  static ThemeData _build(BeaconColors c, Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    final text = textTheme(c);
+
+    final scheme = ColorScheme(
+      brightness: brightness,
+      primary: c.primary,
+      onPrimary: c.onPrimary,
+      primaryContainer: c.primaryContainer,
+      onPrimaryContainer: c.onPrimaryContainer,
+      secondary: c.accent,
+      onSecondary: c.onAccent,
+      secondaryContainer: c.accentContainer,
+      onSecondaryContainer: c.onAccent,
+      tertiary: c.found,
+      onTertiary: c.onFound,
+      tertiaryContainer: c.foundContainer,
+      onTertiaryContainer: c.onSurface,
+      error: c.error,
+      onError: c.onError,
+      errorContainer: c.errorContainer,
+      onErrorContainer: c.onSurface,
+      surface: c.surface,
+      onSurface: c.onSurface,
+      onSurfaceVariant: c.onSurfaceVariant,
+      surfaceContainerLowest: isDark ? c.bg : c.surface,
+      surfaceContainerLow: c.surfaceLow,
+      surfaceContainer: c.surfaceLow,
+      surfaceContainerHigh: c.surfaceHigh,
+      surfaceContainerHighest: c.surfaceHigh,
+      outline: c.outline,
+      outlineVariant: c.outlineVariant,
+      shadow: c.shadow,
+      scrim: c.scrim,
+      inverseSurface:
+          isDark ? BeaconColors.light.surface : BeaconColors.dark.surface,
+      onInverseSurface:
+          isDark ? BeaconColors.light.onSurface : BeaconColors.dark.onSurface,
+      inversePrimary:
+          isDark ? BeaconColors.light.primary : BeaconColors.dark.primary,
+      surfaceTint: Colors.transparent,
+    );
+
+    final pill = RoundedRectangleBorder(borderRadius: BeaconRadius.rPill);
+    final lg = RoundedRectangleBorder(borderRadius: BeaconRadius.rLg);
+
+    OutlineInputBorder inputBorder(Color color, [double w = 1]) =>
+        OutlineInputBorder(
+          borderRadius: BeaconRadius.rMd,
+          borderSide: BorderSide(color: color, width: w),
+        );
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      colorScheme: scheme,
+      extensions: [c],
+      scaffoldBackgroundColor: c.bg,
+      canvasColor: c.bg,
+      textTheme: text,
+      primaryTextTheme: text,
+      fontFamily: text.bodyMedium?.fontFamily,
+      splashFactory: InkSparkle.splashFactory,
+      visualDensity: VisualDensity.standard,
+      iconTheme: IconThemeData(color: c.onSurfaceVariant, size: BeaconIcon.md),
+      dividerColor: c.outlineVariant,
+      dividerTheme: DividerThemeData(
+        color: c.outlineVariant,
+        thickness: 1,
+        space: 1,
       ),
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
-        displayLarge: GoogleFonts.inter(
-          fontSize: 56, fontWeight: FontWeight.bold,
-          color: AppColors.darkOnSurface,
-        ),
-        headlineMedium: GoogleFonts.inter(
-          fontSize: 28, fontWeight: FontWeight.w600,
-          color: AppColors.darkOnSurface,
-          letterSpacing: 0.3,
-        ),
-        titleSmall: GoogleFonts.inter(
-          fontSize: 14, fontWeight: FontWeight.w600,
-          color: AppColors.darkOnSurface,
-        ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 16, color: AppColors.darkOnSurface,
-        ),
-        bodyMedium: GoogleFonts.inter(
-          fontSize: 14, color: AppColors.darkOnSurfaceVar,
-        ),
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
+      appBarTheme: AppBarTheme(
+        backgroundColor: c.bg,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: c.onSurface,
         elevation: 0,
-        foregroundColor: Colors.white,
-        titleTextStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleTextStyle: text.titleLarge,
+        iconTheme: IconThemeData(color: c.onSurface, size: BeaconIcon.md),
+        actionsIconTheme: IconThemeData(color: c.onSurface, size: BeaconIcon.md),
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light.copyWith(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: c.bg,
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: c.bg,
+                systemNavigationBarIconBrightness: Brightness.dark,
+              ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: c.primary,
+          foregroundColor: c.onPrimary,
+          minimumSize: const Size(kBeaconTouchTarget, 52),
+          padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.xxl),
+          shape: pill,
+          textStyle: text.labelLarge,
+          elevation: 0,
         ),
-        iconTheme: IconThemeData(color: Colors.white),
-        actionsIconTheme: IconThemeData(color: Colors.white),
-        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.darkPrimary,
-          foregroundColor: AppColors.darkBg,
+          backgroundColor: c.primary,
+          foregroundColor: c.onPrimary,
+          disabledBackgroundColor: c.surfaceHigh,
+          disabledForegroundColor: c.onSurfaceMuted,
+          minimumSize: const Size(kBeaconTouchTarget, 52),
+          padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.xxl),
+          shape: pill,
+          textStyle: text.labelLarge,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 15),
+          shadowColor: Colors.transparent,
         ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: c.primary,
+          minimumSize: const Size(kBeaconTouchTarget, 52),
+          padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.xxl),
+          shape: pill,
+          side: BorderSide(color: c.outline),
+          textStyle: text.labelLarge,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: c.primary,
+          minimumSize: const Size(kBeaconTouchTarget, kBeaconTouchTarget),
+          padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.md),
+          shape: pill,
+          textStyle: text.labelLarge,
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: c.onSurface,
+          minimumSize: const Size(kBeaconTouchTarget, kBeaconTouchTarget),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: c.primary,
+        foregroundColor: c.onPrimary,
+        elevation: 0,
+        shape: lg,
       ),
       inputDecorationTheme: InputDecorationTheme(
-        filled: false,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-              color: AppColors.darkBorder, width: 1),
+        filled: true,
+        fillColor: c.surfaceLow,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: BeaconSpace.lg,
+          vertical: BeaconSpace.lg,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-              color: AppColors.darkBorder, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-              color: AppColors.darkPrimary, width: 1.5),
-        ),
-        hintStyle: const TextStyle(
-            color: AppColors.darkOnSurfaceVar, fontSize: 14),
+        border: inputBorder(Colors.transparent),
+        enabledBorder: inputBorder(Colors.transparent),
+        disabledBorder: inputBorder(Colors.transparent),
+        focusedBorder: inputBorder(c.primary, 1.5),
+        errorBorder: inputBorder(c.error),
+        focusedErrorBorder: inputBorder(c.error, 1.5),
+        hintStyle: text.bodyLarge?.copyWith(color: c.onSurfaceMuted),
+        labelStyle: text.bodyMedium,
+        helperStyle: text.bodySmall,
+        errorStyle: text.bodySmall?.copyWith(color: c.error),
+        prefixIconColor: c.onSurfaceVariant,
+        suffixIconColor: c.onSurfaceVariant,
       ),
       cardTheme: CardThemeData(
-        color: AppColors.darkSurface,
+        color: c.surface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.darkBorder, width: 1),
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BeaconRadius.rXl),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: c.surfaceLow,
+        selectedColor: c.primaryContainer,
+        disabledColor: c.surfaceLow,
+        labelStyle: text.labelLarge?.copyWith(color: c.onSurface),
+        secondaryLabelStyle:
+            text.labelLarge?.copyWith(color: c.onPrimaryContainer),
+        side: BorderSide.none,
+        shape: pill,
+        padding: const EdgeInsets.symmetric(
+          horizontal: BeaconSpace.md,
+          vertical: BeaconSpace.sm,
+        ),
+        showCheckmark: false,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: c.surface,
+        modalBarrierColor: c.scrim,
+        showDragHandle: false,
+        shape: const RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(BeaconRadius.xxl)),
         ),
       ),
-      iconTheme: const IconThemeData(color: AppColors.darkOnSurfaceVar),
-      dividerColor: AppColors.darkBorder,
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BeaconRadius.rXxl),
+        titleTextStyle: text.headlineSmall,
+        contentTextStyle: text.bodyMedium,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: isDark ? c.surfaceHigh : c.onSurface,
+        contentTextStyle: text.bodyMedium?.copyWith(
+          color: isDark ? c.onSurface : BeaconColors.dark.onSurface,
+        ),
+        actionTextColor: isDark ? c.primary : BeaconColors.dark.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BeaconRadius.rMd),
+        elevation: 0,
+      ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected)
-                ? AppColors.darkPrimary
-                : AppColors.darkOnSurfaceVar),
+          (s) => s.contains(WidgetState.selected) ? c.onPrimary : c.surface,
+        ),
         trackColor: WidgetStateProperty.resolveWith(
-            (s) => s.contains(WidgetState.selected)
-                ? AppColors.darkPrimary.withOpacity(0.25)
-                : AppColors.darkSurfaceHigh),
+          (s) => s.contains(WidgetState.selected) ? c.primary : c.surfaceHigh,
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? c.primary : c.outline,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) =>
+              s.contains(WidgetState.selected) ? c.primary : Colors.transparent,
+        ),
+        checkColor: WidgetStatePropertyAll(c.onPrimary),
+        side: BorderSide(color: c.outline, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? c.primary : c.outline,
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: c.primary,
+        linearTrackColor: c.surfaceHigh,
+        circularTrackColor: Colors.transparent,
+      ),
+      listTileTheme: ListTileThemeData(
+        iconColor: c.onSurfaceVariant,
+        textColor: c.onSurface,
+        titleTextStyle: text.titleMedium,
+        subtitleTextStyle: text.bodySmall,
+        shape: RoundedRectangleBorder(borderRadius: BeaconRadius.rLg),
+        contentPadding: const EdgeInsets.symmetric(horizontal: BeaconSpace.lg),
+        minVerticalPadding: BeaconSpace.md,
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: c.onSurface,
+        unselectedLabelColor: c.onSurfaceVariant,
+        indicatorColor: c.primary,
+        dividerColor: Colors.transparent,
+        labelStyle: text.labelLarge,
+        unselectedLabelStyle: text.labelLarge,
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        headerBackgroundColor: c.primary,
+        headerForegroundColor: c.onPrimary,
+        shape: RoundedRectangleBorder(borderRadius: BeaconRadius.rXxl),
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: c.surface,
+        shape: RoundedRectangleBorder(borderRadius: BeaconRadius.rXxl),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: c.onSurface,
+          borderRadius: BeaconRadius.rSm,
+        ),
+        textStyle: text.bodySmall?.copyWith(color: c.bg),
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+          TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+        },
       ),
     );
   }

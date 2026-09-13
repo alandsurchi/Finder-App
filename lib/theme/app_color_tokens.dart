@@ -1,98 +1,156 @@
 import 'package:flutter/material.dart';
+import 'beacon_colors.dart';
 
 /// Semantic color tokens read from the active [ThemeData] at runtime.
-/// Use [AppColorTokens.of(context)] at the top of every build() method.
 ///
-/// Light  = "The Empathetic Curator"  (DESIGN White Mode.md)
-/// Dark   = "Glacier / Frozen Light"  (DESIGN Dark Mode.md)
+/// This is a thin facade over [BeaconColors] that keeps the historic field
+/// names (`onSurfaceVar`, `divider`, `warning`, …) so every call site keeps
+/// compiling, while exposing the full Beacon palette as well.
+///
+/// Use `AppColorTokens.of(context)` at the top of `build()`.
 class AppColorTokens {
   // ── Backgrounds ──────────────────────────────────────────────────────────
-  final Color bg;           // page / scaffold background
-  final Color surface;      // card / sheet surface
-  final Color surfaceHigh;  // elevated surface, input fill
+  final Color bg;
+  final Color surfaceLow;
+  final Color surface;
+  final Color surfaceHigh;
 
   // ── Brand ─────────────────────────────────────────────────────────────────
-  final Color primary;          // ice-blue (dark) / deep-blue (light)
-  final Color primaryContainer; // very-light primary background
-  final Color iconBg;           // small icon-button background
+  final Color primary;
+  final Color onPrimary;
+  final Color primaryContainer;
+  final Color onPrimaryContainer;
+  final Color iconBg; // legacy alias of primaryContainer
+
+  // ── Beacon accent ─────────────────────────────────────────────────────────
+  final Color accent;
+  final Color onAccent;
+  final Color accentContainer;
+  final Color accentGlow;
+
+  // ── Signals ───────────────────────────────────────────────────────────────
+  final Color lost;
+  final Color onLost;
+  final Color lostContainer;
+  final Color found;
+  final Color onFound;
+  final Color foundContainer;
 
   // ── Text ──────────────────────────────────────────────────────────────────
-  final Color onSurface;       // primary / heading text
-  final Color onSurfaceVar;    // secondary / body text
-  final Color onSurfaceMuted;  // hint / placeholder / captions
+  final Color onSurface;
+  final Color onSurfaceVar;
+  final Color onSurfaceMuted;
 
-  // ── Borders ───────────────────────────────────────────────────────────────
-  final Color divider;         // separator lines, card outlines
+  // ── Lines & glass ─────────────────────────────────────────────────────────
+  final Color outline;
+  final Color outlineVariant;
+  final Color divider; // legacy alias of outline
+  final Color glassSurface;
+  final Color glassBorder;
 
   // ── Semantic ──────────────────────────────────────────────────────────────
-  final Color error;           // red / danger
-  final Color errorSurface;    // error background container
-  final Color success;         // green
-  final Color warning;         // orange – always same (LOST badges, rewards)
+  final Color error;
+  final Color onError;
+  final Color errorSurface; // legacy alias of errorContainer
+  final Color success; // legacy alias of found
+  final Color warning; // legacy alias of accent
+  final Color scrim;
+  final Color shadow;
 
   // ── Mode flag ─────────────────────────────────────────────────────────────
   final bool isDark;
 
-  const AppColorTokens({
+  /// Underlying extension, for widgets that want the raw palette.
+  final BeaconColors beacon;
+
+  const AppColorTokens._({
+    required this.beacon,
+    required this.isDark,
     required this.bg,
+    required this.surfaceLow,
     required this.surface,
     required this.surfaceHigh,
     required this.primary,
+    required this.onPrimary,
     required this.primaryContainer,
+    required this.onPrimaryContainer,
     required this.iconBg,
+    required this.accent,
+    required this.onAccent,
+    required this.accentContainer,
+    required this.accentGlow,
+    required this.lost,
+    required this.onLost,
+    required this.lostContainer,
+    required this.found,
+    required this.onFound,
+    required this.foundContainer,
     required this.onSurface,
     required this.onSurfaceVar,
     required this.onSurfaceMuted,
+    required this.outline,
+    required this.outlineVariant,
     required this.divider,
+    required this.glassSurface,
+    required this.glassBorder,
     required this.error,
+    required this.onError,
     required this.errorSurface,
     required this.success,
     required this.warning,
-    required this.isDark,
+    required this.scrim,
+    required this.shadow,
   });
 
-  /// Builds tokens from the nearest [ThemeData] in the widget tree.
+  factory AppColorTokens.fromBeacon(BeaconColors b, {required bool isDark}) {
+    return AppColorTokens._(
+      beacon: b,
+      isDark: isDark,
+      bg: b.bg,
+      surfaceLow: b.surfaceLow,
+      surface: b.surface,
+      surfaceHigh: b.surfaceHigh,
+      primary: b.primary,
+      onPrimary: b.onPrimary,
+      primaryContainer: b.primaryContainer,
+      onPrimaryContainer: b.onPrimaryContainer,
+      iconBg: b.primaryContainer,
+      accent: b.accent,
+      onAccent: b.onAccent,
+      accentContainer: b.accentContainer,
+      accentGlow: b.accentGlow,
+      lost: b.lost,
+      onLost: b.onLost,
+      lostContainer: b.lostContainer,
+      found: b.found,
+      onFound: b.onFound,
+      foundContainer: b.foundContainer,
+      onSurface: b.onSurface,
+      onSurfaceVar: b.onSurfaceVariant,
+      onSurfaceMuted: b.onSurfaceMuted,
+      outline: b.outline,
+      outlineVariant: b.outlineVariant,
+      divider: b.outline,
+      glassSurface: b.glassSurface,
+      glassBorder: b.glassBorder,
+      error: b.error,
+      onError: b.onError,
+      errorSurface: b.errorContainer,
+      success: b.found,
+      warning: b.accent,
+      scrim: b.scrim,
+      shadow: b.shadow,
+    );
+  }
+
+  /// Builds tokens from the nearest [ThemeData]. Falls back to the static
+  /// Beacon palettes when the theme carries no [BeaconColors] extension
+  /// (e.g. widget tests that pump a bare `MaterialApp`).
   static AppColorTokens of(BuildContext context) {
     final theme = Theme.of(context);
-    final cs    = theme.colorScheme;
-    final dark  = cs.brightness == Brightness.dark;
-
-    return AppColorTokens(
-      // ── Backgrounds ──
-      bg:           theme.scaffoldBackgroundColor,
-      surface:      cs.surface,
-      surfaceHigh:  dark
-          ? const Color(0xFF111827)   // Glacier layer-2
-          : Colors.white,
-
-      // ── Brand ──
-      primary:          cs.primary,
-      primaryContainer: cs.primaryContainer,
-      iconBg: dark
-          ? const Color(0xFF172030)   // dark primary tint
-          : const Color(0xFFDBEAFE),  // light blue
-
-      // ── Text ──
-      onSurface:      cs.onSurface,
-      onSurfaceVar:   cs.onSurfaceVariant,
-      onSurfaceMuted: cs.onSurfaceVariant.withOpacity(0.6),
-
-      // ── Borders ──
-      divider: dark
-          ? const Color(0x1A7DD3FC)   // ice-blue @ 10 %
-          : const Color(0xFFE5E7EB),
-
-      // ── Semantic ──
-      error:        cs.error,
-      errorSurface: dark
-          ? const Color(0xFF2D0E0E)
-          : const Color(0xFFFEF2F2),
-      success: dark
-          ? const Color(0xFF4ADE80)
-          : const Color(0xFF22C55E),
-      warning: const Color(0xFFF59E0B), // stays orange in both modes
-
-      isDark: dark,
-    );
+    final dark = theme.brightness == Brightness.dark;
+    final beacon = theme.extension<BeaconColors>() ??
+        (dark ? BeaconColors.dark : BeaconColors.light);
+    return AppColorTokens.fromBeacon(beacon, isDark: dark);
   }
 }

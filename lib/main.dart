@@ -8,13 +8,14 @@ import 'theme/theme_provider.dart';
 import 'core/network/api_client.dart';
 import 'app/di/app_providers.dart';
 import 'features/auth/presentation/auth_state_provider.dart';
+import 'widgets/state/loading_widget.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  
+
   final apiClient = ApiClient();
   await apiClient.init();
 
@@ -31,13 +32,6 @@ Future<void> main() async {
 class FinderApp extends ConsumerWidget {
   const FinderApp({super.key});
 
-  static const LinearGradient _pageBackgroundGradient = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Color(0xFF0A1533), Color(0xFF123B6B), Color(0xFFEAF1F8)],
-    stops: [0.0, 0.42, 1.0],
-  );
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeControllerProvider);
@@ -49,19 +43,6 @@ class FinderApp extends ConsumerWidget {
       themeMode: mode,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      builder: (context, child) {
-        final themedChild = Theme(
-          data: Theme.of(
-            context,
-          ).copyWith(scaffoldBackgroundColor: Colors.transparent),
-          child: child ?? const SizedBox.shrink(),
-        );
-
-        return DecoratedBox(
-          decoration: const BoxDecoration(gradient: _pageBackgroundGradient),
-          child: themedChild,
-        );
-      },
       onGenerateRoute: AppRouter.onGenerateRoute,
       home: _AuthGate(state: authState),
     );
@@ -77,7 +58,7 @@ class _AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (state.status) {
       case AuthStatus.loading:
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const Scaffold(body: LoadingWidget());
       case AuthStatus.authenticated:
         return const HomeScreen();
       case AuthStatus.unverified:
