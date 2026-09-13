@@ -11,7 +11,7 @@ npm run seed              # demo accounts, posts, chats, notifications
 npm start                 # http://localhost:3001
 ```
 
-`GET /health` reports which database is in use and whether signed uploads are configured.
+`GET /health` reports which database is in use and where uploads are stored.
 
 Production settings (JWT secret, CORS allow-list, Postgres, SMTP, Cloudinary, rate limits) are
 described in [`docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md). Every write endpoint validates its
@@ -83,7 +83,7 @@ UPDATE verification_requests SET status = 'approved' WHERE user_id = '<uid>';
 | Profile | `GET/PUT /profile`, `GET /profile/:userId`, `GET/PUT /profile/privacy`, `GET/PUT /profile/notification-settings`, `GET/POST /profile/verification`, `GET/POST/DELETE /profile/blocked`, `GET/POST/DELETE /profile/saved` |
 | Notifications | `GET /notifications`, `PUT /notifications/read-all`, `PUT /notifications/:id/read` |
 | Users | `GET /users/search?q=` |
-| Uploads | `POST /uploads/sign` (Cloudinary signature for `posts`, `avatars`, `chat`, `verification`) |
+| Uploads | `POST /uploads` (multipart `file` + `folder` = `posts`/`avatars`/`chat`/`verification`) → `{url}`; files served from `/uploads/…` |
 | Account | `DELETE /profile` (`{password}` or `{confirm:"DELETE"}` for Google accounts) |
 | Legal | `GET /legal/privacy`, `GET /legal/terms` |
 

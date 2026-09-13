@@ -9,6 +9,10 @@ RUN npm ci --omit=dev
 
 COPY . .
 
+ENV UPLOADS_DIR=/data/uploads
+RUN mkdir -p /data/uploads
+VOLUME ["/data"]
+
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD wget -qO- http://127.0.0.1:${PORT:-3001}/health || exit 1

@@ -1,5 +1,6 @@
 // Central runtime configuration. Loaded once; fails fast on unsafe production settings.
 require('./env').loadEnv();
+const path = require('path');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const DEV_JWT_SECRET = 'finder_dev_secret_do_not_use_in_production';
@@ -42,19 +43,13 @@ const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30d',
   corsOrigins: readCorsOrigins(),
   publicUrl: (process.env.PUBLIC_URL || '').replace(/\/$/, ''),
+  // Where uploaded images live. Mount a persistent volume here in production.
+  uploadsDir: path.resolve(process.env.UPLOADS_DIR || path.join(__dirname, 'uploads')),
   rateLimit: {
     windowMs: 15 * 60 * 1000,
     general: parseInt(process.env.RATE_LIMIT_GENERAL, 10) || 600,
     auth: parseInt(process.env.RATE_LIMIT_AUTH, 10) || 30,
     passwordReset: parseInt(process.env.RATE_LIMIT_RESET, 10) || 5,
-  },
-  cloudinary: {
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
-    apiKey: process.env.CLOUDINARY_API_KEY || '',
-    apiSecret: process.env.CLOUDINARY_API_SECRET || '',
-    get configured() {
-      return !!(this.cloudName && this.apiKey && this.apiSecret);
-    },
   },
   supportEmail: process.env.SUPPORT_EMAIL || 'support@finder.app',
 };

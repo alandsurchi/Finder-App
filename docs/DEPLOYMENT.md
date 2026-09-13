@@ -2,7 +2,7 @@
 
 ## 1. Backend
 
-The API is a single Node process. It needs Postgres, a JWT secret, SMTP for e-mails and Cloudinary for images.
+The API is a single Node process. It needs Postgres, a JWT secret, SMTP for e-mails and a volume for photos.
 
 ### Environment variables
 
@@ -15,14 +15,14 @@ The API is a single Node process. It needs Postgres, a JWT secret, SMTP for e-ma
 | `CORS_ORIGINS` | web only | Comma-separated origins of the web app, e.g. `https://app.finder.app` |
 | `PUBLIC_URL` | yes | Public https URL of the API (used in seed links and legal pages) |
 | `SMTP_HOST/PORT/USER/PASS/FROM` | yes | Without them signups auto-verify (demo mode). Resend: host `smtp.resend.com`, port `465`, user `resend`, pass = API key |
-| `CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET` | yes | Dashboard → API Keys. Without them release builds cannot upload photos |
+| `UPLOADS_DIR` | yes | Directory on a persistent volume for photos, e.g. `/data/uploads` (the Dockerfile default) |
 | `SUPPORT_EMAIL` | no | Shown in error texts |
 | `RATE_LIMIT_*` | no | Per 15 minutes per IP: general 600, auth 30, reset 5 |
 
 ### Railway (recommended, this repo is already set up for it)
 
 1. New project → Deploy from GitHub → root directory `backend`. `railway.json` selects the Dockerfile and `/health`.
-2. Add a Postgres plugin; Railway injects `DATABASE_URL`.
+2. Add a Postgres database; Railway injects `DATABASE_URL`. Add a Volume to the API service mounted at `/data`.
 3. Set the variables above in the service settings. Generate a domain (or attach `api.finder.app`).
 4. First deploy creates the tables automatically (`initDb`). Do **not** run `npm run seed` in production; it refuses unless `SEED_FORCE=1`.
 
@@ -40,9 +40,9 @@ docker compose exec api node seed.js   # optional demo data
 
 `GET /health` returns `{status, database, uploads}`. Every request is logged as `METHOD path status ms`. Account deletions are logged as `[ACCOUNT DELETED] email`.
 
-## 2. Cloudinary
+## 2. Photo storage
 
-Create a free account, note cloud name, API key and secret, and set the three `CLOUDINARY_*` variables. Uploads land in `finder/posts`, `finder/avatars`, `finder/chat`, `finder/verification`. The old unsigned preset `finder_unsigned` is only used by debug builds and can be deleted once every developer runs a backend with credentials.
+Photos are stored by the API itself under `UPLOADS_DIR` and served from `/uploads/<folder>/<file>`. In Railway add a **Volume** to the API service mounted at `/data`; the Dockerfile already sets `UPLOADS_DIR=/data/uploads`. Without a volume, uploads are lost on every deploy.
 
 ## 3. The app
 

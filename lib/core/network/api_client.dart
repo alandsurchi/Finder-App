@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -82,13 +83,36 @@ class ApiClient {
         () => _http.delete(_uri(path), headers: _headers(), body: json.encode(body)),
       );
 
+  /// Multipart upload of a single file (field `file`) plus text [fields].
+  Future<dynamic> uploadFile(
+    String path, {
+    required Uint8List bytes,
+    required String filename,
+    Map<String, String> fields = const {},
+    Duration uploadTimeout = const Duration(seconds: 90),
+  }) {
+    return _send(
+      path,
+      () async {
+        final request = http.MultipartRequest('POST', _uri(path))
+          ..headers.addAll(_headers()..remove('Content-Type'))
+          ..fields.addAll(fields)
+          ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+        final streamed = await _http.send(request);
+        return http.Response.fromStream(streamed);
+      },
+      timeout: uploadTimeout,
+    );
+  }
+
   Future<dynamic> _send(
     String path,
-    Future<http.Response> Function() request,
-  ) async {
+    Future<http.Response> Function() request, {
+    Duration? timeout,
+  }) async {
     http.Response response;
     try {
-      response = await request().timeout(timeout);
+      response = await request().timeout(timeout ?? this.timeout);
     } on TimeoutException {
       throw const NetworkException(
         'The server took too long to respond. Check your connection and try again.',

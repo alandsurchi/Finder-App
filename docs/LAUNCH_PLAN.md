@@ -12,13 +12,13 @@ Security
 - [x] `helmet`, request rate limiting (global, auth, password reset) and a CORS allow-list from `CORS_ORIGINS`
 - [x] Schema validation on every write endpoint (auth, posts, chats, profile, settings, search)
 - [x] Password policy: at least 8 characters with a letter and a number (server and client)
-- [x] Signed Cloudinary uploads through `POST /uploads/sign`; the unsigned preset only works in debug builds
+- [x] Photos stored by the API on a persistent volume (`POST /uploads`), no third-party image service
 - [x] Seed script refuses to run against a production database
 
 Infrastructure
 - [~] Postgres path: `docker compose` stack written; run `docker compose up --build` once Docker Desktop is available to confirm on this machine
 - [x] `Dockerfile`, `docker-compose.yml`, `railway.json`, health check
-- [x] `.env.example` covers every variable; `docs/DEPLOYMENT.md` explains hosting, SMTP (Resend), Cloudinary, Google OAuth
+- [x] `.env.example` covers every variable; `docs/DEPLOYMENT.md` explains hosting, SMTP (Resend), photo storage, Google OAuth
 - [ ] Deploy the backend to Railway/Render with Postgres and a custom domain (needs your accounts)
 - [ ] Point SMTP at Resend (or another provider) so verification and reset e-mails go out
 

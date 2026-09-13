@@ -106,7 +106,6 @@ const schemas = {
   }),
   blockUser: z.object({ blockedUserId: id }),
   savePost: z.object({ postId: id }),
-  uploadSign: z.object({ folder: z.enum(['posts', 'avatars', 'chat', 'verification']) }),
 
   searchQuery: z.object({ q: z.string().trim().max(60).default('') }),
 };

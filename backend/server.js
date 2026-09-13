@@ -60,6 +60,8 @@ const resetLimiter = limiter(config.rateLimit.passwordReset, 'Too many reset req
 
 // Demo images, legal pages and any other static assets
 app.use('/static', express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
+// User uploads (posts, avatars, chat photos, verification documents)
+app.use('/uploads', express.static(config.uploadsDir, { maxAge: '7d', index: false, dotfiles: 'deny' }));
 app.get('/legal/:doc(privacy|terms)', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'legal', `${req.params.doc}.html`));
 });
@@ -85,7 +87,7 @@ app.get('/health', async (req, res) => {
     res.status(200).json({
       status: 'healthy',
       database: db.isPostgres ? 'postgresql' : 'sqlite',
-      uploads: config.cloudinary.configured ? 'signed' : 'unconfigured',
+      uploads: config.uploadsDir,
     });
   } catch (err) {
     res.status(503).json({ status: 'unhealthy', message: err.message });
