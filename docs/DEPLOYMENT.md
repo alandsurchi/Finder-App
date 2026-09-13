@@ -69,12 +69,24 @@ cp android/key.properties.example android/key.properties   # fill in the passwor
 
 ### Google sign-in
 
-The application id is now `com.finderapp.finder`. Google OAuth Android clients are bound to package name + signing certificate, so:
+Google Cloud project **Finder App** (`finder-app-508520`, owner alandwork456@gmail.com) holds the
+OAuth consent screen (published, External, basic scopes only) and three clients:
 
-1. Get the SHA-1 of the upload keystore: `keytool -list -v -keystore android/upload-keystore.jks -alias upload`.
-2. Google Cloud Console → Credentials → create an **Android** OAuth client with package `com.finderapp.finder` and that SHA-1 (add the debug keystore SHA-1 as a second client for development).
-3. Add the new client id to the `audience` list in `backend/routes/auth.js` (google-login).
-4. For web, set the web client id in `lib/services/auth/railway_auth_service.dart` and add the web app origin to the client's authorised JavaScript origins.
+| Client | Type | Bound to |
+|---|---|---|
+| Finder Web (server client id) | Web | origins `http://localhost`, `http://localhost:5179` |
+| Finder Android (release upload key) | Android | `com.finderapp.finder` + upload keystore SHA-1 |
+| Finder Android (debug key) | Android | `com.finderapp.finder` + debug keystore SHA-1 |
+
+The Web client id is the only one referenced in code: `AppConfig.googleWebClientId`
+(override with `--dart-define=GOOGLE_WEB_CLIENT_ID=…`) and the API's `GOOGLE_CLIENT_IDS`
+env var (defaults to the same id in `backend/config.js`). Android clients are matched by
+Google from the package name and signing certificate, so nothing app-side changes when you
+add one.
+
+If the signing key changes (for example Play App Signing), add a new Android client with the
+new SHA-1. To host the web build somewhere other than localhost, add that origin to the Web
+client's authorised JavaScript origins. iOS has no client yet.
 
 ### Web hosting
 

@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/config/app_config.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/network/api_client.dart';
 import '../../features/auth/domain/auth_user.dart';
@@ -79,22 +79,19 @@ class RailwayAuthService implements AuthService {
   @override
   Future<AuthUser> loginWithGoogle() async {
     try {
-      final String? clientId = kIsWeb
-          ? '685670849218-9vt84sr1ibi9dpqphtqqugcavkk4kn63.apps.googleusercontent.com'
-          : (Platform.isIOS
-              ? '685670849218-6vp6v6gpjujcb6krkqjcicd3gn5bcjeo.apps.googleusercontent.com'
-              : null);
-
-      final String? serverClientId = kIsWeb
-          ? null
-          : (Platform.isAndroid
-              ? '685670849218-pah2cvt7m1ksjumqhbt5uvtb7815mb9u.apps.googleusercontent.com'
-              : '685670849218-6vp6v6gpjujcb6krkqjcicd3gn5bcjeo.apps.googleusercontent.com');
+      // Web: the plugin takes the Web client id as [clientId] and rejects a
+      // serverClientId. Android: the Android client (package + SHA-1) is
+      // looked up automatically; the Web client id goes in [serverClientId]
+      // so the ID token's audience matches what the backend verifies.
+      // iOS has no OAuth client yet and falls back to Info.plist.
+      final String? clientId = kIsWeb ? AppConfig.googleWebClientId : null;
+      final String? serverClientId =
+          kIsWeb ? null : AppConfig.googleWebClientId;
 
       final GoogleSignIn googleSignIn = GoogleSignIn(
         clientId: clientId,
         serverClientId: serverClientId,
-        scopes: ['email', 'profile'],
+        scopes: ['email', 'profile', 'openid'],
       );
 
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();

@@ -17,6 +17,14 @@ class AppConfig {
   static const String privacyEmail =
       String.fromEnvironment('PRIVACY_EMAIL', defaultValue: 'privacy@finder.app');
 
+  /// Google OAuth *Web* client id (Google Cloud project "Finder App").
+  /// Web uses it as the client id; Android passes it as `serverClientId` so
+  /// the ID token is issued for the backend's audience.
+  static const String googleWebClientId = String.fromEnvironment(
+    'GOOGLE_WEB_CLIENT_ID',
+    defaultValue: '209379285612-tbfoc97sjf1p4c5lv3kvmoaub3n0a8h5.apps.googleusercontent.com',
+  );
+
   /// The backend base URL without a trailing slash.
   static String get apiUrl {
     if (_apiUrlDefine.isNotEmpty) return _stripSlash(_apiUrlDefine);

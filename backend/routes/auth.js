@@ -389,11 +389,7 @@ router.post('/google-login', validate(schemas.googleLogin), async (req, res) => 
     // Verify Google ID token (validates signatures and client matches)
     const ticket = await oauth2Client.verifyIdToken({
       idToken: idToken,
-      audience: [
-        '685670849218-6vp6v6gpjujcb6krkqjcicd3gn5bcjeo.apps.googleusercontent.com',
-        '685670849218-pah2cvt7m1ksjumqhbt5uvtb7815mb9u.apps.googleusercontent.com',
-        '685670849218-9vt84sr1ibi9dpqphtqqugcavkk4kn63.apps.googleusercontent.com'
-      ]
+      audience: config.googleClientIds
     });
     
     const payload = ticket.getPayload();

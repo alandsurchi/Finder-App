@@ -52,6 +52,11 @@ const config = {
     passwordReset: parseInt(process.env.RATE_LIMIT_RESET, 10) || 5,
   },
   supportEmail: process.env.SUPPORT_EMAIL || 'support@finder.app',
+  // OAuth client ids whose Google ID tokens the API accepts (comma separated).
+  // The Web client id is the audience for both the web app and Android
+  // (Android passes it as serverClientId).
+  googleClientIds: (process.env.GOOGLE_CLIENT_IDS || '209379285612-tbfoc97sjf1p4c5lv3kvmoaub3n0a8h5.apps.googleusercontent.com')
+    .split(',').map(s => s.trim()).filter(Boolean),
 };
 
 module.exports = config;
