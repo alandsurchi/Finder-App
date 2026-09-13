@@ -21,7 +21,8 @@ Infrastructure
 - [x] `.env.example` covers every variable; `docs/DEPLOYMENT.md` explains hosting, SMTP (Resend), photo storage, Google OAuth
 - [x] Backend deployed on Railway (project `jubilant-respect`, service `Finder-App`, Postgres, volume at `/data`, auto-deploy from `redesign/beacon-ui`): https://finder-app-production-7c49.up.railway.app
 - [ ] Custom domain (e.g. api.finder.app) pointed at the Railway service
-- [ ] Point SMTP at Resend (or another provider) so verification and reset e-mails go out
+- [x] SMTP points at Resend (key `finder-railway`); signups require the e-mailed code
+- [ ] Verify a sending domain in Resend and set `SMTP_FROM` to it (test mode only delivers to the account owner until then)
 
 App
 - [x] `API_URL` is required for release builds (`--dart-define=API_URL=https://…`); debug keeps localhost
