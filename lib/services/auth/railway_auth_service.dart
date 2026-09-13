@@ -35,8 +35,10 @@ class RailwayAuthService implements AuthService {
         photoUrl: userData['photoUrl']?.toString(),
         isVerified: userData['isVerified'] as bool? ?? true,
       );
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+      throw AuthException(_describe(e));
     }
   }
 
@@ -67,8 +69,10 @@ class RailwayAuthService implements AuthService {
         photoUrl: userData['photoUrl']?.toString(),
         isVerified: userData['isVerified'] as bool? ?? true,
       );
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+      throw AuthException(_describe(e));
     }
   }
 
@@ -121,9 +125,10 @@ class RailwayAuthService implements AuthService {
         photoUrl: userData['photoUrl']?.toString(),
         isVerified: userData['isVerified'] as bool? ?? true,
       );
+    } on AppException {
+      rethrow;
     } catch (e) {
-      if (e is AuthException) rethrow;
-      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+      throw AuthException(_describe(e));
     }
   }
 
@@ -132,14 +137,22 @@ class RailwayAuthService implements AuthService {
     await _apiClient.clearToken();
   }
 
+  static String _describe(Object e) {
+    final text = e.toString();
+    if (text.startsWith('Exception: ')) return text.substring(11);
+    return 'Something went wrong. Please try again.';
+  }
+
   @override
   Future<void> sendPasswordResetCode({required String email}) async {
     try {
       await _apiClient.post('/auth/forgot-password', {
         'email': email,
       });
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+      throw AuthException(_describe(e));
     }
   }
 
@@ -150,8 +163,10 @@ class RailwayAuthService implements AuthService {
         'email': email,
         'code': code,
       });
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+      throw AuthException(_describe(e));
     }
   }
 
@@ -167,8 +182,10 @@ class RailwayAuthService implements AuthService {
         'code': code,
         'newPassword': newPassword,
       });
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+      throw AuthException(_describe(e));
     }
   }
 
@@ -190,8 +207,10 @@ class RailwayAuthService implements AuthService {
         photoUrl: userData['photoUrl']?.toString(),
         isVerified: userData['isVerified'] as bool? ?? true,
       );
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+      throw AuthException(_describe(e));
     }
   }
 
@@ -199,8 +218,10 @@ class RailwayAuthService implements AuthService {
   Future<void> resendVerificationCode() async {
     try {
       await _apiClient.post('/auth/resend-verification', {});
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AuthException(e.toString().replaceAll('Exception: ', ''));
+      throw AuthException(_describe(e));
     }
   }
 }

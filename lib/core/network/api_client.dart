@@ -1,26 +1,47 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../errors/exceptions.dart';
+
+/// Thin JSON client over the Finder backend.
+///
+/// Errors are typed: a non-2xx response throws [ApiException] carrying the
+/// server message; transport failures (offline, refused, timeout) throw
+/// [NetworkException]. A 401 on an authenticated call clears the stored
+/// token and invokes [onUnauthorized] so the app can sign the user out.
 class ApiClient {
   final String baseUrl;
+  final Duration timeout;
+  final http.Client _http;
   String? _token;
+
+  /// Called after the token was rejected by the server (401) and cleared.
+  VoidCallback? onUnauthorized;
 
   ApiClient({
     String? baseUrl,
-  }) : this.baseUrl = baseUrl ?? (const String.fromEnvironment('API_URL').isNotEmpty
-          ? const String.fromEnvironment('API_URL')
-          : (kIsWeb 
-              ? 'http://localhost:3001' 
-              : (defaultTargetPlatform == TargetPlatform.android 
-                  ? 'http://10.0.2.2:3001' 
-                  : 'http://localhost:3001')));
+    this.timeout = const Duration(seconds: 10),
+    http.Client? httpClient,
+  })  : baseUrl = baseUrl ?? defaultBaseUrl(),
+        _http = httpClient ?? http.Client();
+
+  static String defaultBaseUrl() {
+    const fromEnv = String.fromEnvironment('API_URL');
+    if (fromEnv.isNotEmpty) return fromEnv;
+    if (kIsWeb) return 'http://localhost:3001';
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:3001';
+    }
+    return 'http://localhost:3001';
+  }
 
   String? get token => _token;
   bool get isAuthenticated => _token != null;
 
-  /// Must be called on application startup to load persisted JWT token
+  /// Must be called on application startup to load the persisted JWT.
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token');
@@ -39,82 +60,99 @@ class ApiClient {
   }
 
   Map<String, String> _headers() {
-    final headers = {
+    final headers = <String, String>{
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     };
-    if (_token != null) {
-      headers['Authorization'] = 'Bearer $_token';
-    }
+    if (_token != null) headers['Authorization'] = 'Bearer $_token';
     return headers;
   }
 
-  Future<dynamic> get(String path) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl$path'),
-        headers: _headers(),
+  Uri _uri(String path) => Uri.parse('$baseUrl$path');
+
+  Future<dynamic> get(String path) =>
+      _send(path, () => _http.get(_uri(path), headers: _headers()));
+
+  Future<dynamic> post(String path, Map<String, dynamic> body) => _send(
+        path,
+        () => _http.post(_uri(path), headers: _headers(), body: json.encode(body)),
       );
-      return _handleResponse(response);
+
+  Future<dynamic> put(String path, Map<String, dynamic> body) => _send(
+        path,
+        () => _http.put(_uri(path), headers: _headers(), body: json.encode(body)),
+      );
+
+  Future<dynamic> delete(String path) =>
+      _send(path, () => _http.delete(_uri(path), headers: _headers()));
+
+  Future<dynamic> _send(
+    String path,
+    Future<http.Response> Function() request,
+  ) async {
+    http.Response response;
+    try {
+      response = await request().timeout(timeout);
+    } on TimeoutException {
+      throw const NetworkException(
+        'The server took too long to respond. Check your connection and try again.',
+      );
+    } on http.ClientException {
+      throw NetworkException(_offlineMessage());
     } catch (e) {
-      throw Exception('Network error: $e');
+      // SocketException and platform-specific transport errors end up here.
+      throw NetworkException(_offlineMessage());
     }
+    return _handleResponse(path, response);
   }
 
-  Future<dynamic> post(String path, Map<String, dynamic> body) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl$path'),
-        headers: _headers(),
-        body: json.encode(body),
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
-  }
+  String _offlineMessage() =>
+      kDebugMode
+          ? 'Could not reach the server at $baseUrl. Is the backend running?'
+          : 'Could not reach the server. Check your connection and try again.';
 
-  Future<dynamic> put(String path, Map<String, dynamic> body) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl$path'),
-        headers: _headers(),
-        body: json.encode(body),
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
-  }
-
-  Future<dynamic> delete(String path) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl$path'),
-        headers: _headers(),
-      );
-      return _handleResponse(response);
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
-  }
-
-  dynamic _handleResponse(http.Response response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
+  dynamic _handleResponse(String path, http.Response response) {
+    final status = response.statusCode;
+    if (status >= 200 && status < 300) {
       if (response.body.isEmpty) return null;
       return json.decode(response.body);
-    } else {
-      final message = _errorMessage(response);
-      throw Exception(message);
     }
+
+    final message = _errorMessage(response);
+    if (status == 401 && _token != null && !_isLoginPath(path)) {
+      // The stored session is no longer valid: forget it and tell the app.
+      _token = null;
+      SharedPreferences.getInstance().then((p) => p.remove('auth_token'));
+      onUnauthorized?.call();
+    }
+    throw ApiException(status, message);
   }
+
+  static bool _isLoginPath(String path) =>
+      path.startsWith('/auth/login') ||
+      path.startsWith('/auth/signup') ||
+      path.startsWith('/auth/google-login');
 
   String _errorMessage(http.Response response) {
     try {
       final map = json.decode(response.body);
-      if (map is Map && map.containsKey('message')) {
+      if (map is Map && map['message'] != null) {
         return map['message'].toString();
       }
     } catch (_) {}
-    return 'HTTP Error: ${response.statusCode}';
+    switch (response.statusCode) {
+      case 400:
+        return 'The request was not valid.';
+      case 401:
+        return 'Your session has expired. Please sign in again.';
+      case 403:
+        return 'You are not allowed to do that.';
+      case 404:
+        return 'Not found.';
+      case 500:
+        return 'The server ran into a problem. Please try again.';
+      default:
+        return 'Request failed (${response.statusCode}).';
+    }
   }
 }

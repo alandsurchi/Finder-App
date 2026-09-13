@@ -7,7 +7,6 @@ import 'package:finder/screens/privacy_settings_screen.dart';
 import 'package:finder/screens/notification_settings_screen.dart';
 import 'package:finder/screens/help_support_screen.dart';
 import 'package:finder/screens/get_verified_screen.dart';
-import 'package:finder/routes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
@@ -343,16 +342,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: 'Log out',
                 destructive: true,
                 showChevron: false,
-                onTap: () async {
-                  await ref.read(authControllerProvider.notifier).logout();
-                  if (context.mounted) {
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      AppRoutes.onboarding,
-                      (route) => false,
-                    );
-                  }
-                },
+                onTap: () => ref.read(authControllerProvider.notifier).logout(),
               ),
             ],
           ),

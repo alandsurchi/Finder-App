@@ -21,5 +21,6 @@ class AppRoutes {
   static const String savedItems = RouteNames.savedItems;
   static const String search = RouteNames.search;
   static const String forgotPassword = RouteNames.forgotPassword;
+  static const String emailVerification = RouteNames.emailVerification;
 }
 

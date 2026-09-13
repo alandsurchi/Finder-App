@@ -19,6 +19,7 @@ import 'package:finder/screens/saved_items_screen.dart';
 import 'package:finder/screens/search_screen.dart';
 import 'package:finder/screens/signup_screen.dart';
 import 'package:finder/screens/forgot_password_screen.dart';
+import 'package:finder/screens/email_verification_screen.dart';
 import 'route_names.dart';
 
 class AppRouter {
@@ -72,6 +73,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SearchScreen());
       case RouteNames.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+      case RouteNames.emailVerification:
+        return MaterialPageRoute(builder: (_) => const EmailVerificationScreen());
       default:
         return null;
     }

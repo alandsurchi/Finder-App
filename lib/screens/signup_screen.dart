@@ -5,6 +5,7 @@ import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/social_button.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/features/auth/presentation/auth_controller.dart';
+import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/core/validation/validators.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -32,8 +33,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppColorTokens.of(context);
-
     return AuthShell(
       icon: Icons.person_add_alt_1_rounded,
       title: 'Create your account',
@@ -99,39 +98,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         const LabeledDivider(label: 'Or sign up with'),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: BeaconSpace.xl),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SocialButton(
-                imageAsset: 'assets/images/google_logo.png',
-                semanticLabel: 'Sign up with Google',
-                onTap: _isLoading
-                    ? null
-                    : () {
-                        _handleGoogleSignIn();
-                      },
-              ),
-              const SizedBox(width: BeaconSpace.lg),
-              SocialButton(
-                icon: Icons.apple,
-                color: t.onSurface,
-                semanticLabel: 'Sign up with Apple',
-                onTap: () => ActionFeedback.showComingSoon(
-                  context,
-                  feature: 'Apple sign up',
-                ),
-              ),
-              const SizedBox(width: BeaconSpace.lg),
-              SocialButton(
-                icon: Icons.facebook,
-                color: const Color(0xFF1877F2), // Facebook brand blue
-                semanticLabel: 'Sign up with Facebook',
-                onTap: () => ActionFeedback.showComingSoon(
-                  context,
-                  feature: 'Facebook sign up',
-                ),
-              ),
-            ],
+          child: Center(
+            child: SocialButton(
+              imageAsset: 'assets/images/google_logo.png',
+              semanticLabel: 'Sign up with Google',
+              onTap: _isLoading ? null : _handleGoogleSignIn,
+            ),
           ),
         ),
         AuthFooterLink(
@@ -143,27 +115,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     );
   }
 
+  /// Sends the user to Home, or to e-mail verification when the backend
+  /// still needs a code (only when SMTP is configured on the server).
+  void _enterApp() {
+    final status = ref.read(authStateProvider).status;
+    final route = status == AuthStatus.unverified
+        ? AppRoutes.emailVerification
+        : AppRoutes.home;
+    Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
+  }
+
   Future<void> _submit() async {
     final email = _emailCtrl.text.trim();
-    final password = _passwordCtrl.text.trim();
+    final password = _passwordCtrl.text;
     final name = _nameCtrl.text.trim();
     final phone = _phoneCtrl.text.trim();
     if (!Validators.isEmail(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter a valid email'),
-        ),
-      );
+      ActionFeedback.showError(context, 'Enter a valid email address.');
       return;
     }
     if (!Validators.hasMinLength(password, 6)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Password must be at least 6 characters',
-          ),
-        ),
-      );
+      ActionFeedback.showError(context, 'Password must be at least 6 characters.');
       return;
     }
 
@@ -175,40 +147,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       phone: phone,
     );
 
+    if (!mounted) return;
+    setState(() => _isLoading = false);
     res.fold(
-      onSuccess: (_) {
-        if (context.mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
-        }
-      },
-      onFailure: (failure) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(failure.message)),
-          );
-        }
-      },
+      onSuccess: (_) => _enterApp(),
+      onFailure: (failure) => ActionFeedback.showError(context, failure.message),
     );
-    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
     final res = await ref.read(authControllerProvider.notifier).loginWithGoogle();
+    if (!mounted) return;
+    setState(() => _isLoading = false);
     res.fold(
-      onSuccess: (_) {
-        if (context.mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
-        }
-      },
-      onFailure: (failure) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(failure.message)),
-          );
-        }
-      },
+      onSuccess: (_) => _enterApp(),
+      onFailure: (failure) => ActionFeedback.showError(context, failure.message),
     );
-    if (mounted) setState(() => _isLoading = false);
   }
 }

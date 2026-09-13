@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/routes.dart';
+import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/features/auth/presentation/auth_controller.dart';
 
@@ -23,9 +25,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
   Future<void> _handleVerifyEmail() async {
     final code = _codeCtrl.text.trim();
     if (code.length != 6 || int.tryParse(code) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the 6-digit verification code')),
-      );
+      ActionFeedback.showError(context, 'Please enter the 6-digit verification code.');
       return;
     }
 
@@ -33,17 +33,16 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     final result = await ref.read(authControllerProvider.notifier).verifyEmail(code: code);
     if (mounted) setState(() => _isLoading = false);
 
+    if (!mounted) return;
     result.fold(
       onSuccess: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account verified successfully! Welcome to Finder.')),
-        );
+        Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = Navigator.of(context, rootNavigator: true).context;
+          ActionFeedback.showSuccess(ctx, 'Account verified. Welcome to Finder!');
+        });
       },
-      onFailure: (failure) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
-      },
+      onFailure: (failure) => ActionFeedback.showError(context, failure.message),
     );
   }
 
@@ -52,17 +51,13 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     final result = await ref.read(authControllerProvider.notifier).resendVerificationCode();
     if (mounted) setState(() => _isLoading = false);
 
+    if (!mounted) return;
     result.fold(
-      onSuccess: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A new verification code has been sent to your email.')),
-        );
-      },
-      onFailure: (failure) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        );
-      },
+      onSuccess: (_) => ActionFeedback.showSuccess(
+        context,
+        'A new verification code has been sent to your email.',
+      ),
+      onFailure: (failure) => ActionFeedback.showError(context, failure.message),
     );
   }
 
