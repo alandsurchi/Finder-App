@@ -21,6 +21,8 @@ The API is a single Node process. It needs Postgres, a JWT secret, SMTP for e-ma
 
 ### Railway (recommended, this repo is already set up for it)
 
+Current production deployment: project **jubilant-respect** → service **Finder-App**, URL `https://finder-app-production-7c49.up.railway.app`, deploying `backend/` from branch `redesign/beacon-ui` on every push. Do not put a `VOLUME` instruction in the Dockerfile; Railway rejects it and manages volumes itself.
+
 1. New project → Deploy from GitHub → root directory `backend`. `railway.json` selects the Dockerfile and `/health`.
 2. Add a Postgres database; Railway injects `DATABASE_URL`. Add a Volume to the API service mounted at `/data`.
 3. Set the variables above in the service settings. Generate a domain (or attach `api.finder.app`).

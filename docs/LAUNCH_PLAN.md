@@ -16,10 +16,11 @@ Security
 - [x] Seed script refuses to run against a production database
 
 Infrastructure
-- [~] Postgres path: `docker compose` stack written; run `docker compose up --build` once Docker Desktop is available to confirm on this machine
+- [x] Postgres path verified on Railway (`/health` reports `postgresql`; signup, posts and uploads tested against it)
 - [x] `Dockerfile`, `docker-compose.yml`, `railway.json`, health check
 - [x] `.env.example` covers every variable; `docs/DEPLOYMENT.md` explains hosting, SMTP (Resend), photo storage, Google OAuth
-- [ ] Deploy the backend to Railway/Render with Postgres and a custom domain (needs your accounts)
+- [x] Backend deployed on Railway (project `jubilant-respect`, service `Finder-App`, Postgres, volume at `/data`, auto-deploy from `redesign/beacon-ui`): https://finder-app-production-7c49.up.railway.app
+- [ ] Custom domain (e.g. api.finder.app) pointed at the Railway service
 - [ ] Point SMTP at Resend (or another provider) so verification and reset e-mails go out
 
 App
