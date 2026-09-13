@@ -50,15 +50,23 @@ class AppAvatar extends StatelessWidget {
           : Icon(fallbackIcon, color: t.primary, size: size * 0.5),
     );
 
-    Widget content = hasUrl
-        ? Image.network(
-            url!,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => fallback,
-          )
-        : fallback;
+    Widget content = !hasUrl
+        ? fallback
+        : url!.startsWith('assets/')
+            ? Image.asset(
+                url!,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => fallback,
+              )
+            : Image.network(
+                url!,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => fallback,
+              );
 
     Widget avatar = ClipOval(
       child: SizedBox(width: size, height: size, child: content),

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/services/image_upload_service.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
+import 'package:finder/widgets/ui/ui.dart';
 
 class EditPostScreen extends ConsumerStatefulWidget {
   final ItemModel post;
-  const EditPostScreen({Key? key, required this.post}) : super(key: key);
+  const EditPostScreen({super.key, required this.post});
 
   @override
   ConsumerState<EditPostScreen> createState() => _EditPostScreenState();
@@ -121,123 +121,143 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Colors.white, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Edit Post',
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20)),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
-                : const Text('Save',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15)),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+      body: SafeArea(
+        bottom: false,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Lost / Found toggle ──
-            _sectionLabel('Post Type', t),
-            Row(
-              children: [
-                Expanded(
-                  child: _typeTile(
-                    selected: _isLostItem,
-                    icon: Icons.search_rounded,
-                    label: 'Lost Item',
-                    onTap: () => setState(() => _isLostItem = true),
-                    t: t,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _typeTile(
-                    selected: !_isLostItem,
-                    icon: Icons.back_hand_rounded,
-                    label: 'Found Item',
-                    onTap: () => setState(() => _isLostItem = false),
-                    t: t,
-                  ),
+            AppPageHeader(
+              title: 'Edit post',
+              subtitle: widget.post.title,
+              actions: [
+                AppButton.ghost(
+                  label: 'Save',
+                  icon: Icons.check_rounded,
+                  isLoading: _isSaving,
+                  onPressed: _isSaving ? null : _save,
                 ),
               ],
             ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(BeaconSpace.page, 0,
+                    BeaconSpace.page, BeaconSpace.huge + bottomInset + 64),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Lost / Found toggle ──
+                    Row(
+                      children: [
+                        Expanded(
+                          child: LostFoundTypeTile(
+                            kind: SignalKind.lost,
+                            compact: true,
+                            selected: _isLostItem,
+                            onTap: () => setState(() => _isLostItem = true),
+                          ),
+                        ),
+                        const SizedBox(width: BeaconSpace.md),
+                        Expanded(
+                          child: LostFoundTypeTile(
+                            kind: SignalKind.found,
+                            compact: true,
+                            selected: !_isLostItem,
+                            onTap: () => setState(() => _isLostItem = false),
+                          ),
+                        ),
+                      ],
+                    ),
 
-            const SizedBox(height: 20),
+                    const SizedBox(height: BeaconSpace.xxl),
 
-            // ── Image ──
-            _sectionLabel('Photo', t),
-            _buildImagePicker(t),
+                    // ── Image ──
+                    const SectionHeader(title: 'Photo'),
+                    _buildImagePicker(t),
 
-            const SizedBox(height: 16),
+                    const SizedBox(height: BeaconSpace.xxl),
 
-            // ── Title ──
-            _sectionLabel('Item Name *', t),
-            _field(_titleCtrl, 'e.g. Black wallet', Icons.label_outline, t),
+                    SurfaceCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppTextField(
+                            controller: _titleCtrl,
+                            label: 'Item name',
+                            required: true,
+                            hint: 'e.g. Black wallet',
+                            prefixIcon: Icons.label_outline_rounded,
+                            textCapitalization: TextCapitalization.sentences,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: BeaconSpace.lg),
+                          _categoryDropdown(t),
+                          const SizedBox(height: BeaconSpace.lg),
+                          AppTextField(
+                            controller: _descCtrl,
+                            label: 'Description',
+                            required: true,
+                            hint: 'Describe the item in detail…',
+                            helper: 'At least 10 characters',
+                            maxLines: 4,
+                            textCapitalization: TextCapitalization.sentences,
+                          ),
+                        ],
+                      ),
+                    ),
 
-            const SizedBox(height: 16),
+                    const SizedBox(height: BeaconSpace.xxl),
 
-            // ── Category ──
-            _sectionLabel('Category', t),
-            _categoryDropdown(t),
-
-            const SizedBox(height: 16),
-
-            // ── Description ──
-            _sectionLabel('Description *', t),
-            _field(_descCtrl, 'Describe the item in detail…',
-                Icons.description_outlined, t,
-                maxLines: 4),
-
-            const SizedBox(height: 16),
-
-            // ── Location ──
-            _sectionLabel('Location', t),
-            _field(_locationCtrl, 'Where was it lost/found?',
-                Icons.location_on_outlined, t),
-
-            const SizedBox(height: 16),
-
-            // ── Date ──
-            _sectionLabel('Date / Time', t),
-            GestureDetector(
-              onTap: _pickDate,
-              child: AbsorbPointer(
-                child: _field(_lostOnCtrl,
-                    'Tap to pick date', Icons.calendar_today_outlined, t),
+                    SurfaceCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppTextField(
+                            controller: _locationCtrl,
+                            label: 'Location',
+                            hint: 'Where was it lost or found?',
+                            prefixIcon: Icons.place_outlined,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: BeaconSpace.lg),
+                          AppTextField(
+                            controller: _lostOnCtrl,
+                            label: 'Date / time',
+                            hint: 'Tap to pick date',
+                            prefixIcon: Icons.calendar_today_outlined,
+                            readOnly: true,
+                            onTap: _pickDate,
+                          ),
+                          const SizedBox(height: BeaconSpace.lg),
+                          AppTextField(
+                            controller: _rewardCtrl,
+                            label: 'Reward (optional)',
+                            hint: 'e.g. 50',
+                            prefixIcon: Icons.workspace_premium_outlined,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // ── Reward ──
-            _sectionLabel('Reward (optional)', t),
-            _field(_rewardCtrl, 'e.g. 50', Icons.monetization_on_outlined, t,
-                keyboardType: TextInputType.number),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              BeaconSpace.page, BeaconSpace.sm, BeaconSpace.page, BeaconSpace.lg),
+          child: AppButton(
+            label: 'Save changes',
+            icon: Icons.check_rounded,
+            isLoading: _isSaving,
+            onPressed: _isSaving ? null : _save,
+          ),
         ),
       ),
     );
@@ -245,129 +265,34 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
-  Widget _sectionLabel(String text, AppColorTokens t) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  Widget _field(
-    TextEditingController ctrl,
-    String hint,
-    IconData icon,
-    AppColorTokens t, {
-    int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: t.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: t.divider),
-      ),
-      child: TextField(
-        controller: ctrl,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        style: TextStyle(color: t.onSurface, fontSize: 14),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle:
-              TextStyle(color: t.onSurfaceMuted, fontSize: 14),
-          prefixIcon:
-              Icon(icon, color: t.onSurfaceMuted, size: 20),
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        ),
-      ),
-    );
-  }
-
   Widget _categoryDropdown(AppColorTokens t) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: t.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: t.divider),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _category,
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Category', style: text.titleSmall),
+        const SizedBox(height: BeaconSpace.sm),
+        DropdownButtonFormField<String>(
+          initialValue: _category,
           isExpanded: true,
           dropdownColor: t.surface,
-          icon: Icon(Icons.expand_more, color: t.onSurfaceMuted),
-          style: TextStyle(color: t.onSurface, fontSize: 14),
+          borderRadius: BeaconRadius.rLg,
+          icon: Icon(Icons.expand_more_rounded, color: t.onSurfaceVar),
+          style: text.bodyLarge,
+          decoration: InputDecoration(
+            prefixIcon: Icon(categoryIcon(_category ?? ''), size: BeaconIcon.md),
+          ),
           onChanged: (v) {
             if (v != null) setState(() => _category = v);
           },
           items: _categories
               .map((c) => DropdownMenuItem(
                     value: c,
-                    child: Text(c,
-                        style: TextStyle(color: t.onSurface)),
+                    child: Text(c, style: text.bodyLarge),
                   ))
               .toList(),
         ),
-      ),
-    );
-  }
-
-  Widget _typeTile({
-    required bool selected,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    required AppColorTokens t,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFF123D73).withOpacity(0.65)
-              : t.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected
-                ? const Color(0xFF2D8CFF)
-                : t.divider,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon,
-                color: selected
-                    ? const Color(0xFF2D8CFF)
-                    : t.onSurfaceMuted,
-                size: 22),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: selected
-                    ? const Color(0xFF2D8CFF)
-                    : t.onSurfaceMuted,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
@@ -397,89 +322,81 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
 
   Widget _buildImagePicker(AppColorTokens t) {
     final url = _imageCtrl.text.trim();
-    return GestureDetector(
-      onTap: _isUploadingImage ? null : _pickAndUploadImage,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 130,
-        decoration: BoxDecoration(
+    final text = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: url.isEmpty ? 'Add a photo' : 'Change photo',
+      child: PressScale(
+        enabled: !_isUploadingImage,
+        scale: 0.985,
+        child: Material(
           color: t.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: url.isNotEmpty ? t.primary.withOpacity(0.4) : t.divider,
+          shape: RoundedRectangleBorder(
+            borderRadius: BeaconRadius.rXl,
+            side: BorderSide(
+              color: url.isNotEmpty ? t.primary.withValues(alpha: 0.4) : t.outlineVariant,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _isUploadingImage ? null : _pickAndUploadImage,
+            child: SizedBox(
+              height: 168,
+              child: _isUploadingImage
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2.5, color: t.primary),
+                          ),
+                          const SizedBox(height: BeaconSpace.sm),
+                          Text('Uploading image…', style: text.bodySmall),
+                        ],
+                      ),
+                    )
+                  : url.isNotEmpty
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            ItemImage(url: url, height: 168),
+                            Positioned(
+                              top: BeaconSpace.sm,
+                              right: BeaconSpace.sm,
+                              child: AppIconButton(
+                                icon: Icons.close_rounded,
+                                tooltip: 'Remove photo',
+                                size: 36,
+                                iconSize: 18,
+                                variant: AppIconButtonVariant.filled,
+                                background: t.error,
+                                color: t.onError,
+                                onPressed: () => setState(() => _imageCtrl.text = ''),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: BeaconSpace.sm,
+                              right: BeaconSpace.sm,
+                              child: StatusBadge.neutral('Tap to change',
+                                  icon: Icons.edit_outlined, small: true),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_photo_alternate_outlined,
+                                color: t.primary, size: 32),
+                            const SizedBox(height: BeaconSpace.sm),
+                            Text('Tap to pick from gallery', style: text.bodyMedium),
+                          ],
+                        ),
+            ),
           ),
         ),
-        child: _isUploadingImage
-            ? const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(strokeWidth: 2),
-                    SizedBox(height: 8),
-                    Text('Uploading image...',
-                        style: TextStyle(fontSize: 12)),
-                  ],
-                ),
-              )
-            : url.isNotEmpty
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(13),
-                        child: Image.network(
-                          url,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Center(
-                            child: Icon(Icons.broken_image_outlined,
-                                color: t.onSurfaceMuted, size: 36),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _imageCtrl.text = ''),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFD83838),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.close,
-                                color: Colors.white, size: 14),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.55),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text('Tap to change',
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 11)),
-                        ),
-                      ),
-                    ],
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add_photo_alternate_outlined,
-                          color: t.onSurfaceMuted, size: 36),
-                      const SizedBox(height: 8),
-                      Text('Tap to pick from gallery',
-                          style: TextStyle(
-                              color: t.onSurfaceMuted, fontSize: 13)),
-                    ],
-                  ),
       ),
     );
   }

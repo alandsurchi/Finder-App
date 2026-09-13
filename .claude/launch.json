@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "finder-web",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run", "-d", "chrome", "--web-port", "5179", "--web-hostname", "localhost"],
+      "port": 5179
+    },
+    {
+      "name": "finder-preview",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run", "-d", "chrome", "-t", "lib/dev/preview_main.dart", "--web-port", "5180", "--web-hostname", "localhost"],
+      "port": 5180
+    }
+  ]
+}

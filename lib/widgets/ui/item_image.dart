@@ -65,6 +65,14 @@ class ItemImage extends StatelessWidget {
     Widget image;
     if (url.trim().isEmpty) {
       image = fallback();
+    } else if (url.startsWith('assets/')) {
+      image = Image.asset(
+        url,
+        height: height,
+        width: width,
+        fit: fit,
+        errorBuilder: (_, __, ___) => fallback(),
+      );
     } else {
       image = Image.network(
         url,
