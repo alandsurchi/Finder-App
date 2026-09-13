@@ -1,48 +1,71 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
+import 'package:finder/theme/beacon_tokens.dart';
 
+/// Beacon notch navigation.
+///
+/// A frosted-glass bar with a moving notch; the selected destination floats in
+/// the notch as a primary disc wrapped in an amber "beacon ring". The bar
+/// respects the bottom safe-area inset and every destination is a 48dp+
+/// target with an accessible label.
 class CustomBottomNavBar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
 
   const CustomBottomNavBar({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
-  }) : super(key: key);
+  });
+
+  /// Height of the visible bar (excluding the safe-area inset and the lift of
+  /// the floating disc). Pages use [totalHeight] to pad their scroll views.
+  static const double barHeight = 68;
+  static const double lift = 24;
+  static const double discSize = 56;
+
+  static double totalHeight(BuildContext context) =>
+      barHeight + lift + MediaQuery.paddingOf(context).bottom;
 
   @override
   State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
 }
 
-class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  int _previousIndex = 0;
+class _CustomBottomNavBarState extends State<CustomBottomNavBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: BeaconMotion.state,
+  );
+  late Animation<double> _position;
+
+  static const _items = [
+    _NavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
+    _NavItem(Icons.search_rounded, Icons.search_rounded, 'Search'),
+    _NavItem(Icons.add_rounded, Icons.add_rounded, 'Post'),
+    _NavItem(Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages'),
+    _NavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _previousIndex = widget.currentIndex;
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _animation = Tween<double>(
-      begin: widget.currentIndex.toDouble(),
-      end: widget.currentIndex.toDouble(),
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _position = AlwaysStoppedAnimation(widget.currentIndex.toDouble());
   }
 
   @override
   void didUpdateWidget(CustomBottomNavBar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.currentIndex != widget.currentIndex) {
-      _previousIndex = oldWidget.currentIndex;
-      _animation = Tween<double>(
-        begin: _previousIndex.toDouble(),
+      _position = Tween<double>(
+        begin: oldWidget.currentIndex.toDouble(),
         end: widget.currentIndex.toDouble(),
-      ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+      ).animate(
+        CurvedAnimation(parent: _controller, curve: BeaconMotion.emphasized),
+      );
+      _controller.duration = BeaconMotion.scaled(context, BeaconMotion.state);
       _controller.forward(from: 0);
     }
   }
@@ -55,43 +78,66 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    final double itemWidth = size.width / 5;
     final t = AppColorTokens.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final itemWidth = width / _items.length;
+    final barHeight = CustomBottomNavBar.barHeight + bottomInset;
+    final total = CustomBottomNavBar.lift + barHeight;
 
     return SizedBox(
-      height: 100, // Total height including the floating part
+      height: total,
       child: Stack(
         children: [
-          // Background Painter
+          // ── Glass bar with notch ───────────────────────────────────────
           Positioned(
-            bottom: 0,
             left: 0,
             right: 0,
-            height: 80,
+            bottom: 0,
+            height: barHeight,
             child: AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: NavBarPainter(
-                    position: _animation.value,
-                    itemWidth: itemWidth,
-                    color: t.surface,
-                    borderColor: t.divider,
-                  ),
-                  size: Size(size.width, 80),
+              animation: _position,
+              builder: (context, _) {
+                final path = _NavShape.path(
+                  Size(width, barHeight),
+                  position: _position.value,
+                  itemWidth: itemWidth,
+                );
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Ambient shadow under the bar.
+                    CustomPaint(
+                      painter: _ShadowPainter(path: path, color: t.shadow),
+                    ),
+                    ClipPath(
+                      clipper: _PathClipper(path),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: ColoredBox(color: t.glassSurface),
+                      ),
+                    ),
+                    CustomPaint(
+                      painter: _StrokePainter(path: path, color: t.glassBorder),
+                    ),
+                  ],
                 );
               },
             ),
           ),
-          // Icons
+
+          // ── Destinations ──────────────────────────────────────────────
           Positioned.fill(
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(5, (index) {
+              children: List.generate(_items.length, (i) {
                 return SizedBox(
                   width: itemWidth,
-                  child: _buildNavItem(index, itemWidth, t),
+                  child: _Destination(
+                    item: _items[i],
+                    selected: widget.currentIndex == i,
+                    onTap: () => widget.onTap(i),
+                    bottomInset: bottomInset,
+                  ),
                 );
               }),
             ),
@@ -100,74 +146,96 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
       ),
     );
   }
+}
 
-  Widget _buildNavItem(int index, double itemWidth, AppColorTokens t) {
-    final bool isSelected = widget.currentIndex == index;
-    
-    // Items data
-    final List<Map<String, dynamic>> items = [
-      {'icon': Icons.home_outlined, 'activeIcon': Icons.home_filled, 'label': 'Home'},
-      {'icon': Icons.search, 'activeIcon': Icons.search, 'label': 'Search'},
-      {'icon': Icons.add, 'activeIcon': Icons.add, 'label': 'Post'},
-      {'icon': Icons.send_outlined, 'activeIcon': Icons.send, 'label': 'Message'},
-      {'icon': Icons.person_outline, 'activeIcon': Icons.person, 'label': 'Profile'},
-    ];
+class _NavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _NavItem(this.icon, this.activeIcon, this.label);
+}
 
-    final item = items[index];
+class _Destination extends StatelessWidget {
+  final _NavItem item;
+  final bool selected;
+  final VoidCallback onTap;
+  final double bottomInset;
 
-    return GestureDetector(
-      onTap: () => widget.onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        height: 100,
+  const _Destination({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+    required this.bottomInset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    final duration = BeaconMotion.scaled(context, BeaconMotion.state);
+    const disc = CustomBottomNavBar.discSize;
+    const lift = CustomBottomNavBar.lift;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${item.label} tab',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
         child: Stack(
-          alignment: Alignment.center,
+          alignment: Alignment.topCenter,
+          clipBehavior: Clip.none,
           children: [
-            // Floating Circle (Selected State)
+            // Floating disc (selected) / plain icon (unselected)
             AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              top: isSelected ? 0 : 35, // Move up when selected
+              duration: duration,
+              curve: BeaconMotion.emphasized,
+              top: selected ? 0 : lift + 10,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: 60,
-                height: 60,
+                duration: duration,
+                curve: BeaconMotion.emphasized,
+                width: selected ? disc : 40,
+                height: selected ? disc : 40,
                 decoration: BoxDecoration(
-                  color: t.surface,
+                  color: selected ? t.primary : Colors.transparent,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? t.primary : Colors.transparent,
+                    color: selected ? t.accent : Colors.transparent,
                     width: 2,
                   ),
-                  boxShadow: isSelected
+                  boxShadow: selected
                       ? [
                           BoxShadow(
-                            color: t.primary.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
+                            color: t.accentGlow,
+                            blurRadius: 22,
+                            spreadRadius: 4,
+                          ),
+                          BoxShadow(
+                            color: t.primary.withValues(alpha: 0.35),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
                           ),
                         ]
-                      : [],
+                      : const [],
                 ),
                 child: Icon(
-                  isSelected ? item['activeIcon'] : item['icon'],
-                  color: isSelected ? t.primary : t.onSurfaceMuted,
-                  size: 30,
+                  selected ? item.activeIcon : item.icon,
+                  color: selected ? t.onPrimary : t.onSurfaceVar,
+                  size: selected ? 26 : 24,
                 ),
               ),
             ),
             // Label
             Positioned(
-              bottom: 15,
+              bottom: bottomInset + 10,
               child: AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 300),
-                style: TextStyle(
-                  color: isSelected ? t.primary : t.onSurfaceMuted,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 12,
-                  fontFamily: 'Poppins', // Assuming Poppins is used
+                duration: duration,
+                style: text.labelSmall!.copyWith(
+                  color: selected ? t.primary : t.onSurfaceVar,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
-                child: Text(item['label']),
+                child: Text(item.label),
               ),
             ),
           ],
@@ -177,101 +245,77 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> with SingleTick
   }
 }
 
-class NavBarPainter extends CustomPainter {
-  final double position;
-  final double itemWidth;
+// ── Geometry ────────────────────────────────────────────────────────────────
+
+class _NavShape {
+  static const double notchRadius = 36;
+  static const double notchDepth = 40;
+  static const double corner = 24;
+
+  static Path path(Size size,
+      {required double position, required double itemWidth}) {
+    final center = position * itemWidth + itemWidth / 2;
+    const top = 0.0;
+    final p = Path()
+      ..moveTo(0, corner)
+      ..quadraticBezierTo(0, top, corner, top)
+      ..lineTo(center - notchRadius - 12, top)
+      ..cubicTo(
+        center - notchRadius + 2, top,
+        center - notchRadius + 8, notchDepth,
+        center, notchDepth,
+      )
+      ..cubicTo(
+        center + notchRadius - 8, notchDepth,
+        center + notchRadius - 2, top,
+        center + notchRadius + 12, top,
+      )
+      ..lineTo(size.width - corner, top)
+      ..quadraticBezierTo(size.width, top, size.width, corner)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    return p;
+  }
+}
+
+class _PathClipper extends CustomClipper<Path> {
+  final Path path;
+  _PathClipper(this.path);
+  @override
+  Path getClip(Size size) => path;
+  @override
+  bool shouldReclip(covariant _PathClipper old) => old.path != path;
+}
+
+class _ShadowPainter extends CustomPainter {
+  final Path path;
   final Color color;
-  final Color borderColor;
+  _ShadowPainter({required this.path, required this.color});
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawShadow(path, color.withValues(alpha: 0.35), 10, true);
+  }
 
-  NavBarPainter({
-    required this.position,
-    required this.itemWidth,
-    required this.color,
-    required this.borderColor,
-  });
+  @override
+  bool shouldRepaint(covariant _ShadowPainter old) =>
+      old.path != path || old.color != color;
+}
 
+class _StrokePainter extends CustomPainter {
+  final Path path;
+  final Color color;
+  _StrokePainter({required this.path, required this.color});
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..style = PaintingStyle.fill;
-
-    final borderPaint = Paint()
-      ..color = borderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    final path = Path();
-    
-    // Start point with rounded top-left
-    path.moveTo(0, 20);
-    path.quadraticBezierTo(0, 0, 20, 0);
-
-    // Calculate the center of the curve based on position
-    final double loc = position * itemWidth;
-    final double center = loc + (itemWidth / 2);
-    
-    // Bezier Curve for the notch
-    const double notchRadius = 38; // Slightly larger than circle radius (30)
-    const double topY = 0;
-    const double bottomY = 45; // Depth of the notch
-    
-    // Line to start of notch
-    path.lineTo(center - notchRadius - 10, topY);
-    
-    // The Notch Curve
-    path.cubicTo(
-      center - notchRadius, topY,     // Control point 1
-      center - notchRadius + 10, bottomY, // Control point 2
-      center, bottomY,                // End point (bottom of notch)
-    );
-    
-    path.cubicTo(
-      center + notchRadius - 10, bottomY, // Control point 1
-      center + notchRadius, topY,     // Control point 2
-      center + notchRadius + 10, topY, // End point
-    );
-
-    // Line to top-right
-    path.lineTo(size.width - 20, topY);
-    path.quadraticBezierTo(size.width, topY, size.width, 20);
-    
-    // Bottom part
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-
-    // Draw shadow
-    canvas.drawShadow(path, Colors.black.withOpacity(0.1), 5, true);
-    
-    // Draw background
+      ..strokeWidth = 1;
     canvas.drawPath(path, paint);
-    
-    // Draw border (only on top)
-    final borderPath = Path();
-    borderPath.moveTo(0, 20);
-    borderPath.quadraticBezierTo(0, 0, 20, 0);
-    
-    borderPath.lineTo(center - notchRadius - 10, topY);
-    borderPath.cubicTo(
-      center - notchRadius, topY,
-      center - notchRadius + 10, bottomY,
-      center, bottomY,
-    );
-    borderPath.cubicTo(
-      center + notchRadius - 10, bottomY,
-      center + notchRadius, topY,
-      center + notchRadius + 10, topY,
-    );
-    
-    borderPath.lineTo(size.width - 20, topY);
-    borderPath.quadraticBezierTo(size.width, topY, size.width, 20);
-    
-    canvas.drawPath(borderPath, borderPaint);
   }
 
   @override
-  bool shouldRepaint(covariant NavBarPainter oldDelegate) {
-    return oldDelegate.position != position;
-  }
+  bool shouldRepaint(covariant _StrokePainter old) =>
+      old.path != path || old.color != color;
 }

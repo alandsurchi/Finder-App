@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
+import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/models/conversation_model.dart';
+import 'package:finder/widgets/ui/app_avatar.dart';
+import 'package:finder/widgets/ui/surface_card.dart';
 
 class ConversationCard extends StatelessWidget {
   final ConversationModel convo;
@@ -19,7 +22,12 @@ class ConversationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
-    return GestureDetector(
+    final text = Theme.of(context).textTheme;
+    final unread = convo.unreadCount > 0;
+
+    return SurfaceCard(
+      margin: const EdgeInsets.only(bottom: BeaconSpace.md),
+      padding: const EdgeInsets.all(BeaconSpace.md),
       onTap: () {
         final chatId = convo.chatId.isEmpty
             ? convo.name.toLowerCase().replaceAll(' ', '_')
@@ -34,153 +42,98 @@ class ConversationCard extends StatelessWidget {
           },
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: t.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: t.divider),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // ── Avatar + online dot
-            Stack(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          AppAvatar(
+            url: convo.avatarUrl,
+            name: convo.name,
+            size: 52,
+            online: convo.isOnline,
+          ),
+          const SizedBox(width: BeaconSpace.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Image.network(
-                    convo.avatarUrl,
-                    width: 54,
-                    height: 54,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 54,
-                      height: 54,
-                      color: t.iconBg,
-                      child: Icon(Icons.person, color: t.primary, size: 28),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 2,
-                  bottom: 2,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: convo.isOnline ? t.success : t.onSurfaceMuted,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: t.surface, width: 2),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(width: 12),
-
-            // ── Name + message
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            convo.name,
-                            style: TextStyle(
-                              color: t.onSurface,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (convo.isVerified) ...[
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.verified_rounded,
-                              color: t.primary,
-                              size: 15,
-                            ),
-                          ],
-                        ],
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        convo.name,
+                        style: text.titleMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        _formatTimeAgo(convo.lastUpdatedAt.toDate()),
-                        style: TextStyle(color: t.primary, fontSize: 12),
-                      ),
+                    ),
+                    if (convo.isVerified) ...[
+                      const SizedBox(width: BeaconSpace.xs),
+                      Icon(Icons.verified_rounded, color: t.primary, size: 15),
                     ],
-                  ),
-                  const SizedBox(height: 2),
-                  if (convo.itemName.isNotEmpty)
+                    const Spacer(),
                     Text(
-                      'Re: ${convo.itemName}',
-                      style: TextStyle(
-                        color: t.onSurfaceMuted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      _formatTimeAgo(convo.lastUpdatedAt.toDate()),
+                      style: text.bodySmall?.copyWith(
+                        color: unread ? t.primary : t.onSurfaceMuted,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  const SizedBox(height: 5),
+                  ],
+                ),
+                if (convo.itemName.isNotEmpty) ...[
+                  const SizedBox(height: 2),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
+                      Icon(Icons.inventory_2_outlined,
+                          size: 12, color: t.onSurfaceMuted),
+                      const SizedBox(width: BeaconSpace.xs),
+                      Flexible(
                         child: Text(
-                          convo.message,
+                          convo.itemName,
+                          style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: convo.unreadCount > 0
-                                ? t.onSurface
-                                : t.onSurfaceVar,
-                            fontSize: 13,
-                            fontWeight: convo.unreadCount > 0
-                                ? FontWeight.w500
-                                : FontWeight.normal,
-                          ),
                         ),
                       ),
-                      if (convo.unreadCount > 0) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: t.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            convo.unreadCount.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ],
-              ),
+                const SizedBox(height: BeaconSpace.xs),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        convo.message,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodyMedium?.copyWith(
+                          color: unread ? t.onSurface : t.onSurfaceVar,
+                          fontWeight: unread ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                    if (unread) ...[
+                      const SizedBox(width: BeaconSpace.sm),
+                      Container(
+                        constraints: const BoxConstraints(minWidth: 22),
+                        height: 22,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: t.primary,
+                          borderRadius: BeaconRadius.rPill,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          convo.unreadCount.toString(),
+                          style: text.labelSmall?.copyWith(color: t.onPrimary),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
