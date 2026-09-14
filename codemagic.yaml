@@ -24,20 +24,32 @@ workflows:
           flutter pub get
       - name: Build (no code signing)
         script: |
-          flutter build ios --release --no-codesign \
+          set -e
+          # Generate the Xcode config for a release build, then drive xcodebuild
+          # ourselves with signing fully disabled (flutter's --no-codesign still
+          # lets Xcode demand a development team).
+          flutter build ios --release --no-codesign --config-only \
             --dart-define=API_URL=$API_URL \
             --build-number=$BUILD_NUMBER
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner \
+            -configuration Release -sdk iphoneos \
+            -derivedDataPath ../build/ios/derived \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" \
+            -quiet
       - name: Package .ipa
         script: |
           set -e
-          cd build/ios/iphoneos
-          rm -rf Payload Finder.ipa
-          mkdir Payload
-          cp -R Runner.app Payload/
-          zip -qr Finder.ipa Payload
-          ls -la Finder.ipa
+          APP=build/ios/derived/Build/Products/Release-iphoneos/Runner.app
+          test -d "$APP"
+          rm -rf build/ios/Payload build/ios/Finder.ipa
+          mkdir -p build/ios/Payload
+          cp -R "$APP" build/ios/Payload/
+          (cd build/ios && zip -qr Finder.ipa Payload)
+          ls -la build/ios/Finder.ipa
     artifacts:
-      - build/ios/iphoneos/Finder.ipa
+      - build/ios/Finder.ipa
 
   ios-testflight:
     name: iOS TestFlight
