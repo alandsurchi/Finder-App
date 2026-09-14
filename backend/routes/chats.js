@@ -9,8 +9,7 @@ const {
   notify,
   displayName,
   mapMessage,
-  bool,
-} = require('../lib/helpers');
+  bool, truthy } = require('../lib/helpers');
 
 const { validate, schemas } = require('../lib/validate');
 
@@ -25,6 +24,7 @@ router.get('/', verifyToken, async (req, res) => {
       `SELECT c.id, c.post_id, c.item_name, c.last_message_text, c.last_sender_id,
               c.updated_at_ms, me.unread_count AS my_unread,
               cp.user_id AS p_user_id, u.full_name, u.nick_name, u.avatar_url,
+              u.identity_verified AS p_verified, u.is_admin AS p_admin,
               p.owner_id AS post_owner_id, p.status AS post_status
        FROM chats c
        JOIN chat_participants me ON me.chat_id = c.id AND me.user_id = $1
@@ -49,6 +49,8 @@ router.get('/', verifyToken, async (req, res) => {
           participants: [],
           participantNames: {},
           participantAvatars: {},
+          participantVerified: {},
+          participantAdmin: {},
           lastMessageText: r.last_message_text || '',
           lastSenderId: r.last_sender_id || '',
           updatedAtMs: parseInt(r.updated_at_ms),
@@ -59,6 +61,8 @@ router.get('/', verifyToken, async (req, res) => {
       convo.participants.push(r.p_user_id);
       convo.participantNames[r.p_user_id] = displayName(r);
       convo.participantAvatars[r.p_user_id] = r.avatar_url || '';
+      convo.participantVerified[r.p_user_id] = truthy(r.p_verified);
+      convo.participantAdmin[r.p_user_id] = truthy(r.p_admin);
     }
 
     const conversations = [...byId.values()].filter(

@@ -70,6 +70,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                           StatusBadge.reward('REWARD \$${item.reward}'),
                         if (item.isResolved) StatusBadge.resolved(),
                         if (item.isVerified) StatusBadge.verified(small: false),
+                        if (item.ownerIsAdmin) adminBadge(small: false),
                       ],
                     ),
                   ),
@@ -213,6 +214,8 @@ class ItemDetailsScreen extends ConsumerWidget {
       itemName: item.title,
       postOwnerId: item.ownerId,
       postStatus: item.isResolved ? 'resolved' : 'active',
+      peerVerified: item.isVerified || (owner?.identityVerified ?? false),
+      peerAdmin: item.ownerIsAdmin || (owner?.isAdmin ?? false),
     );
   }
 
@@ -730,7 +733,12 @@ class ItemDetailsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(ownerName, style: text.titleMedium),
+                    NameWithMarks(
+                      name: ownerName,
+                      verified: verified,
+                      admin: item.ownerIsAdmin || (profile?.isAdmin ?? false),
+                      style: text.titleMedium,
+                    ),
                     const SizedBox(height: 2),
                     if (ownerProfileAsync.isLoading && profile == null)
                       Text('Loading profile…', style: text.bodySmall)

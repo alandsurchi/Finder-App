@@ -18,6 +18,8 @@ class ItemModel {
   final bool isLost;
   final String? reward;
   final bool isVerified;
+  /// The owner is a Finder administrator (staff mark).
+  final bool ownerIsAdmin;
   final String category;
   final String? lostOn;
   final double? latitude;
@@ -40,6 +42,7 @@ class ItemModel {
     required this.isLost,
     this.reward,
     this.isVerified = false,
+    this.ownerIsAdmin = false,
     required this.category,
     this.lostOn,
     this.latitude,
@@ -81,6 +84,7 @@ class ItemModel {
       ownerName: map['ownerName']?.toString(),
       ownerAvatarUrl: map['ownerAvatarUrl']?.toString() ?? '',
       isVerified: map['ownerVerified'] == true,
+      ownerIsAdmin: map['ownerIsAdmin'] == true,
       isResolved: map['status']?.toString() == 'resolved',
       createdAt: Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
       timeAgo: relativeTime(createdAtMs),
@@ -166,6 +170,7 @@ class ItemModel {
     String? reward,
     bool clearReward = false,
     bool? isVerified,
+    bool? ownerIsAdmin,
     String? category,
     String? lostOn,
     double? latitude,
@@ -189,6 +194,7 @@ class ItemModel {
       isLost: isLost ?? this.isLost,
       reward: clearReward ? null : (reward ?? this.reward),
       isVerified: isVerified ?? this.isVerified,
+      ownerIsAdmin: ownerIsAdmin ?? this.ownerIsAdmin,
       category: category ?? this.category,
       lostOn: lostOn ?? this.lostOn,
       latitude: clearCoordinates ? null : (latitude ?? this.latitude),
@@ -216,6 +222,7 @@ class ItemModel {
         other.isLost == isLost &&
         other.reward == reward &&
         other.isVerified == isVerified &&
+        other.ownerIsAdmin == ownerIsAdmin &&
         other.category == category &&
         other.lostOn == lostOn &&
         other.latitude == latitude &&

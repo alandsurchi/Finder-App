@@ -152,7 +152,8 @@ const POST_SELECT = `
          u.full_name AS owner_full_name,
          u.nick_name AS owner_nick_name,
          u.avatar_url AS owner_avatar_url,
-         u.identity_verified AS owner_identity_verified
+         u.identity_verified AS owner_identity_verified,
+         u.is_admin AS owner_is_admin
   FROM posts p
   LEFT JOIN users u ON u.uid = p.owner_id`;
 
@@ -168,6 +169,7 @@ function mapPost(row) {
     ownerName: row.owner_full_name || row.owner_nick_name || 'Finder User',
     ownerAvatarUrl: row.owner_avatar_url || '',
     ownerVerified: truthy(row.owner_identity_verified),
+    ownerIsAdmin: truthy(row.owner_is_admin),
     location: row.location,
     imageUrl: row.image_url || '',
     lostOn: row.lost_on || null,

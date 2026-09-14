@@ -19,6 +19,7 @@ const fs = require('fs');
 const config = require('../config');
 const { upload, sniffImage } = require('./uploads');
 const { sendVerificationFile } = require('./admin');
+const { deleteUserData } = require('../lib/users');
 
 const bcrypt = require('bcryptjs');
 const { validate, schemas } = require('../lib/validate');
@@ -444,35 +445,7 @@ router.delete('/', verifyToken, validate(schemas.deleteAccount), async (req, res
       if (!ok) return res.status(401).json({ message: 'Incorrect password.' });
     }
 
-    const uid = req.userId;
-    // Chats the user took part in (their own posts' chats included).
-    const chatRows = await db.query(
-      `SELECT DISTINCT c.id FROM chats c
-       LEFT JOIN chat_participants cp ON cp.chat_id = c.id
-       LEFT JOIN posts p ON p.id = c.post_id
-       WHERE cp.user_id = $1 OR p.owner_id = $2`,
-      [uid, uid]
-    );
-    for (const row of chatRows) {
-      await db.exec('DELETE FROM messages WHERE chat_id = $1', [row.id]);
-      await db.exec('DELETE FROM chat_participants WHERE chat_id = $1', [row.id]);
-      await db.exec('DELETE FROM chats WHERE id = $1', [row.id]);
-    }
-    await db.exec('DELETE FROM saved_items WHERE user_id = $1 OR post_id IN (SELECT id FROM posts WHERE owner_id = $2)', [uid, uid]);
-    await db.exec('DELETE FROM reports WHERE reporter_id = $1 OR post_id IN (SELECT id FROM posts WHERE owner_id = $2)', [uid, uid]);
-    await db.exec('DELETE FROM posts WHERE owner_id = $1', [uid]);
-    await db.exec('DELETE FROM notifications WHERE user_id = $1', [uid]);
-    await db.exec('DELETE FROM blocked_users WHERE user_id = $1 OR blocked_user_id = $2', [uid, uid]);
-    await db.exec('DELETE FROM device_tokens WHERE user_id = $1', [uid]);
-    await db.exec('DELETE FROM verification_requests WHERE user_id = $1', [uid]);
-    try {
-      const dir = path.join(config.privateDir, 'verification');
-      for (const f of await fs.promises.readdir(dir).catch(() => [])) {
-        if (f.startsWith(`${uid}_`)) await fs.promises.unlink(path.join(dir, f)).catch(() => {});
-      }
-    } catch (_) { /* best effort */ }
-    await db.exec('DELETE FROM user_settings WHERE user_id = $1', [uid]);
-    await db.exec('DELETE FROM users WHERE uid = $1', [uid]);
+    await deleteUserData(req.userId);
 
     console.log(`[ACCOUNT DELETED] ${user.email}`);
     res.status(200).json({ message: 'Your account and data have been deleted.' });
@@ -503,6 +476,7 @@ router.get('/:userId', verifyToken, async (req, res) => {
       nickName: user.nick_name || '',
       avatarUrl: user.avatar_url || '',
       identityVerified: truthy(user.identity_verified),
+      isAdmin: truthy(user.is_admin),
       memberSinceMs: parseInt(user.created_at),
       createdAtMs: parseInt(user.created_at),
       postsCount: parseInt(countRow ? countRow.n : 0) || 0,

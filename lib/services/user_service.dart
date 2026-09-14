@@ -8,6 +8,7 @@ class UserSummary {
   final String nickName;
   final String avatarUrl;
   final bool identityVerified;
+  final bool isAdmin;
 
   const UserSummary({
     required this.uid,
@@ -15,6 +16,7 @@ class UserSummary {
     this.nickName = '',
     this.avatarUrl = '',
     this.identityVerified = false,
+    this.isAdmin = false,
   });
 
   String get displayName => fullName.isNotEmpty ? fullName : nickName;
@@ -25,6 +27,7 @@ class UserSummary {
         nickName: map['nickName']?.toString() ?? '',
         avatarUrl: map['avatarUrl']?.toString() ?? '',
         identityVerified: map['identityVerified'] == true,
+        isAdmin: map['isAdmin'] == true,
       );
 }
 

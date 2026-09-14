@@ -312,11 +312,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  userName,
+                NameWithMarks(
+                  name: userName,
+                  verified: _arg(ChatArgs.peerVerified) == '1',
+                  admin: _arg(ChatArgs.peerAdmin) == '1',
                   style: text.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 if (itemName.isNotEmpty)
                   Row(

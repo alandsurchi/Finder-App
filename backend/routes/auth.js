@@ -23,13 +23,25 @@ function verifyToken(req, res, next) {
     return res.status(401).json({ message: 'No bearer token provided.' });
   }
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.userId = decoded.userId;
-    next();
+    decoded = jwt.verify(token, JWT_SECRET);
   } catch (err) {
     return res.status(401).json({ message: 'Invalid or expired token.' });
   }
+  req.userId = decoded.userId;
+  // Suspended accounts lose access immediately, whatever token they hold.
+  db.queryOne('SELECT is_banned FROM users WHERE uid = $1', [decoded.userId])
+    .then(row => {
+      if (row && truthy(row.is_banned)) {
+        return res.status(401).json({ message: 'This account has been suspended. Contact support if you think this is a mistake.' });
+      }
+      next();
+    })
+    .catch(err => {
+      console.error('verifyToken lookup error:', err);
+      next();
+    });
 }
 
 // POST /auth/signup
@@ -121,6 +133,9 @@ router.post('/login', validate(schemas.login), async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Incorrect email or password.' });
+    }
+    if (truthy(user.is_banned)) {
+      return res.status(403).json({ message: 'This account has been suspended. Contact support if you think this is a mistake.' });
     }
 
     const isVerified = user.is_verified === 1 || user.is_verified === true || user.is_verified === 'true';
@@ -401,6 +416,9 @@ router.post('/google-login', validate(schemas.googleLogin), async (req, res) => 
 
     // Check if user already exists
     let user = await db.queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    if (user && truthy(user.is_banned)) {
+      return res.status(403).json({ message: 'This account has been suspended. Contact support if you think this is a mistake.' });
+    }
     let uid;
     
     if (!user) {

@@ -16,6 +16,7 @@ class ConversationModel {
   final String postStatus;
   final bool isOnline;
   final bool isVerified;
+  final bool isAdmin;
   final String avatarUrl;
 
   const ConversationModel({
@@ -34,6 +35,7 @@ class ConversationModel {
     this.postStatus = '',
     this.isOnline = false,
     this.isVerified = false,
+    this.isAdmin = false,
     this.avatarUrl = '',
   });
 
@@ -49,6 +51,8 @@ class ConversationModel {
 
     final resolvedName = namesMap[otherUserId]?.toString() ?? 'Finder User';
     final resolvedAvatar = avatarsMap[otherUserId]?.toString() ?? '';
+    final verifiedMap = Map<String, dynamic>.from(map['participantVerified'] ?? {});
+    final adminMap = Map<String, dynamic>.from(map['participantAdmin'] ?? {});
 
     return ConversationModel(
       chatId: id,
@@ -57,6 +61,8 @@ class ConversationModel {
       name: resolvedName,
       peerId: otherUserId == currentUserId ? '' : otherUserId,
       avatarUrl: resolvedAvatar,
+      isVerified: verifiedMap[otherUserId] == true,
+      isAdmin: adminMap[otherUserId] == true,
       message: map['lastMessage']?.toString() ?? '',
       lastMessageSenderId: map['lastMessageSenderId']?.toString() ?? '',
       lastUpdatedAt: map['lastUpdatedAt'] ?? Timestamp.now(),
@@ -85,6 +91,7 @@ class ConversationModel {
         other.postOwnerId == postOwnerId &&
         other.postStatus == postStatus &&
         other.isVerified == isVerified &&
+        other.isAdmin == isAdmin &&
         other.avatarUrl == avatarUrl;
   }
 

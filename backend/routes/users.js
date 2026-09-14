@@ -15,7 +15,7 @@ router.get('/search', verifyToken, validate(schemas.searchQuery, 'query'), async
   try {
     const like = `%${q}%`;
     const rows = await db.query(
-      `SELECT uid, full_name, nick_name, avatar_url, email, identity_verified
+      `SELECT uid, full_name, nick_name, avatar_url, email, identity_verified, is_admin
        FROM users
        WHERE uid != $1
          AND (LOWER(full_name) LIKE $2 OR LOWER(nick_name) LIKE $3 OR LOWER(email) LIKE $4)
@@ -33,6 +33,7 @@ router.get('/search', verifyToken, validate(schemas.searchQuery, 'query'), async
         nickName: r.nick_name || '',
         avatarUrl: r.avatar_url || '',
         identityVerified: truthy(r.identity_verified),
+        isAdmin: truthy(r.is_admin),
       }));
     res.status(200).json(users);
   } catch (err) {

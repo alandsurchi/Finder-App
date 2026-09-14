@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:finder/screens/admin/verification_queue_screen.dart';
+import 'package:finder/screens/admin/admin_console_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/screens/edit_profile_screen.dart';
@@ -169,9 +169,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        if (profile.identityVerified) ...[
+        if (profile.identityVerified || profile.isAdmin) ...[
           const SizedBox(height: BeaconSpace.sm),
-          StatusBadge.verified(),
+          Wrap(
+            spacing: BeaconSpace.sm,
+            children: [
+              if (profile.identityVerified) StatusBadge.verified(),
+              if (profile.isAdmin) adminBadge(),
+            ],
+          ),
         ],
       ],
     );
@@ -354,12 +360,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (profile.isAdmin)
                 SettingsTile(
                   icon: Icons.admin_panel_settings_outlined,
-                  title: 'Admin · Review queue',
-                  subtitle: 'Identity verification requests',
+                  iconColor: kAdminColor,
+                  title: 'Admin console',
+                  subtitle: 'Users, posts, reports and verification',
+                  trailing: adminBadge(),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (_) => const VerificationQueueScreen()),
+                    MaterialPageRoute(builder: (_) => const AdminConsoleScreen()),
                   ),
                 ),
             ],

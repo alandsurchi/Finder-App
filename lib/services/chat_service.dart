@@ -67,6 +67,8 @@ class ChatService {
         'participants': map['participants'],
         'participantNames': map['participantNames'],
         'participantAvatars': map['participantAvatars'],
+        'participantVerified': map['participantVerified'],
+        'participantAdmin': map['participantAdmin'],
         'lastMessage': map['lastMessageText'],
         'lastMessageSenderId': map['lastSenderId'],
         'lastUpdatedAt': Timestamp.fromMillisecondsSinceEpoch(updatedAtMs),

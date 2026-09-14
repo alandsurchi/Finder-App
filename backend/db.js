@@ -207,6 +207,10 @@ async function initDb() {
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS lost_on TEXT;');
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;');
       await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;');
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_banned BOOLEAN DEFAULT FALSE;');
+      await pgPool.query('ALTER TABLE reports ADD COLUMN IF NOT EXISTS reviewed_at_ms BIGINT;');
+      await pgPool.query('ALTER TABLE reports ADD COLUMN IF NOT EXISTS reviewer_id VARCHAR(255);');
+      await pgPool.query('ALTER TABLE reports ADD COLUMN IF NOT EXISTS resolution VARCHAR(32);');
       await pgPool.query('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS data TEXT;');
       await pgPool.query('ALTER TABLE verification_requests ADD COLUMN IF NOT EXISTS rejection_reason TEXT;');
       await pgPool.query('ALTER TABLE verification_requests ADD COLUMN IF NOT EXISTS reviewed_at_ms BIGINT;');
@@ -396,6 +400,10 @@ async function initDb() {
         sqliteDb.run('ALTER TABLE posts ADD COLUMN lost_on TEXT', () => {});
         sqliteDb.run('ALTER TABLE posts ADD COLUMN latitude REAL', () => {});
         sqliteDb.run('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0', () => {});
+        sqliteDb.run('ALTER TABLE users ADD COLUMN is_banned INTEGER DEFAULT 0', () => {});
+        sqliteDb.run('ALTER TABLE reports ADD COLUMN reviewed_at_ms INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE reports ADD COLUMN reviewer_id TEXT', () => {});
+        sqliteDb.run('ALTER TABLE reports ADD COLUMN resolution TEXT', () => {});
         sqliteDb.run('ALTER TABLE notifications ADD COLUMN data TEXT', () => {});
         sqliteDb.run('ALTER TABLE verification_requests ADD COLUMN rejection_reason TEXT', () => {});
         sqliteDb.run('ALTER TABLE verification_requests ADD COLUMN reviewed_at_ms INTEGER', () => {});

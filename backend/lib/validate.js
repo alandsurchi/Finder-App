@@ -116,6 +116,9 @@ const schemas = {
   }),
   verificationUpload: z.object({ slot: z.enum(['front', 'back', 'selfie']) }),
   rejectVerification: z.object({ reason: trimmed(300, 3) }),
+  adminFlag: z.object({ value: z.boolean() }),
+  adminPostStatus: z.object({ status: z.enum(['active', 'resolved']) }),
+  adminResolveReport: z.object({ action: z.enum(['dismiss', 'remove_post']) }),
   pushToken: z.object({
     token: trimmed(4096, 20),
     platform: z.enum(['android', 'ios', 'web']).default('android'),

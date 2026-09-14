@@ -15,6 +15,7 @@ const notificationsRouter = require('./routes/notifications');
 const usersRouter = require('./routes/users');
 const { router: uploadsRouter } = require('./routes/uploads');
 const { router: adminRouter } = require('./routes/admin');
+const { router: adminConsoleRouter } = require('./routes/admin_console');
 const push = require('./lib/push');
 const geoRouter = require('./routes/geo');
 const { initWebSocket } = require('./websocket');
@@ -84,6 +85,7 @@ app.use('/users', usersRouter);
 app.use('/uploads', uploadsRouter);
 app.use('/geo', geoRouter);
 app.use('/admin', adminRouter);
+app.use('/admin', adminConsoleRouter);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {

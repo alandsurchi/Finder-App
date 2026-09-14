@@ -188,10 +188,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildResultRow(_SearchEntry entry) {
+    final item = entry.item;
+    final t = AppColorTokens.of(context);
     return ItemCard(
-      item: entry.item,
+      item: item,
       layout: ItemCardLayout.row,
       heroTag: 'item-image-${entry.id}',
+      subtitle: (item.isVerified || item.ownerIsAdmin)
+          ? NameWithMarks(
+              name: (item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User',
+              verified: item.isVerified,
+              admin: item.ownerIsAdmin,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: t.primary),
+              markSize: 14,
+            )
+          : null,
       onTap: () => Navigator.pushNamed(
         context,
         AppRoutes.itemDetails,

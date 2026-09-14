@@ -10,6 +10,7 @@ import 'package:finder/features/posts/presentation/saved_items_controller.dart';
 import 'package:finder/widgets/ui/app_button.dart';
 import 'package:finder/widgets/ui/item_card.dart';
 import 'package:finder/widgets/ui/status_badge.dart';
+import 'package:finder/widgets/ui/identity_marks.dart';
 
 /// Legacy badge descriptor. LOST / FOUND / REWARD labels are rendered with
 /// the shared Beacon rule; any other label uses the supplied color.
@@ -75,16 +76,15 @@ class HomeItemCard extends ConsumerWidget {
       badges: _badges(),
       banner: bannerText,
       overlay: _SaveButton(item: item),
-      subtitle: verifiedUser != null
-          ? Row(
-              children: [
-                Icon(Icons.verified_rounded, color: t.primary, size: 14),
-                const SizedBox(width: BeaconSpace.xs),
-                Text(
-                  verifiedUser!,
-                  style: text.labelSmall?.copyWith(color: t.primary),
-                ),
-              ],
+      // Who posted it, with the verified tick / admin mark when they have one.
+      subtitle: (item.isVerified || item.ownerIsAdmin || verifiedUser != null)
+          ? NameWithMarks(
+              name: verifiedUser ??
+                  ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User'),
+              verified: item.isVerified || verifiedUser != null,
+              admin: item.ownerIsAdmin,
+              style: text.labelSmall?.copyWith(color: t.primary),
+              markSize: 14,
             )
           : null,
       footer: AppButton(
@@ -101,6 +101,8 @@ class HomeItemCard extends ConsumerWidget {
           itemName: item.title,
           postOwnerId: item.ownerId,
           postStatus: item.isResolved ? 'resolved' : 'active',
+          peerVerified: item.isVerified,
+          peerAdmin: item.ownerIsAdmin,
         ),
       ),
     );

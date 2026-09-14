@@ -204,7 +204,9 @@ router.delete('/:id', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'Post not found.' });
     }
     if (post.owner_id !== req.userId) {
-      return res.status(403).json({ message: 'You do not own this post.' });
+      const me = await db.queryOne('SELECT is_admin FROM users WHERE uid = $1', [req.userId]);
+      const isAdminUser = me && truthy(me.is_admin);
+      if (!isAdminUser) return res.status(403).json({ message: 'You do not own this post.' });
     }
 
     // SQLite does not enforce the foreign keys, so clean up by hand.

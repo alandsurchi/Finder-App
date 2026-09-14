@@ -7,6 +7,7 @@ import 'package:finder/routes.dart';
 import 'package:finder/models/conversation_model.dart';
 import 'package:finder/widgets/ui/app_avatar.dart';
 import 'package:finder/widgets/ui/surface_card.dart';
+import 'package:finder/widgets/ui/identity_marks.dart';
 
 class ConversationCard extends StatelessWidget {
   final ConversationModel convo;
@@ -35,6 +36,8 @@ class ConversationCard extends StatelessWidget {
             ChatArgs.postId: convo.postId,
             ChatArgs.postOwnerId: convo.postOwnerId,
             ChatArgs.postStatus: convo.postStatus,
+            ChatArgs.peerVerified: convo.isVerified ? '1' : '',
+            ChatArgs.peerAdmin: convo.isAdmin ? '1' : '',
           },
         );
       },
@@ -64,10 +67,11 @@ class ConversationCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (convo.isVerified) ...[
-                            const SizedBox(width: BeaconSpace.xs),
-                            Icon(Icons.verified_rounded, color: t.primary, size: 15),
-                          ],
+                          IdentityMarks(
+                            verified: convo.isVerified,
+                            admin: convo.isAdmin,
+                            size: 15,
+                          ),
                         ],
                       ),
                     ),

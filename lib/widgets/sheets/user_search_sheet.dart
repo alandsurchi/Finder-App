@@ -192,10 +192,11 @@ class _UserRow extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (user.identityVerified) ...[
-                            const SizedBox(width: BeaconSpace.xs),
-                            Icon(Icons.verified_rounded, color: t.primary, size: 15),
-                          ],
+                          IdentityMarks(
+                            verified: user.identityVerified,
+                            admin: user.isAdmin,
+                            size: 15,
+                          ),
                         ],
                       ),
                       if (user.nickName.isNotEmpty)
