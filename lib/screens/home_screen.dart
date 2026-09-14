@@ -47,6 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Scaffold(
       body: Stack(
         children: [
@@ -61,13 +62,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: _pages[_currentIndex],
             ),
           ),
+          // The bar slides away while the keyboard is open so text fields in
+          // Search, New post and Messages get the whole screen.
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: CustomBottomNavBar(
-              currentIndex: _currentIndex,
-              onTap: (i) => setState(() => _currentIndex = i),
+            child: AnimatedSlide(
+              offset: keyboardOpen ? const Offset(0, 1.2) : Offset.zero,
+              duration: BeaconMotion.scaled(context, BeaconMotion.state),
+              curve: Curves.easeOut,
+              child: IgnorePointer(
+                ignoring: keyboardOpen,
+                child: CustomBottomNavBar(
+                  currentIndex: _currentIndex,
+                  onTap: (i) => setState(() => _currentIndex = i),
+                ),
+              ),
             ),
           ),
         ],

@@ -56,6 +56,12 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Finder uses your location to place lost and found items on the map.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Finder uses the camera to photograph items you post.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Finder lets you attach photos from your library to posts and chats.</string>
 </dict>
 </plist>
 

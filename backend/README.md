@@ -85,6 +85,7 @@ UPDATE verification_requests SET status = 'approved' WHERE user_id = '<uid>';
 | Users | `GET /users/search?q=` |
 | Uploads | `POST /uploads` (multipart `file` + `folder` = `posts`/`avatars`/`chat`/`verification`) → `{url}`; files served from `/uploads/…` |
 | Account | `DELETE /profile` (`{password}` or `{confirm:"DELETE"}` for Google accounts) |
+| Geo | `GET /geo/search?q=` (places for a query), `GET /geo/reverse?lat=&lon=` (address at a point); proxied to OpenStreetMap Nominatim, cached, 60 req/min per user |
 | Legal | `GET /legal/privacy`, `GET /legal/terms` |
 
 All routes except `/auth/*` and `/health` need `Authorization: Bearer <token>`.

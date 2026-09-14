@@ -20,6 +20,7 @@ import 'package:finder/providers/user_provider.dart';
 import 'package:finder/providers/post_provider.dart';
 import 'package:finder/screens/edit_post_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:finder/screens/location_picker_screen.dart';
 
 class ItemDetailsScreen extends ConsumerWidget {
   const ItemDetailsScreen({super.key});
@@ -591,13 +592,38 @@ class ItemDetailsScreen extends ConsumerWidget {
             value: item.location.isEmpty ? null : item.location,
           ),
           const SizedBox(height: BeaconSpace.sm),
-          MapPlaceholder(
-            height: 140,
+          MapPreview(
+            latitude: item.latitude,
+            longitude: item.longitude,
+            height: 160,
             label: item.location.isEmpty ? 'Location not specified' : item.location,
+            onTap: item.hasCoordinates
+                ? () => LocationPickerScreen.view(context, item.place!,
+                    title: item.title)
+                : null,
           ),
+          if (item.hasCoordinates) ...[
+            const SizedBox(height: BeaconSpace.sm),
+            AppButton.ghost(
+              label: 'Open in Maps',
+              icon: Icons.directions_outlined,
+              size: AppButtonSize.medium,
+              onPressed: () => _openInMaps(context, item),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Future<void> _openInMaps(BuildContext context, ItemModel item) async {
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}',
+    );
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ActionFeedback.showError(context, 'Could not open a maps app.');
+    }
   }
 
   Widget _detailRow(

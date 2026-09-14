@@ -12,6 +12,9 @@ import 'package:finder/models/item_model.dart';
 import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
+import 'package:finder/features/location/place.dart';
+import 'package:finder/screens/location_picker_screen.dart';
+import 'package:finder/services/image_upload_service.dart' show ImageSourceKind;
 import 'package:finder/widgets/ui/ui.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
@@ -31,6 +34,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   String? _category;
   final _descCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
+  Place? _place;
+  bool _locating = false;
   final _dateCtrl = TextEditingController();
   DateTime? _selectedDateTime;
   final _rewardCtrl = TextEditingController();
@@ -191,13 +196,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             _MediaTile(
               icon: Icons.photo_camera_outlined,
               label: 'Camera',
-              onTap: busy ? null : _pickAndUploadImage,
+              onTap: busy ? null : () => _pickAndUploadImage(ImageSourceKind.camera),
             ),
             const SizedBox(width: BeaconSpace.md),
             _MediaTile(
               icon: Icons.photo_library_outlined,
               label: 'Gallery',
-              onTap: busy ? null : _pickAndUploadImage,
+              onTap: busy ? null : () => _pickAndUploadImage(ImageSourceKind.gallery),
             ),
             const SizedBox(width: BeaconSpace.md),
             if (_isUploadingImage)
@@ -339,10 +344,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(BeaconSpace.sm),
-                child: MapPlaceholder(
-                  height: 140,
+                child: MapPreview(
+                  latitude: _place?.latitude,
+                  longitude: _place?.longitude,
+                  height: 150,
                   label: location.isEmpty ? 'No location selected' : location,
-                  onTap: _isSubmitting ? null : _enterLocationManually,
+                  onTap: _isSubmitting ? null : _pickOnMap,
                 ),
               ),
               Padding(
@@ -355,19 +362,32 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       children: [
                         Expanded(
                           child: AppButton.tonal(
-                            label: 'Use current location',
+                            label: 'Locate me',
                             icon: Icons.my_location_rounded,
                             size: AppButtonSize.medium,
-                            onPressed: _isSubmitting ? null : _useCurrentLocationNow,
+                            isLoading: _locating,
+                            onPressed: (_isSubmitting || _locating)
+                                ? null
+                                : _useCurrentLocationNow,
                           ),
                         ),
                         const SizedBox(width: BeaconSpace.sm),
-                        AppButton.ghost(
-                          label: 'Enter manually',
-                          icon: Icons.edit_location_alt_outlined,
-                          onPressed: _isSubmitting ? null : _enterLocationManually,
+                        Expanded(
+                          child: AppButton.tonal(
+                            label: _place == null ? 'Open map' : 'Move pin',
+                            icon: Icons.map_outlined,
+                            size: AppButtonSize.medium,
+                            onPressed: _isSubmitting ? null : _pickOnMap,
+                          ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: BeaconSpace.sm),
+                    AppButton.ghost(
+                      label: 'Type an address instead',
+                      icon: Icons.edit_location_alt_outlined,
+                      size: AppButtonSize.medium,
+                      onPressed: _isSubmitting ? null : _enterLocationManually,
                     ),
                     const SizedBox(height: BeaconSpace.lg),
                     Row(
@@ -526,12 +546,33 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
   }
 
-  void _useCurrentLocationNow() {
+  Future<void> _useCurrentLocationNow() async {
+    if (_locating) return;
+    setState(() => _locating = true);
+    try {
+      final place = await ref.read(geoServiceProvider).currentPlace();
+      if (!mounted) return;
+      setState(() {
+        _place = place;
+        _locationCtrl.text = place.label;
+        _publicSearch = true;
+      });
+      _showMessage('Location set to ${place.label}.');
+    } catch (e) {
+      if (mounted) _showMessage(describeError(e), isError: true);
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
+  Future<void> _pickOnMap() async {
+    final picked = await LocationPickerScreen.pick(context, initial: _place);
+    if (!mounted || picked == null) return;
     setState(() {
-      _locationCtrl.text = 'Current location';
+      _place = picked;
+      _locationCtrl.text = picked.label;
       _publicSearch = true;
     });
-    _showMessage('Using your current location.');
   }
 
   Future<void> _enterLocationManually() async {
@@ -566,6 +607,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     if (!mounted || value == null) return;
     setState(() {
       _locationCtrl.text = value;
+      // A typed address has no pin; the map picker sets one again.
+      _place = null;
       _publicSearch = true;
     });
   }
@@ -706,6 +749,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           ? 'Unknown location'
           : _locationCtrl.text.trim(),
       lostOn: _dateCtrl.text.trim().isEmpty ? null : _dateCtrl.text.trim(),
+      latitude: _place?.latitude,
+      longitude: _place?.longitude,
       imagePath: _imagePath,
       timeAgo: 'Just now',
     );
@@ -753,13 +798,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     _titleCtrl.clear();
     _descCtrl.clear();
     _locationCtrl.clear();
+    _place = null;
     _rewardCtrl.clear();
     _imagePath = '';
     _selectedDateTime = DateTime.now();
     _dateCtrl.text = _formatDateTime(_selectedDateTime!);
   }
 
-  Future<void> _pickAndUploadImage() async {
+  Future<void> _pickAndUploadImage(ImageSourceKind source) async {
     final uid = ref.read(authStateProvider).userId ?? 'anon';
     setState(() => _isUploadingImage = true);
     try {
@@ -767,6 +813,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       final url = await ref.read(imageUploadServiceProvider).pickAndUpload(
         folder: 'posts',
         fileName: fileName,
+        source: source,
       );
       if (url != null && mounted) {
         setState(() => _imagePath = url);
@@ -786,6 +833,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       'category': _category,
       'description': _descCtrl.text,
       'location': _locationCtrl.text,
+      'latitude': _place?.latitude,
+      'longitude': _place?.longitude,
       'dateTime': _selectedDateTime?.millisecondsSinceEpoch,
       'reward': _rewardCtrl.text,
       'usePhone': _usePhone,
@@ -805,6 +854,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     _category = draft['category']?.toString() ?? _category;
     _descCtrl.text = draft['description']?.toString() ?? '';
     _locationCtrl.text = draft['location']?.toString() ?? '';
+    final lat = draft['latitude'];
+    final lng = draft['longitude'];
+    if (lat is double && lng is double) {
+      _place = Place(latitude: lat, longitude: lng, label: _locationCtrl.text);
+    }
 
     final dateMs = draft['dateTime'];
     if (dateMs is int) {

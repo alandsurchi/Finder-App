@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' show MediaType;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
@@ -88,6 +89,7 @@ class ApiClient {
     String path, {
     required Uint8List bytes,
     required String filename,
+    String? contentType,
     Map<String, String> fields = const {},
     Duration uploadTimeout = const Duration(seconds: 90),
   }) {
@@ -97,7 +99,12 @@ class ApiClient {
         final request = http.MultipartRequest('POST', _uri(path))
           ..headers.addAll(_headers()..remove('Content-Type'))
           ..fields.addAll(fields)
-          ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+          ..files.add(http.MultipartFile.fromBytes(
+            'file',
+            bytes,
+            filename: filename,
+            contentType: contentType == null ? null : MediaType.parse(contentType),
+          ));
         final streamed = await _http.send(request);
         return http.Response.fromStream(streamed);
       },

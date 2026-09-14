@@ -19,6 +19,7 @@ import '../../usecases/verify_reset_code.dart';
 import '../../usecases/verify_email.dart';
 import '../../usecases/resend_verification.dart';
 import '../../usecases/login_with_google.dart';
+import '../../services/geo_service.dart';
 
 /// The HTTP client. Overridden in `main()` with the initialised instance.
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -85,4 +86,8 @@ final savedItemsRepositoryProvider = Provider<SavedItemsRepository>(
 
 final imageUploadServiceProvider = Provider<ImageUploadService>(
   (ref) => ImageUploadService(apiClient: ref.read(apiClientProvider)),
+);
+
+final geoServiceProvider = Provider<GeoService>(
+  (ref) => GeoService(apiClient: ref.read(apiClientProvider)),
 );

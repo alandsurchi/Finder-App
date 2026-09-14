@@ -13,13 +13,31 @@ const router = express.Router();
 
 const FOLDERS = ['posts', 'avatars', 'chat', 'verification'];
 const MAX_BYTES = 8 * 1024 * 1024;
-const EXT_BY_MIME = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/gif': 'gif',
-  'image/heic': 'heic',
-};
+
+/**
+ * Detects the image format from its first bytes. Phones and browsers are
+ * unreliable about the Content-Type they send (often application/octet-stream),
+ * so the bytes decide, not the header.
+ */
+function sniffImage(buf) {
+  if (!buf || buf.length < 12) return null;
+  const ascii = (from, to) => buf.toString('latin1', from, to);
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return { mime: 'image/jpeg', ext: 'jpg' };
+  if (buf[0] === 0x89 && ascii(1, 4) === 'PNG') return { mime: 'image/png', ext: 'png' };
+  if (ascii(0, 6) === 'GIF87a' || ascii(0, 6) === 'GIF89a') return { mime: 'image/gif', ext: 'gif' };
+  if (ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP') return { mime: 'image/webp', ext: 'webp' };
+  if (buf[0] === 0x42 && buf[1] === 0x4d) return { mime: 'image/bmp', ext: 'bmp' };
+  if ((buf[0] === 0x49 && buf[1] === 0x49 && buf[2] === 0x2a && buf[3] === 0x00) ||
+      (buf[0] === 0x4d && buf[1] === 0x4d && buf[2] === 0x00 && buf[3] === 0x2a)) {
+    return { mime: 'image/tiff', ext: 'tif' };
+  }
+  if (ascii(4, 8) === 'ftyp') {
+    const brand = ascii(8, 12);
+    if (/^(heic|heix|hevc|hevx|mif1|msf1)/.test(brand)) return { mime: 'image/heic', ext: 'heic' };
+    if (/^avi[fs]/.test(brand)) return { mime: 'image/avif', ext: 'avif' };
+  }
+  return null;
+}
 
 for (const f of FOLDERS) fs.mkdirSync(path.join(config.uploadsDir, f), { recursive: true });
 
@@ -27,10 +45,13 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_BYTES, files: 1 },
   fileFilter: (req, file, cb) => {
-    if (!EXT_BY_MIME[file.mimetype]) {
-      return cb(Object.assign(new Error('Only JPEG, PNG, WebP, GIF or HEIC images are accepted.'), { status: 400 }));
+    const type = (file.mimetype || '').toLowerCase();
+    // Anything that claims to be an image, or has no useful type at all, is
+    // accepted here; the bytes are checked once the upload has finished.
+    if (type.startsWith('image/') || type === 'application/octet-stream' || type === '') {
+      return cb(null, true);
     }
-    cb(null, true);
+    cb(Object.assign(new Error('Please choose an image file.'), { status: 400 }));
   },
 });
 
@@ -57,7 +78,13 @@ router.post('/', verifyToken, (req, res, next) => {
   if (!req.file) return res.status(400).json({ message: 'No image received.' });
 
   try {
-    const ext = EXT_BY_MIME[req.file.mimetype];
+    // The declared Content-Type is never trusted: only files whose bytes are a
+    // real raster image are stored.
+    const sniffed = sniffImage(req.file.buffer);
+    const ext = sniffed ? sniffed.ext : null;
+    if (!ext) {
+      return res.status(400).json({ message: 'That file does not look like an image we can read.' });
+    }
     const name = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${ext}`;
     await fs.promises.writeFile(path.join(config.uploadsDir, folder, name), req.file.buffer);
     const url = `${publicBase(req)}/uploads/${folder}/${name}`;

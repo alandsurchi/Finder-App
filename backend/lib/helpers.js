@@ -131,6 +131,8 @@ function mapPost(row) {
     location: row.location,
     imageUrl: row.image_url || '',
     lostOn: row.lost_on || null,
+    latitude: row.latitude === null || row.latitude === undefined ? null : Number(row.latitude),
+    longitude: row.longitude === null || row.longitude === undefined ? null : Number(row.longitude),
     createdAtMs: parseInt(row.created_at_ms),
     updatedAtMs: parseInt(row.updated_at_ms),
     status: row.status || 'active',

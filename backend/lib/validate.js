@@ -51,6 +51,8 @@ const schemas = {
     location: trimmed(200, 1),
     imageUrl: httpUrl(500).optional(),
     lostOn: z.string().trim().max(40).nullable().optional(),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
   }),
   updatePost: z.object({
     title: trimmed(120, 3).optional(),
@@ -61,6 +63,8 @@ const schemas = {
     location: trimmed(200, 1).optional(),
     imageUrl: httpUrl(500).optional(),
     lostOn: z.string().trim().max(40).nullable().optional(),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
     status: z.enum(['active', 'resolved']).optional(),
   }),
   reportPost: z.object({ reason: optionalTrimmed(300) }),

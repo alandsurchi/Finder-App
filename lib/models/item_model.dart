@@ -1,5 +1,6 @@
 import '../core/utils/relative_time.dart';
 import '../core/utils/timestamp.dart';
+import '../features/location/place.dart';
 
 /// A lost or found post as the app sees it.
 ///
@@ -19,6 +20,8 @@ class ItemModel {
   final bool isVerified;
   final String category;
   final String? lostOn;
+  final double? latitude;
+  final double? longitude;
   final String? lastSeenAt;
   final String? ownerName;
   final String ownerAvatarUrl;
@@ -39,6 +42,8 @@ class ItemModel {
     this.isVerified = false,
     required this.category,
     this.lostOn,
+    this.latitude,
+    this.longitude,
     this.lastSeenAt,
     this.ownerName,
     this.ownerAvatarUrl = '',
@@ -48,6 +53,12 @@ class ItemModel {
 
   bool get hasReward => reward != null && reward!.trim().isNotEmpty;
   bool get hasImage => imagePath.trim().isNotEmpty;
+  bool get hasCoordinates => latitude != null && longitude != null;
+
+  /// The pinned place, when the post carries coordinates.
+  Place? get place => hasCoordinates
+      ? Place(latitude: latitude!, longitude: longitude!, label: location)
+      : null;
 
   /// Builds an item from a backend post object.
   factory ItemModel.fromApi(Map<String, dynamic> map) {
@@ -65,6 +76,8 @@ class ItemModel {
       location: map['location']?.toString() ?? '',
       imagePath: map['imageUrl']?.toString() ?? '',
       lostOn: map['lostOn']?.toString(),
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
       ownerName: map['ownerName']?.toString(),
       ownerAvatarUrl: map['ownerAvatarUrl']?.toString() ?? '',
       isVerified: map['ownerVerified'] == true,
@@ -85,6 +98,8 @@ class ItemModel {
       'location': location,
       'imageUrl': imagePath,
       'lostOn': lostOn,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -104,6 +119,8 @@ class ItemModel {
       isVerified: map['isVerified'] ?? false,
       category: map['category'] ?? 'All Items',
       lostOn: map['lostOn'],
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
       lastSeenAt: map['lastSeenAt'],
       ownerName: map['ownerName'],
       ownerAvatarUrl: map['ownerAvatarUrl'] ?? '',
@@ -126,6 +143,8 @@ class ItemModel {
       'isVerified': isVerified,
       'category': category,
       'lostOn': lostOn,
+      'latitude': latitude,
+      'longitude': longitude,
       'lastSeenAt': lastSeenAt,
       'ownerName': ownerName,
       'ownerAvatarUrl': ownerAvatarUrl,
@@ -149,6 +168,9 @@ class ItemModel {
     bool? isVerified,
     String? category,
     String? lostOn,
+    double? latitude,
+    double? longitude,
+    bool clearCoordinates = false,
     String? lastSeenAt,
     String? ownerName,
     String? ownerAvatarUrl,
@@ -169,6 +191,8 @@ class ItemModel {
       isVerified: isVerified ?? this.isVerified,
       category: category ?? this.category,
       lostOn: lostOn ?? this.lostOn,
+      latitude: clearCoordinates ? null : (latitude ?? this.latitude),
+      longitude: clearCoordinates ? null : (longitude ?? this.longitude),
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       ownerName: ownerName ?? this.ownerName,
       ownerAvatarUrl: ownerAvatarUrl ?? this.ownerAvatarUrl,

@@ -16,6 +16,7 @@ export 'beacon_pulse.dart';
 export 'item_card.dart';
 export 'item_image.dart';
 export 'map_placeholder.dart';
+export 'map_preview.dart';
 export 'press_scale.dart';
 export 'search_field.dart';
 export 'settings_tile.dart';

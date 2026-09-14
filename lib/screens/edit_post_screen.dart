@@ -7,6 +7,8 @@ import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
+import 'package:finder/features/location/place.dart';
+import 'package:finder/screens/location_picker_screen.dart';
 
 class EditPostScreen extends ConsumerStatefulWidget {
   final ItemModel post;
@@ -30,6 +32,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
 
   bool _isSaving = false;
   bool _isUploadingImage = false;
+  Place? _place;
 
   @override
   void initState() {
@@ -44,6 +47,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
     _lostOnCtrl = TextEditingController(text: p.lostOn ?? '');
     _rewardCtrl = TextEditingController(text: p.reward ?? '');
     _imageCtrl = TextEditingController(text: p.imagePath);
+    _place = p.place;
   }
 
   @override
@@ -84,6 +88,9 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
           ? 'Unknown location'
           : _locationCtrl.text.trim(),
       lostOn: _lostOnCtrl.text.trim().isEmpty ? null : _lostOnCtrl.text.trim(),
+      latitude: _place?.latitude,
+      longitude: _place?.longitude,
+      clearCoordinates: _place == null,
       reward: _rewardCtrl.text.trim().isEmpty ? null : _rewardCtrl.text.trim(),
       clearReward: _rewardCtrl.text.trim().isEmpty,
       imagePath: _imageCtrl.text.trim(),
@@ -201,12 +208,30 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          MapPreview(
+                            latitude: _place?.latitude,
+                            longitude: _place?.longitude,
+                            height: 140,
+                            label: _locationCtrl.text.trim().isEmpty
+                                ? 'No location selected'
+                                : _locationCtrl.text.trim(),
+                            onTap: _isSaving ? null : _pickOnMap,
+                          ),
+                          const SizedBox(height: BeaconSpace.md),
                           AppTextField(
                             controller: _locationCtrl,
                             label: 'Location',
                             hint: 'Where was it lost or found?',
                             prefixIcon: Icons.place_outlined,
                             textInputAction: TextInputAction.next,
+                            onChanged: (_) => setState(() {}),
+                          ),
+                          const SizedBox(height: BeaconSpace.sm),
+                          AppButton.ghost(
+                            label: _place == null ? 'Pick on map' : 'Move pin on map',
+                            icon: Icons.map_outlined,
+                            size: AppButtonSize.medium,
+                            onPressed: _isSaving ? null : _pickOnMap,
                           ),
                           const SizedBox(height: BeaconSpace.lg),
                           AppTextField(
@@ -306,6 +331,15 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
         '${combined.year}-${combined.month.toString().padLeft(2, '0')}-${combined.day.toString().padLeft(2, '0')} '
         '${combined.hour.toString().padLeft(2, '0')}:'
         '${combined.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _pickOnMap() async {
+    final picked = await LocationPickerScreen.pick(context, initial: _place);
+    if (!mounted || picked == null) return;
+    setState(() {
+      _place = picked;
+      _locationCtrl.text = picked.label;
+    });
   }
 
   Widget _buildImagePicker(AppColorTokens t) {

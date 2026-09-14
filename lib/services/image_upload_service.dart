@@ -11,6 +11,10 @@ import 'package:image_picker/image_picker.dart';
 
 import '../core/errors/exceptions.dart';
 import '../core/network/api_client.dart';
+import '../core/utils/image_mime.dart';
+
+/// Where a picked image comes from.
+enum ImageSourceKind { gallery, camera }
 
 /// Picks an image and uploads it to the Finder backend (`POST /uploads`),
 /// which stores it on its own volume and returns the public URL.
@@ -22,36 +26,59 @@ class ImageUploadService {
   static const int maxBytes = 8 * 1024 * 1024;
 
   /// Returns the public URL, or null when the user cancelled the picker.
+  ///
+  /// On the web the browser's file dialog is used for both sources.
   Future<String?> pickAndUpload({
     required String folder,
     required String fileName,
+    ImageSourceKind source = ImageSourceKind.gallery,
   }) {
     if (kIsWeb) {
       return web_picker.webPickAndUpload(folder: folder, upload: _upload);
     }
-    return _mobilePickAndUpload(folder: folder);
+    return _mobilePickAndUpload(folder: folder, source: source);
   }
 
-  Future<String?> _mobilePickAndUpload({required String folder}) async {
-    final picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-      maxWidth: 1600,
-      maxHeight: 1600,
-    );
+  Future<String?> _mobilePickAndUpload({
+    required String folder,
+    required ImageSourceKind source,
+  }) async {
+    final picker = ImagePicker();
+    final XFile? picked;
+    try {
+      picked = await picker.pickImage(
+        source: source == ImageSourceKind.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+        // Re-encodes large photos (including HEIC on most devices) to a
+        // JPEG the whole app can display, and keeps uploads small.
+        imageQuality: 82,
+        maxWidth: 1800,
+        maxHeight: 1800,
+        requestFullMetadata: false,
+      );
+    } catch (e) {
+      throw ValidationException(_describePickerError(e, source));
+    }
     if (picked == null) return null;
     final bytes = await picked.readAsBytes();
     return _upload(bytes, folder: folder);
   }
 
   Future<String> _upload(Uint8List bytes, {required String folder}) async {
+    if (bytes.isEmpty) {
+      throw const ValidationException('The selected file is empty.');
+    }
     if (bytes.lengthInBytes > maxBytes) {
       throw const ValidationException('Please choose an image under 8 MB.');
     }
+    // Label the upload from its bytes; the picker's own type is unreliable.
+    final kind = sniffImage(bytes);
     final res = await _apiClient.uploadFile(
       '/uploads',
       bytes: bytes,
-      filename: 'image.jpg',
+      filename: 'image.${kind?.extension ?? 'bin'}',
+      contentType: kind?.mime ?? 'application/octet-stream',
       fields: {'folder': folder},
     );
     final url = (res as Map)['url']?.toString();
@@ -59,5 +86,18 @@ class ImageUploadService {
       throw const UnknownException('The server returned no image URL.');
     }
     return url;
+  }
+
+  String _describePickerError(Object e, ImageSourceKind source) {
+    final text = e.toString().toLowerCase();
+    if (text.contains('camera_access_denied') || text.contains('camera')) {
+      return 'Camera access was denied. Allow it in your phone settings or choose a photo from the gallery.';
+    }
+    if (text.contains('photo_access_denied') || text.contains('permission')) {
+      return 'Photo access was denied. Allow it in your phone settings and try again.';
+    }
+    return source == ImageSourceKind.camera
+        ? 'Could not open the camera.'
+        : 'Could not open the photo picker.';
   }
 }

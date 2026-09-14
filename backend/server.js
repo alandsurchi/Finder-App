@@ -14,6 +14,7 @@ const profileRouter = require('./routes/profile');
 const notificationsRouter = require('./routes/notifications');
 const usersRouter = require('./routes/users');
 const uploadsRouter = require('./routes/uploads');
+const geoRouter = require('./routes/geo');
 const { initWebSocket } = require('./websocket');
 
 const app = express();
@@ -79,6 +80,7 @@ app.use('/profile', profileRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/users', usersRouter);
 app.use('/uploads', uploadsRouter);
+app.use('/geo', geoRouter);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
