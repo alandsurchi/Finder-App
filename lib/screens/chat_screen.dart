@@ -23,18 +23,36 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _sending = false;
   bool _uploading = false;
   int _lastCount = 0;
+  double _lastKeyboard = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// When the keyboard slides up the list shrinks; keep the latest message
+  /// in view instead of leaving it hidden behind the composer.
+  @override
+  void didChangeMetrics() {
+    final keyboard = View.of(context).viewInsets.bottom;
+    if (keyboard > _lastKeyboard) _scrollToBottom();
+    _lastKeyboard = keyboard;
   }
 
   Map<String, dynamic> get _args {

@@ -20,7 +20,9 @@ class AppBottomSheet extends StatelessWidget {
     required this.child,
     this.actions = const [],
     this.scrollable = true,
-    this.contentPadding = const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
+    this.contentPadding = const EdgeInsets.symmetric(
+      horizontal: BeaconSpace.page,
+    ),
     this.maxHeightFactor,
   });
 
@@ -48,12 +50,21 @@ class AppBottomSheet extends StatelessWidget {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final media = MediaQuery.of(context);
-    final maxH = media.size.height * (maxHeightFactor ?? 0.88);
+    // The keyboard eats part of the screen: size the sheet against what is
+    // left and lift the whole sheet above it, so text fields inside sheets
+    // (user search, reasons, filters) are never hidden behind it.
+    final keyboard = media.viewInsets.bottom;
+    final available = media.size.height - keyboard - media.padding.top;
+    final maxH = available * (maxHeightFactor ?? 0.88);
 
     final header = (title != null)
         ? Padding(
             padding: const EdgeInsets.fromLTRB(
-                BeaconSpace.page, 0, BeaconSpace.sm, BeaconSpace.md),
+              BeaconSpace.page,
+              0,
+              BeaconSpace.sm,
+              BeaconSpace.md,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -81,51 +92,56 @@ class AppBottomSheet extends StatelessWidget {
 
     final content = Padding(padding: contentPadding, child: child);
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxH),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: BeaconSpace.md),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: t.outline,
-              borderRadius: BeaconRadius.rPill,
+    return AnimatedPadding(
+      padding: EdgeInsets.only(bottom: keyboard),
+      duration: BeaconMotion.scaled(context, BeaconMotion.state),
+      curve: Curves.easeOut,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxH),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: BeaconSpace.md),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: t.outline,
+                borderRadius: BeaconRadius.rPill,
+              ),
             ),
-          ),
-          const SizedBox(height: BeaconSpace.lg),
-          header,
-          if (scrollable)
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: actions.isEmpty ? BeaconSpace.xxl : BeaconSpace.lg,
+            const SizedBox(height: BeaconSpace.lg),
+            header,
+            if (scrollable)
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    bottom: actions.isEmpty ? BeaconSpace.xxl : BeaconSpace.lg,
+                  ),
+                  child: content,
                 ),
-                child: content,
-              ),
-            )
-          else
-            content,
-          if (actions.isNotEmpty)
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                BeaconSpace.page,
-                BeaconSpace.sm,
-                BeaconSpace.page,
-                BeaconSpace.lg + media.viewInsets.bottom,
-              ),
-              child: Row(
-                children: [
-                  for (var i = 0; i < actions.length; i++) ...[
-                    if (i > 0) const SizedBox(width: BeaconSpace.md),
-                    Expanded(child: actions[i]),
+              )
+            else
+              content,
+            if (actions.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  BeaconSpace.page,
+                  BeaconSpace.sm,
+                  BeaconSpace.page,
+                  BeaconSpace.lg,
+                ),
+                child: Row(
+                  children: [
+                    for (var i = 0; i < actions.length; i++) ...[
+                      if (i > 0) const SizedBox(width: BeaconSpace.md),
+                      Expanded(child: actions[i]),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -163,12 +179,19 @@ class SheetOption extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-              horizontal: BeaconSpace.lg, vertical: BeaconSpace.md),
+            horizontal: BeaconSpace.lg,
+            vertical: BeaconSpace.md,
+          ),
           child: Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: BeaconIcon.md,
-                    color: destructive ? t.error : (selected ? t.primary : t.onSurfaceVar)),
+                Icon(
+                  icon,
+                  size: BeaconIcon.md,
+                  color: destructive
+                      ? t.error
+                      : (selected ? t.primary : t.onSurfaceVar),
+                ),
                 const SizedBox(width: BeaconSpace.md),
               ],
               Expanded(
@@ -176,7 +199,8 @@ class SheetOption extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(label, style: text.titleMedium?.copyWith(color: fg)),
-                    if (subtitle != null) Text(subtitle!, style: text.bodySmall),
+                    if (subtitle != null)
+                      Text(subtitle!, style: text.bodySmall),
                   ],
                 ),
               ),

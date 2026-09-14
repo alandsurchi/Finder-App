@@ -46,6 +46,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
       peerName: user.displayName,
       peerAvatarUrl: user.avatarUrl,
     );
+    // The conversation exists on the server now; list it without waiting
+    // for the next poll.
+    if (mounted) ref.invalidate(conversationsStreamProvider);
   }
 
   @override

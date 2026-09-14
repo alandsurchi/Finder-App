@@ -96,7 +96,7 @@ class _UserSearchSheetState extends ConsumerState<_UserSearchSheet> {
     return AppBottomSheet(
       title: widget.title,
       subtitle: 'Type at least two letters of a name or e-mail address.',
-      maxHeightFactor: 0.8,
+      maxHeightFactor: 0.9,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
