@@ -235,6 +235,14 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
       data: (profile) => profile.avatarUrl as String? ?? '',
       orElse: () => '',
     );
+    final verified = profileState.maybeWhen(
+      data: (profile) => profile.identityVerified == true,
+      orElse: () => false,
+    );
+    final admin = profileState.maybeWhen(
+      data: (profile) => profile.isAdmin == true,
+      orElse: () => false,
+    );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -259,11 +267,12 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(_greeting(), style: text.bodySmall),
-                            Text(
-                              userName,
+                            NameWithMarks(
+                              name: userName,
+                              verified: verified,
+                              admin: admin,
                               style: text.headlineSmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              markSize: 20,
                             ),
                           ],
                         ),
