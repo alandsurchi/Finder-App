@@ -17,7 +17,11 @@ workflows:
         API_URL: https://finder-app-production-7c49.up.railway.app
     scripts:
       - name: Flutter packages
-        script: flutter pub get
+        script: |
+          # Plugins are integrated through CocoaPods (ios/Podfile pins iOS 15 for
+          # Firebase); Flutter's Swift Package Manager mode must stay off.
+          flutter config --no-enable-swift-package-manager
+          flutter pub get
       - name: Build (no code signing)
         script: |
           flutter build ios --release --no-codesign \
@@ -53,7 +57,11 @@ workflows:
         APP_STORE_APPLE_ID: 0000000000   # App Store Connect → App → App Information → Apple ID
     scripts:
       - name: Flutter packages
-        script: flutter pub get
+        script: |
+          # Plugins are integrated through CocoaPods (ios/Podfile pins iOS 15 for
+          # Firebase); Flutter's Swift Package Manager mode must stay off.
+          flutter config --no-enable-swift-package-manager
+          flutter pub get
       - name: Signing files
         script: xcode-project use-profiles
       - name: Build signed .ipa
