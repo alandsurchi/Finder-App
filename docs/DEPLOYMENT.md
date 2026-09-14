@@ -88,6 +88,34 @@ If the signing key changes (for example Play App Signing), add a new Android cli
 new SHA-1. To host the web build somewhere other than localhost, add that origin to the Web
 client's authorised JavaScript origins. iOS has no client yet.
 
+### Push notifications (Firebase Cloud Messaging)
+
+Railway cannot wake a closed phone app, so push goes through FCM (free). Everything else stays on
+Railway: the app lists notifications from our own database; FCM only rings the phone.
+
+1. Firebase console → **Add project** → pick the existing Google Cloud project **Finder App**
+   (`finder-app-508520`) so it shares the OAuth clients.
+2. Add an Android app with package `com.finderapp.finder` and the two SHA-1s; download
+   `google-services.json` into `android/app/` (it is not a secret and is committed).
+3. Project settings → Service accounts → **Generate new private key**. Encode it and store it on
+   Railway as `FIREBASE_SERVICE_ACCOUNT`, then delete the key file locally:
+
+   ```powershell
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes('service-account.json')) | Set-Clipboard
+   ```
+
+4. `/health` reports `"push": "fcm"` once the variable is set. iOS additionally needs an APNs key
+   from an Apple developer account uploaded in Firebase → Cloud Messaging (pending).
+
+### Admin accounts and identity verification
+
+`ADMIN_EMAILS` (comma separated) lists the accounts that can review identity verification
+requests from **Profile → Admin · Review queue** in the app. Documents and selfies are stored under
+`PRIVATE_DIR` (`/data/private` on the Railway volume), never under the public `/uploads` path, and
+are only served to their owner and to admins with a valid token. Approving sets the verified
+badge; rejecting sends the reason to the user, who can submit new photos. This is a human review;
+automated document/face checks would need a KYC provider (the `provider_ref` column is reserved).
+
 ### Web hosting
 
 `flutter build web --release --dart-define=API_URL=…` produces `build/web`. Serve it from any static host (Netlify, Vercel, Cloudflare Pages, Firebase Hosting) and add its origin to `CORS_ORIGINS` on the API.

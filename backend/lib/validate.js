@@ -22,6 +22,10 @@ const password = z.string()
   });
 const sixDigits = z.string().trim().regex(/^\d{6}$/, 'Code must be 6 digits.');
 const id = z.string().trim().min(1).max(200);
+const verificationRef = z.string().trim().max(500).refine(
+  v => v === '' || /^https:\/\//i.test(v) || /^[A-Za-z0-9_.-]{8,200}$/.test(v),
+  'must be an upload id or an https URL'
+);
 const optionalBool = z.boolean().optional();
 
 const schemas = {
@@ -104,10 +108,19 @@ const schemas = {
   }),
   verification: z.object({
     docType: z.enum(['passport', 'id_card', 'drivers_license']),
-    frontUrl: httpUrl(500).refine(v => v.length > 0, 'frontUrl is required'),
-    backUrl: httpUrl(500).optional(),
-    selfieUrl: httpUrl(500).refine(v => v.length > 0, 'selfieUrl is required'),
+    // Either a private file id returned by POST /profile/verification/upload
+    // or (legacy) an https URL.
+    frontUrl: verificationRef.refine(v => v.length > 0, 'frontUrl is required'),
+    backUrl: verificationRef.optional(),
+    selfieUrl: verificationRef.refine(v => v.length > 0, 'selfieUrl is required'),
   }),
+  verificationUpload: z.object({ slot: z.enum(['front', 'back', 'selfie']) }),
+  rejectVerification: z.object({ reason: trimmed(300, 3) }),
+  pushToken: z.object({
+    token: trimmed(4096, 20),
+    platform: z.enum(['android', 'ios', 'web']).default('android'),
+  }),
+  removePushToken: z.object({ token: trimmed(4096, 20) }),
   blockUser: z.object({ blockedUserId: id }),
   savePost: z.object({ postId: id }),
 

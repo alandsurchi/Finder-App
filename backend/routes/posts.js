@@ -2,7 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { verifyToken } = require('./auth');
 const crypto = require('crypto');
-const { POST_SELECT, mapPost, bool, truthy, notify, blockedIdsFor } = require('../lib/helpers');
+const { POST_SELECT, mapPost, bool, truthy, notify, blockedIdsFor, getSettings } = require('../lib/helpers');
 const { validate, schemas } = require('../lib/validate');
 
 const router = express.Router();
@@ -175,10 +175,13 @@ router.put('/:id', verifyToken, validate(schemas.updatePost), async (req, res) =
         [id, req.userId]
       );
       for (const peer of peers) {
+        const settings = await getSettings(peer.user_id);
+        if (!settings.notify_updates) continue;
         await notify(peer.user_id, {
-          title: 'Item resolved',
-          message: `"${post.title}" has been marked as resolved.`,
+          title: 'Item returned',
+          message: `"${post.title}" has been marked as returned to its owner.`,
           type: 'update',
+          data: { type: 'post_resolved', postId: id },
         });
       }
     }

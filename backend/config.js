@@ -36,6 +36,20 @@ function readCorsOrigins() {
   return raw.split(',').map(s => s.trim()).filter(Boolean);
 }
 
+function readServiceAccount() {
+  const raw = (process.env.FIREBASE_SERVICE_ACCOUNT || '').trim();
+  if (!raw) return null;
+  try {
+    const json = raw.startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8');
+    const parsed = JSON.parse(json);
+    if (!parsed.project_id || !parsed.private_key) throw new Error('missing project_id/private_key');
+    return parsed;
+  } catch (err) {
+    console.error('FIREBASE_SERVICE_ACCOUNT is not valid service-account JSON (base64 or raw):', err.message);
+    return null;
+  }
+}
+
 const config = {
   isProduction,
   port: parseInt(process.env.PORT, 10) || 3001,
@@ -55,6 +69,13 @@ const config = {
   // OAuth client ids whose Google ID tokens the API accepts (comma separated).
   // The Web client id is the audience for both the web app and Android
   // (Android passes it as serverClientId).
+  // E-mail addresses that get the admin role (verification review queue).
+  adminEmails: (process.env.ADMIN_EMAILS || '')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+  // Firebase Cloud Messaging service account (base64 JSON). Null disables push.
+  firebaseServiceAccount: readServiceAccount(),
+  // Files that must never be served publicly (identity documents, selfies).
+  privateDir: path.resolve(process.env.PRIVATE_DIR || path.join(process.env.UPLOADS_DIR ? path.dirname(path.resolve(process.env.UPLOADS_DIR)) : __dirname, 'private')),
   googleClientIds: (process.env.GOOGLE_CLIENT_IDS || '209379285612-tbfoc97sjf1p4c5lv3kvmoaub3n0a8h5.apps.googleusercontent.com')
     .split(',').map(s => s.trim()).filter(Boolean),
 };

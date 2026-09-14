@@ -93,17 +93,57 @@ async function saveSettings(userId, patch) {
   return next;
 }
 
-/** Insert a notification row. `type` is one of message | match | update | system. */
-async function notify(userId, { title, message, type = 'system' }) {
+/**
+ * Insert a notification row and push it to the user's phones.
+ * `type` is one of message | match | update | system; `data` is a small
+ * string map the app uses to deep-link (chatId, postId, ...).
+ */
+async function notify(userId, { title, message, type = 'system', data = null, push = true }) {
   if (!userId) return null;
   const id = crypto.randomUUID();
   const now = Date.now();
   await db.exec(
-    `INSERT INTO notifications (id, user_id, title, message, type, is_unread, created_at_ms)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [id, userId, title, message, type, bool(true), now]
+    `INSERT INTO notifications (id, user_id, title, message, type, is_unread, created_at_ms, data)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [id, userId, title, message, type, bool(true), now, data ? JSON.stringify(data) : null]
   );
-  return { id, title, message, type, isUnread: true, createdAtMs: now };
+  if (push) {
+    const payload = { ...(data || {}), type: (data && data.type) || type, notificationId: id };
+    const collapseKey = payload.chatId || payload.postId || undefined;
+    // Fire and forget: a slow FCM call must never delay the API response.
+    require('./push').sendPush(userId, { title, body: message, data: payload, collapseKey })
+      .catch(err => console.error('PUSH: unexpected error:', err.message));
+  }
+  return { id, title, message, type, isUnread: true, createdAtMs: now, data };
+}
+
+/** Parses the JSON `data` column of a notification row. */
+function parseNotificationData(raw) {
+  if (!raw) return null;
+  try {
+    const v = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return v && typeof v === 'object' ? v : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function isAdminEmail(email) {
+  const config = require('../config');
+  return !!email && config.adminEmails.includes(String(email).toLowerCase().trim());
+}
+
+/**
+ * Effective admin flag for a user row, promoting the row the first time an
+ * ADMIN_EMAILS account is seen. Safe to call on every /auth/me.
+ */
+async function syncAdminFlag(user) {
+  if (!user) return false;
+  if (truthy(user.is_admin)) return true;
+  if (!isAdminEmail(user.email)) return false;
+  await db.exec('UPDATE users SET is_admin = $1 WHERE uid = $2', [bool(true), user.uid]);
+  user.is_admin = true;
+  return true;
 }
 
 /** SELECT fragment + mapper so every post response has the same shape. */
@@ -152,6 +192,9 @@ function mapMessage(row) {
 }
 
 module.exports = {
+  parseNotificationData,
+  isAdminEmail,
+  syncAdminFlag,
   smtpConfigured,
   truthy,
   bool,

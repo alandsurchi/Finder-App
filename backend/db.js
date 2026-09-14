@@ -206,6 +206,19 @@ async function initDb() {
       await pgPool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(20) DEFAULT 'email';");
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS lost_on TEXT;');
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;');
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;');
+      await pgPool.query('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS data TEXT;');
+      await pgPool.query('ALTER TABLE verification_requests ADD COLUMN IF NOT EXISTS rejection_reason TEXT;');
+      await pgPool.query('ALTER TABLE verification_requests ADD COLUMN IF NOT EXISTS reviewed_at_ms BIGINT;');
+      await pgPool.query('ALTER TABLE verification_requests ADD COLUMN IF NOT EXISTS reviewer_id VARCHAR(255);');
+      await pgPool.query('ALTER TABLE verification_requests ADD COLUMN IF NOT EXISTS provider_ref TEXT;');
+      await pgPool.query(`CREATE TABLE IF NOT EXISTS device_tokens (
+        token VARCHAR(4096) PRIMARY KEY,
+        user_id VARCHAR(255) REFERENCES users(uid) ON DELETE CASCADE,
+        platform VARCHAR(16) DEFAULT 'android',
+        updated_at_ms BIGINT NOT NULL
+      );`);
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_device_tokens_user ON device_tokens(user_id);');
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;');
       await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;');
       await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_messages BOOLEAN DEFAULT TRUE;');
@@ -382,6 +395,22 @@ async function initDb() {
         sqliteDb.run("ALTER TABLE users ADD COLUMN auth_provider TEXT DEFAULT 'email'", () => {});
         sqliteDb.run('ALTER TABLE posts ADD COLUMN lost_on TEXT', () => {});
         sqliteDb.run('ALTER TABLE posts ADD COLUMN latitude REAL', () => {});
+        sqliteDb.run('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0', () => {});
+        sqliteDb.run('ALTER TABLE notifications ADD COLUMN data TEXT', () => {});
+        sqliteDb.run('ALTER TABLE verification_requests ADD COLUMN rejection_reason TEXT', () => {});
+        sqliteDb.run('ALTER TABLE verification_requests ADD COLUMN reviewed_at_ms INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE verification_requests ADD COLUMN reviewer_id TEXT', () => {});
+        sqliteDb.run('ALTER TABLE verification_requests ADD COLUMN provider_ref TEXT', () => {});
+        sqliteDb.run(`
+          CREATE TABLE IF NOT EXISTS device_tokens (
+            token TEXT PRIMARY KEY,
+            user_id TEXT,
+            platform TEXT DEFAULT 'android',
+            updated_at_ms INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(uid) ON DELETE CASCADE
+          )
+        `);
+        sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_device_tokens_user ON device_tokens(user_id)');
         sqliteDb.run('ALTER TABLE posts ADD COLUMN longitude REAL', () => {});
         sqliteDb.run('ALTER TABLE messages ADD COLUMN image_url TEXT', () => {});
         sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_messages INTEGER DEFAULT 1', () => {});

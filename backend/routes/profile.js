@@ -11,7 +11,13 @@ const {
   mapPost,
   displayName,
   bool,
+  syncAdminFlag,
 } = require('../lib/helpers');
+const path = require('path');
+const fs = require('fs');
+const config = require('../config');
+const { upload, sniffImage } = require('./uploads');
+const { sendVerificationFile } = require('./admin');
 
 const bcrypt = require('bcryptjs');
 const { validate, schemas } = require('../lib/validate');
@@ -29,6 +35,7 @@ function ownProfile(user) {
     job: user.job || '',
     avatarUrl: user.avatar_url || '',
     identityVerified: truthy(user.identity_verified),
+    isAdmin: truthy(user.is_admin),
     authProvider: user.auth_provider || 'email',
     createdAtMs: parseInt(user.created_at),
   };
@@ -39,6 +46,7 @@ router.get('/', verifyToken, async (req, res) => {
   try {
     const user = await db.queryOne('SELECT * FROM users WHERE uid = $1', [req.userId]);
     if (!user) return res.status(404).json({ message: 'User not found.' });
+    await syncAdminFlag(user);
     res.status(200).json(ownProfile(user));
   } catch (err) {
     console.error('Get profile error:', err);
@@ -167,6 +175,8 @@ router.get('/verification', verifyToken, async (req, res) => {
       status: latest.status,
       docType: latest.doc_type,
       createdAtMs: parseInt(latest.created_at_ms),
+      reviewedAtMs: latest.reviewed_at_ms ? parseInt(latest.reviewed_at_ms) : null,
+      rejectionReason: latest.rejection_reason || null,
     });
   } catch (err) {
     console.error('Get verification error:', err);
@@ -191,6 +201,11 @@ router.post('/verification', verifyToken, validate(schemas.verification), async 
     if (pending) {
       return res.status(400).json({ message: 'You already have a verification request under review.' });
     }
+    for (const ref of [frontUrl, backUrl, selfieUrl]) {
+      if (ref && !/^https?:\/\//i.test(ref) && !ref.startsWith(`${req.userId}_`)) {
+        return res.status(400).json({ message: 'Upload ids must come from your own uploads.' });
+      }
+    }
     const now = Date.now();
     await db.exec(
       `INSERT INTO verification_requests (id, user_id, doc_type, front_url, back_url, selfie_url, status, created_at_ms)
@@ -201,6 +216,82 @@ router.post('/verification', verifyToken, validate(schemas.verification), async 
   } catch (err) {
     console.error('Submit verification error:', err);
     res.status(500).json({ message: 'Error submitting verification.' });
+  }
+});
+
+// POST /profile/verification/upload  (multipart: file=<image>, slot=front|back|selfie)
+// Stored privately; returns an id to put in POST /profile/verification.
+router.post('/verification/upload', verifyToken, (req, res, next) => {
+  upload.single('file')(req, res, err => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ message: 'Please choose an image under 8 MB.' });
+      return res.status(err.status || 400).json({ message: err.message || 'Upload failed.' });
+    }
+    next();
+  });
+}, async (req, res) => {
+  const slot = String(req.body.slot || '');
+  if (!['front', 'back', 'selfie'].includes(slot)) {
+    return res.status(400).json({ message: 'slot must be front, back or selfie.' });
+  }
+  if (!req.file) return res.status(400).json({ message: 'No image received.' });
+  const sniffed = sniffImage(req.file.buffer);
+  if (!sniffed) return res.status(400).json({ message: 'That file does not look like an image we can read.' });
+  try {
+    const dir = path.join(config.privateDir, 'verification');
+    await fs.promises.mkdir(dir, { recursive: true });
+    const fileId = `${req.userId}_${slot}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.${sniffed.ext}`;
+    await fs.promises.writeFile(path.join(dir, fileId), req.file.buffer);
+    res.status(201).json({ fileId, bytes: req.file.size });
+  } catch (err) {
+    console.error('Verification upload error:', err);
+    res.status(500).json({ message: 'Could not store the image.' });
+  }
+});
+
+// GET /profile/verification/file/:slot — the owner's own latest upload
+router.get('/verification/file/:slot', verifyToken, async (req, res) => {
+  const column = { front: 'front_url', back: 'back_url', selfie: 'selfie_url' }[req.params.slot];
+  if (!column) return res.status(400).json({ message: 'slot must be front, back or selfie.' });
+  try {
+    const latest = await db.queryOne(
+      'SELECT * FROM verification_requests WHERE user_id = $1 ORDER BY created_at_ms DESC LIMIT 1',
+      [req.userId]
+    );
+    if (!latest) return res.status(404).json({ message: 'No verification request.' });
+    sendVerificationFile(res, latest[column]);
+  } catch (err) {
+    console.error('Verification file error:', err);
+    res.status(500).json({ message: 'Error loading the file.' });
+  }
+});
+
+// ── Push tokens ─────────────────────────────────────────────────────────────
+// POST /profile/push-token { token, platform }
+router.post('/push-token', verifyToken, validate(schemas.pushToken), async (req, res) => {
+  const { token, platform } = req.body;
+  try {
+    const now = Date.now();
+    await db.exec(
+      `INSERT INTO device_tokens (token, user_id, platform, updated_at_ms) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (token) DO UPDATE SET user_id = excluded.user_id, platform = excluded.platform, updated_at_ms = excluded.updated_at_ms`,
+      [token, req.userId, platform, now]
+    );
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('Save push token error:', err);
+    res.status(500).json({ message: 'Could not register this device.' });
+  }
+});
+
+// DELETE /profile/push-token { token }
+router.delete('/push-token', verifyToken, validate(schemas.removePushToken), async (req, res) => {
+  try {
+    await db.exec('DELETE FROM device_tokens WHERE token = $1 AND user_id = $2', [req.body.token, req.userId]);
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('Remove push token error:', err);
+    res.status(500).json({ message: 'Could not unregister this device.' });
   }
 });
 
@@ -353,7 +444,14 @@ router.delete('/', verifyToken, validate(schemas.deleteAccount), async (req, res
     await db.exec('DELETE FROM posts WHERE owner_id = $1', [uid]);
     await db.exec('DELETE FROM notifications WHERE user_id = $1', [uid]);
     await db.exec('DELETE FROM blocked_users WHERE user_id = $1 OR blocked_user_id = $2', [uid, uid]);
+    await db.exec('DELETE FROM device_tokens WHERE user_id = $1', [uid]);
     await db.exec('DELETE FROM verification_requests WHERE user_id = $1', [uid]);
+    try {
+      const dir = path.join(config.privateDir, 'verification');
+      for (const f of await fs.promises.readdir(dir).catch(() => [])) {
+        if (f.startsWith(`${uid}_`)) await fs.promises.unlink(path.join(dir, f)).catch(() => {});
+      }
+    } catch (_) { /* best effort */ }
     await db.exec('DELETE FROM user_settings WHERE user_id = $1', [uid]);
     await db.exec('DELETE FROM users WHERE uid = $1', [uid]);
 

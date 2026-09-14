@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { verifyToken } = require('./auth');
-const { truthy, bool } = require('../lib/helpers');
+const { truthy, bool, parseNotificationData } = require('../lib/helpers');
 
 const router = express.Router();
 
@@ -13,6 +13,7 @@ function mapNotification(item) {
     type: item.type,
     isUnread: truthy(item.is_unread),
     createdAtMs: parseInt(item.created_at_ms),
+    data: parseNotificationData(item.data),
   };
 }
 

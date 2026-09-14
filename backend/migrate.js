@@ -15,16 +15,7 @@ if (process.env.FIREBASE_CONFIG) {
 }
 
 if (!serviceAccount) {
-  try {
-    serviceAccount = require('./finder-9959b-firebase-adminsdk-fbsvc-4ad8b53f21.json');
-    console.log('Loaded Firebase config from local JSON file.');
-  } catch (e) {
-    console.error('Failed to load local firebase-key JSON file:', e.message);
-  }
-}
-
-if (!serviceAccount) {
-  console.error('Error: No Firebase configuration found. Please set FIREBASE_CONFIG or place the key file in backend folder.');
+  console.error('Error: No Firebase configuration found. Set FIREBASE_CONFIG to the service-account JSON.');
   process.exit(1);
 }
 

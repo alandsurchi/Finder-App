@@ -11,7 +11,9 @@ const { verifyToken } = require('./auth');
 
 const router = express.Router();
 
-const FOLDERS = ['posts', 'avatars', 'chat', 'verification'];
+// Identity documents are NOT here: they go through POST /profile/verification/upload
+// into config.privateDir and are only served to their owner and admins.
+const FOLDERS = ['posts', 'avatars', 'chat'];
 const MAX_BYTES = 8 * 1024 * 1024;
 
 /**
@@ -95,4 +97,4 @@ router.post('/', verifyToken, (req, res, next) => {
   }
 });
 
-module.exports = router;
+module.exports = { router, upload, sniffImage };

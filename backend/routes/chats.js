@@ -24,11 +24,13 @@ router.get('/', verifyToken, async (req, res) => {
     const rows = await db.query(
       `SELECT c.id, c.post_id, c.item_name, c.last_message_text, c.last_sender_id,
               c.updated_at_ms, me.unread_count AS my_unread,
-              cp.user_id AS p_user_id, u.full_name, u.nick_name, u.avatar_url
+              cp.user_id AS p_user_id, u.full_name, u.nick_name, u.avatar_url,
+              p.owner_id AS post_owner_id, p.status AS post_status
        FROM chats c
        JOIN chat_participants me ON me.chat_id = c.id AND me.user_id = $1
        JOIN chat_participants cp ON cp.chat_id = c.id
        JOIN users u ON u.uid = cp.user_id
+       LEFT JOIN posts p ON p.id = c.post_id
        ORDER BY c.updated_at_ms DESC`,
       [userId]
     );
@@ -41,6 +43,8 @@ router.get('/', verifyToken, async (req, res) => {
         convo = {
           id: r.id,
           postId: r.post_id || '',
+          postOwnerId: r.post_owner_id || '',
+          postStatus: r.post_status || '',
           itemName: r.item_name,
           participants: [],
           participantNames: {},
@@ -222,8 +226,8 @@ router.post('/:id/messages', verifyToken, validate(schemas.sendMessage), async (
     );
 
     // Notify the other participants (respecting their notification setting).
-    const sender = await db.queryOne('SELECT full_name, nick_name FROM users WHERE uid = $1', [senderId]);
-    const chat = await db.queryOne('SELECT item_name FROM chats WHERE id = $1', [chatId]);
+    const sender = await db.queryOne('SELECT full_name, nick_name, avatar_url FROM users WHERE uid = $1', [senderId]);
+    const chat = await db.queryOne('SELECT item_name, post_id FROM chats WHERE id = $1', [chatId]);
     for (const o of others) {
       const settings = await getSettings(o.user_id);
       if (!settings.notify_messages) continue;
@@ -231,6 +235,17 @@ router.post('/:id/messages', verifyToken, validate(schemas.sendMessage), async (
         title: `${displayName(sender)} · ${chat ? chat.item_name : 'Message'}`,
         message: preview.length > 120 ? `${preview.slice(0, 117)}...` : preview,
         type: 'message',
+        // Everything the app needs to open this chat straight from the
+        // notification, without another request.
+        data: {
+          type: 'message',
+          chatId,
+          postId: (chat && chat.post_id) || '',
+          peerId: senderId,
+          peerName: displayName(sender),
+          peerAvatarUrl: (sender && sender.avatar_url) || '',
+          itemName: (chat && chat.item_name) || '',
+        },
       });
     }
 

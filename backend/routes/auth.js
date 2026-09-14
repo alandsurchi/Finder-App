@@ -152,6 +152,7 @@ router.get('/me', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
+    const isAdmin = await require('../lib/helpers').syncAdminFlag(user);
     res.status(200).json({
       id: user.uid,
       email: user.email,
@@ -159,6 +160,7 @@ router.get('/me', verifyToken, async (req, res) => {
       photoUrl: user.avatar_url,
       isVerified: truthy(user.is_verified),
       identityVerified: truthy(user.identity_verified),
+      isAdmin,
       authProvider: user.auth_provider || 'email'
     });
   } catch (err) {

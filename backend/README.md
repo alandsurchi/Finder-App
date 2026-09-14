@@ -65,13 +65,16 @@ links resolve from inside the emulator.
 
 ## Identity verification
 
-`POST /profile/verification` stores a request with `status = pending`. Approve one by
-hand:
+Users upload ID front/back and a live selfie through `POST /profile/verification/upload`
+(stored privately under `PRIVATE_DIR`) and submit them with `POST /profile/verification`.
+Accounts listed in `ADMIN_EMAILS` review the queue in the app (Profile → Admin · Review queue)
+or through the `/admin/verification` routes; approving sets `users.identity_verified`, rejecting
+records a reason. Both outcomes notify the user (in-app and push).
 
-```sql
-UPDATE users SET identity_verified = 1 WHERE email = 'omar@finder.app';
-UPDATE verification_requests SET status = 'approved' WHERE user_id = '<uid>';
-```
+## Push notifications
+
+`notify()` stores a row and, when `FIREBASE_SERVICE_ACCOUNT` is set, pushes it through Firebase
+Cloud Messaging to every device registered with `POST /profile/push-token`. See docs/DEPLOYMENT.md.
 
 ## Endpoints
 
@@ -85,6 +88,9 @@ UPDATE verification_requests SET status = 'approved' WHERE user_id = '<uid>';
 | Users | `GET /users/search?q=` |
 | Uploads | `POST /uploads` (multipart `file` + `folder` = `posts`/`avatars`/`chat`/`verification`) → `{url}`; files served from `/uploads/…` |
 | Account | `DELETE /profile` (`{password}` or `{confirm:"DELETE"}` for Google accounts) |
+| Push | `POST /profile/push-token`, `DELETE /profile/push-token` |
+| Verification | `GET /profile/verification`, `POST /profile/verification/upload` (multipart `file` + `slot`), `POST /profile/verification`, `GET /profile/verification/file/:slot` |
+| Admin | `GET /admin/verification?status=`, `GET /admin/verification/:id`, `GET /admin/verification/:id/file/:slot`, `POST /admin/verification/:id/approve`, `POST /admin/verification/:id/reject` (admins from `ADMIN_EMAILS`) |
 | Geo | `GET /geo/search?q=` (places for a query), `GET /geo/reverse?lat=&lon=` (address at a point); proxied to OpenStreetMap Nominatim, cached, 60 req/min per user |
 | Legal | `GET /legal/privacy`, `GET /legal/terms` |
 

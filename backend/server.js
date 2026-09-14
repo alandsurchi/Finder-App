@@ -13,7 +13,9 @@ const chatsRouter = require('./routes/chats');
 const profileRouter = require('./routes/profile');
 const notificationsRouter = require('./routes/notifications');
 const usersRouter = require('./routes/users');
-const uploadsRouter = require('./routes/uploads');
+const { router: uploadsRouter } = require('./routes/uploads');
+const { router: adminRouter } = require('./routes/admin');
+const push = require('./lib/push');
 const geoRouter = require('./routes/geo');
 const { initWebSocket } = require('./websocket');
 
@@ -81,6 +83,7 @@ app.use('/notifications', notificationsRouter);
 app.use('/users', usersRouter);
 app.use('/uploads', uploadsRouter);
 app.use('/geo', geoRouter);
+app.use('/admin', adminRouter);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -90,6 +93,7 @@ app.get('/health', async (req, res) => {
       status: 'healthy',
       database: db.isPostgres ? 'postgresql' : 'sqlite',
       uploads: config.uploadsDir,
+      push: push.pushConfigured() ? 'fcm' : 'disabled',
     });
   } catch (err) {
     res.status(503).json({ status: 'unhealthy', message: err.message });
