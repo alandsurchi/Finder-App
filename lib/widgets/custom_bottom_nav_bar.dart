@@ -255,9 +255,12 @@ class _BeaconDisc extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final glowAlpha = t.accentGlow.a * k;
+    // The box is exactly the disc: the glow and the breathing ring overflow
+    // it (Clip.none) instead of padding it, so the icon's centre stays where
+    // the lift animation puts it and never drifts onto the label.
     return SizedBox(
-      width: CustomBottomNavBar.discSize + 24,
-      height: CustomBottomNavBar.discSize + 24,
+      width: size,
+      height: size,
       child: Stack(
         alignment: Alignment.center,
         clipBehavior: Clip.none,
