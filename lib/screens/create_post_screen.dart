@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/providers/post_provider.dart';
+import 'package:finder/providers/home_tab_provider.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/features/profile/presentation/privacy_settings_controller.dart';
@@ -58,6 +59,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     _dateCtrl.text = _formatDateTime(_selectedDateTime!);
     _restoreDraftIfAvailable();
     if (widget.initialIsLost != null) _isLostItem = widget.initialIsLost!;
+  }
+
+  @override
+  void didUpdateWidget(covariant CreatePostScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The Home hero tiles pre-select Lost/Found while this tab stays alive.
+    final prefill = widget.initialIsLost;
+    if (prefill != null && prefill != oldWidget.initialIsLost) {
+      setState(() => _isLostItem = prefill);
+    }
   }
 
   @override
@@ -763,6 +774,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       ref.read(myPostsProvider.notifier).prepend(created);
       ref.invalidate(postsStreamProvider);
       _resetForm();
+      // Details opens on top of Home, so Back lands on the feed, not here.
+      ref.read(createPrefillProvider.notifier).state = null;
+      ref.read(homeTabProvider.notifier).state = HomeTabs.home;
       ActionFeedback.showSuccess(context, 'Your post is live.');
       Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: created);
     } catch (e) {

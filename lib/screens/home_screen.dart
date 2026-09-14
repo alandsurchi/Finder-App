@@ -11,6 +11,7 @@ import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/providers/post_provider.dart';
+import 'package:finder/providers/home_tab_provider.dart';
 import 'package:finder/features/posts/presentation/posts_filter.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/features/notifications/presentation/notifications_controller.dart';
@@ -28,61 +29,80 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _currentIndex = 0;
-  bool? _createIsLost;
+  /// Tabs are built on first visit and then kept alive, so scroll positions
+  /// and the Post form survive tab switches and nothing is painted twice.
+  final Set<int> _built = {HomeTabs.home};
 
-  List<Widget> get _pages => [
-    _HomeContent(
-      onProfileTap: () => setState(() => _currentIndex = 4),
-      onReport: (isLost) => setState(() {
-        _createIsLost = isLost;
-        _currentIndex = 2;
-      }),
-    ),
-    const SearchScreen(),
-    CreatePostScreen(initialIsLost: _createIsLost),
-    const MessagesScreen(),
-    const ProfileScreen(),
-  ];
+  Widget _page(int i) {
+    switch (i) {
+      case HomeTabs.home:
+        return _HomeContent(
+          onProfileTap: () => _select(HomeTabs.profile),
+          onReport: (isLost) {
+            ref.read(createPrefillProvider.notifier).state = isLost;
+            _select(HomeTabs.post);
+          },
+        );
+      case HomeTabs.search:
+        return const SearchScreen();
+      case HomeTabs.post:
+        return CreatePostScreen(
+          initialIsLost: ref.watch(createPrefillProvider),
+        );
+      case HomeTabs.messages:
+        return const MessagesScreen();
+      default:
+        return const ProfileScreen();
+    }
+  }
+
+  void _select(int i) => ref.read(homeTabProvider.notifier).state = i;
 
   @override
   Widget build(BuildContext context) {
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final index = ref.watch(homeTabProvider);
+    _built.add(index);
+
     return Scaffold(
       body: Stack(
         children: [
-          AnimatedSwitcher(
-            duration: BeaconMotion.scaled(context, BeaconMotion.state),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            transitionBuilder: (child, animation) =>
-                FadeTransition(opacity: animation, child: child),
-            child: KeyedSubtree(
-              key: ValueKey(_currentIndex),
-              child: _pages[_currentIndex],
+          IndexedStack(
+            index: index,
+            children: List.generate(
+              5,
+              (i) => _built.contains(i) ? _page(i) : const SizedBox.shrink(),
             ),
           ),
-          // The bar slides away while the keyboard is open so text fields in
-          // Search, New post and Messages get the whole screen.
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: AnimatedSlide(
-              offset: keyboardOpen ? const Offset(0, 1.2) : Offset.zero,
-              duration: BeaconMotion.scaled(context, BeaconMotion.state),
-              curve: Curves.easeOut,
-              child: IgnorePointer(
-                ignoring: keyboardOpen,
-                child: CustomBottomNavBar(
-                  currentIndex: _currentIndex,
-                  onTap: (i) => setState(() => _currentIndex = i),
-                ),
-              ),
+            child: _NavBarHost(
+              currentIndex: index,
+              onTap: _select,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The only widget that reads the keyboard inset: it hides the bar while
+/// the keyboard is open so text fields get the whole screen, without
+/// rebuilding the tabs on every keyboard frame.
+class _NavBarHost extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  const _NavBarHost({required this.currentIndex, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    return Visibility(
+      visible: !keyboardOpen,
+      maintainState: true,
+      child: CustomBottomNavBar(currentIndex: currentIndex, onTap: onTap),
     );
   }
 }

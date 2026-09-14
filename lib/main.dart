@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/home_tab_provider.dart';
 
 import 'app/di/app_providers.dart';
 import 'app/router/app_router.dart';
@@ -67,6 +68,8 @@ void resetUserScopedProviders(WidgetRef ref) {
   ref.invalidate(blockedUsersProvider);
   ref.invalidate(notificationSettingsProvider);
   ref.invalidate(verificationProvider);
+  ref.invalidate(homeTabProvider);
+  ref.invalidate(createPrefillProvider);
 }
 
 class FinderApp extends ConsumerWidget {

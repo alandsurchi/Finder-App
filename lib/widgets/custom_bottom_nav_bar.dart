@@ -1,4 +1,4 @@
-import 'dart:ui' show ImageFilter;
+import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
@@ -6,10 +6,13 @@ import 'package:finder/theme/beacon_tokens.dart';
 
 /// Beacon notch navigation.
 ///
-/// A frosted-glass bar with a moving notch; the selected destination floats
-/// in the notch as a gradient primary disc wrapped in an amber "beacon ring"
-/// that breathes softly. The bar respects the bottom safe-area inset and every
-/// destination is a 48dp+ target with an accessible label.
+/// A solid bar with a moving notch; the selected destination floats in the
+/// notch as a gradient primary disc with an amber beacon ring. One animation
+/// (`_position`, in tab units) drives the notch, the disc size and lift, the
+/// icon and the label, so every frame is a pure function of that value and
+/// the selected state is exact from the first build. No blur: a backdrop
+/// filter under a moving clip was the main source of jank and flicker on
+/// Android.
 class CustomBottomNavBar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -25,6 +28,7 @@ class CustomBottomNavBar extends StatefulWidget {
   static const double barHeight = 68;
   static const double lift = 30;
   static const double discSize = 62;
+  static const double _restSize = 40;
 
   static double totalHeight(BuildContext context) =>
       barHeight + lift + MediaQuery.paddingOf(context).bottom;
@@ -58,16 +62,25 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
   @override
   void didUpdateWidget(CustomBottomNavBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentIndex != widget.currentIndex) {
-      _position = Tween<double>(
-        begin: oldWidget.currentIndex.toDouble(),
-        end: widget.currentIndex.toDouble(),
-      ).animate(
-        CurvedAnimation(parent: _controller, curve: BeaconMotion.emphasized),
-      );
-      _controller.duration = BeaconMotion.scaled(context, BeaconMotion.state);
-      _controller.forward(from: 0);
+    if (oldWidget.currentIndex == widget.currentIndex) return;
+    // Start from wherever the notch is right now, so rapid taps never jump.
+    final from = _position.value;
+    final duration = BeaconMotion.scaled(context, BeaconMotion.state);
+    if (duration == Duration.zero) {
+      _controller.stop();
+      _position = AlwaysStoppedAnimation(widget.currentIndex.toDouble());
+      setState(() {});
+      return;
     }
+    _position = Tween<double>(
+      begin: from,
+      end: widget.currentIndex.toDouble(),
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: BeaconMotion.emphasized),
+    );
+    _controller
+      ..duration = duration
+      ..forward(from: 0);
   }
 
   @override
@@ -87,61 +100,58 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
 
     return SizedBox(
       height: total,
-      child: Stack(
-        children: [
-          // ── Glass bar with notch ───────────────────────────────────────
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: barHeight,
-            child: AnimatedBuilder(
-              animation: _position,
-              builder: (context, _) {
-                final path = _NavShape.path(
-                  Size(width, barHeight),
-                  position: _position.value,
-                  itemWidth: itemWidth,
-                );
-                return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CustomPaint(
-                      painter: _ShadowPainter(path: path, color: t.shadow),
+      child: AnimatedBuilder(
+        animation: _position,
+        builder: (context, _) {
+          final position = _position.value;
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // ── Bar with notch (shadow, fill, hairline) ────────────────
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: barHeight,
+                child: CustomPaint(
+                  painter: _BarPainter(
+                    path: _NavShape.path(
+                      Size(width, barHeight),
+                      position: position,
+                      itemWidth: itemWidth,
                     ),
-                    ClipPath(
-                      clipper: _PathClipper(path),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-                        child: ColoredBox(color: t.glassSurface),
-                      ),
-                    ),
-                    CustomPaint(
-                      painter: _StrokePainter(path: path, color: t.glassBorder),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-
-          // ── Destinations ──────────────────────────────────────────────
-          Positioned.fill(
-            child: Row(
-              children: List.generate(_items.length, (i) {
-                return SizedBox(
-                  width: itemWidth,
-                  child: _Destination(
-                    item: _items[i],
-                    selected: widget.currentIndex == i,
-                    onTap: () => widget.onTap(i),
-                    bottomInset: bottomInset,
+                    fill: t.isDark
+                        ? t.surfaceHigh.withValues(alpha: 0.98)
+                        : t.surface,
+                    stroke: t.glassBorder,
+                    shadow: t.shadow,
                   ),
-                );
-              }),
-            ),
-          ),
-        ],
+                ),
+              ),
+
+              // ── Destinations ──────────────────────────────────────────
+              Positioned.fill(
+                child: Row(
+                  children: List.generate(_items.length, (i) {
+                    // 1 when the notch is centred on this tab, 0 when it is a
+                    // full tab away.
+                    final k = (1 - (position - i).abs()).clamp(0.0, 1.0);
+                    return SizedBox(
+                      width: itemWidth,
+                      child: _Destination(
+                        item: _items[i],
+                        selected: widget.currentIndex == i,
+                        k: k,
+                        onTap: () => widget.onTap(i),
+                        bottomInset: bottomInset,
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -157,12 +167,16 @@ class _NavItem {
 class _Destination extends StatelessWidget {
   final _NavItem item;
   final bool selected;
+
+  /// Selection progress 0..1 derived from the shared notch position.
+  final double k;
   final VoidCallback onTap;
   final double bottomInset;
 
   const _Destination({
     required this.item,
     required this.selected,
+    required this.k,
     required this.onTap,
     required this.bottomInset,
   });
@@ -171,9 +185,15 @@ class _Destination extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
-    final duration = BeaconMotion.scaled(context, BeaconMotion.state);
     const disc = CustomBottomNavBar.discSize;
+    const rest = CustomBottomNavBar._restSize;
     const lift = CustomBottomNavBar.lift;
+
+    final size = lerpDouble(rest, disc, k)!;
+    final top = lerpDouble(lift + 12, 0, k)!;
+    final active = k > 0.5;
+    final iconColor = Color.lerp(t.onSurfaceVar, t.onPrimary, k)!;
+    final labelColor = Color.lerp(t.onSurfaceVar, t.primary, k)!;
 
     return Semantics(
       button: true,
@@ -186,28 +206,24 @@ class _Destination extends StatelessWidget {
           alignment: Alignment.topCenter,
           clipBehavior: Clip.none,
           children: [
-            // Floating disc (selected) / plain icon (unselected)
-            AnimatedPositioned(
-              duration: duration,
-              curve: BeaconMotion.emphasized,
-              top: selected ? 0 : lift + 12,
+            Positioned(
+              top: top,
               child: _BeaconDisc(
-                selected: selected,
-                icon: selected ? item.activeIcon : item.icon,
-                size: selected ? disc : 40,
-                duration: duration,
+                k: k,
+                size: size,
+                icon: active ? item.activeIcon : item.icon,
+                iconColor: iconColor,
+                iconSize: lerpDouble(24, 27, k)!,
               ),
             ),
-            // Label
             Positioned(
               bottom: bottomInset + 10,
-              child: AnimatedDefaultTextStyle(
-                duration: duration,
+              child: Text(
+                item.label,
                 style: text.labelSmall!.copyWith(
-                  color: selected ? t.primary : t.onSurfaceVar,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: labelColor,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                 ),
-                child: Text(item.label),
               ),
             ),
           ],
@@ -217,26 +233,84 @@ class _Destination extends StatelessWidget {
   }
 }
 
-/// The selected-tab disc: gradient primary fill, amber ring, breathing glow.
-class _BeaconDisc extends StatefulWidget {
-  final bool selected;
-  final IconData icon;
+/// The selected-tab disc: gradient primary fill, amber ring and a static glow
+/// that fades in with [k]. A soft breathing ring sits behind it (separate
+/// animation, so the disc itself never restarts a tween).
+class _BeaconDisc extends StatelessWidget {
+  final double k;
   final double size;
-  final Duration duration;
+  final IconData icon;
+  final Color iconColor;
+  final double iconSize;
+
   const _BeaconDisc({
-    required this.selected,
-    required this.icon,
+    required this.k,
     required this.size,
-    required this.duration,
+    required this.icon,
+    required this.iconColor,
+    required this.iconSize,
   });
 
   @override
-  State<_BeaconDisc> createState() => _BeaconDiscState();
+  Widget build(BuildContext context) {
+    final t = AppColorTokens.of(context);
+    final glowAlpha = t.accentGlow.a * k;
+    return SizedBox(
+      width: CustomBottomNavBar.discSize + 24,
+      height: CustomBottomNavBar.discSize + 24,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          if (k > 0.95) _BreathingRing(size: size, color: t.accentGlow),
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              gradient: k > 0 ? t.primaryGradient : null,
+              color: k > 0 ? null : Colors.transparent,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: t.accent.withValues(alpha: k),
+                width: 2.5,
+              ),
+              boxShadow: k > 0
+                  ? [
+                      BoxShadow(
+                        color: t.accentGlow.withValues(alpha: glowAlpha),
+                        blurRadius: 22,
+                        spreadRadius: 4,
+                      ),
+                      BoxShadow(
+                        color: t.primary.withValues(alpha: 0.30 * k),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                  : const [],
+            ),
+            child: Icon(icon, color: iconColor, size: iconSize),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _BeaconDiscState extends State<_BeaconDisc>
+/// A slow amber halo behind the selected disc. Purely decorative and
+/// disabled when the platform asks for reduced motion.
+class _BreathingRing extends StatefulWidget {
+  final double size;
+  final Color color;
+  const _BreathingRing({required this.size, required this.color});
+
+  @override
+  State<_BreathingRing> createState() => _BreathingRingState();
+}
+
+class _BreathingRingState extends State<_BreathingRing>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _breath = AnimationController(
+  late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2400),
   );
@@ -244,74 +318,37 @@ class _BeaconDiscState extends State<_BeaconDisc>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(covariant _BeaconDisc old) {
-    super.didUpdateWidget(old);
-    _sync();
-  }
-
-  void _sync() {
-    final reduced = BeaconMotion.reduced(context);
-    if (widget.selected && !reduced) {
-      if (!_breath.isAnimating) _breath.repeat(reverse: true);
-    } else {
-      _breath.stop();
-      _breath.value = 0.5;
+    if (BeaconMotion.reduced(context)) {
+      _controller.stop();
+      _controller.value = 0.5;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
     }
   }
 
   @override
   void dispose() {
-    _breath.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = AppColorTokens.of(context);
-    final selected = widget.selected;
-    return AnimatedBuilder(
-      animation: _breath,
-      builder: (context, child) {
-        final k = Curves.easeInOut.transform(_breath.value);
-        return AnimatedContainer(
-          duration: widget.duration,
-          curve: BeaconMotion.emphasized,
-          width: widget.size,
-          height: widget.size,
-          decoration: BoxDecoration(
-            gradient: selected ? t.primaryGradient : null,
-            color: selected ? null : Colors.transparent,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: selected ? t.accent : Colors.transparent,
-              width: 2.5,
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      child: Container(
+        width: widget.size + 14,
+        height: widget.size + 14,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: widget.color.withValues(alpha: widget.color.a * 0.9),
+              blurRadius: 24,
+              spreadRadius: 2,
             ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: t.accentGlow.withValues(alpha: t.accentGlow.a * (0.7 + 0.6 * k)),
-                      blurRadius: 18 + 10 * k,
-                      spreadRadius: 3 + 3 * k,
-                    ),
-                    BoxShadow(
-                      color: t.primary.withValues(alpha: 0.30),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                : const [],
-          ),
-          child: child,
-        );
-      },
-      child: Icon(
-        widget.icon,
-        color: selected ? t.onPrimary : t.onSurfaceVar,
-        size: selected ? 27 : 24,
+          ],
+        ),
       ),
     );
   }
@@ -351,43 +388,37 @@ class _NavShape {
   }
 }
 
-class _PathClipper extends CustomClipper<Path> {
+/// Shadow, fill and hairline of the notched bar in one paint pass.
+class _BarPainter extends CustomPainter {
   final Path path;
-  _PathClipper(this.path);
-  @override
-  Path getClip(Size size) => path;
-  @override
-  bool shouldReclip(covariant _PathClipper old) => old.path != path;
-}
+  final Color fill;
+  final Color stroke;
+  final Color shadow;
 
-class _ShadowPainter extends CustomPainter {
-  final Path path;
-  final Color color;
-  _ShadowPainter({required this.path, required this.color});
+  _BarPainter({
+    required this.path,
+    required this.fill,
+    required this.stroke,
+    required this.shadow,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawShadow(path, color.withValues(alpha: 0.35), 12, true);
+    canvas.drawShadow(path, shadow.withValues(alpha: 0.35), 12, true);
+    canvas.drawPath(path, Paint()..color = fill);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = stroke
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _ShadowPainter old) =>
-      old.path != path || old.color != color;
-}
-
-class _StrokePainter extends CustomPainter {
-  final Path path;
-  final Color color;
-  _StrokePainter({required this.path, required this.color});
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _StrokePainter old) =>
-      old.path != path || old.color != color;
+  bool shouldRepaint(covariant _BarPainter old) =>
+      old.path != path ||
+      old.fill != fill ||
+      old.stroke != stroke ||
+      old.shadow != shadow;
 }
