@@ -94,6 +94,15 @@ class RailwayAuthService implements AuthService {
         scopes: ['email', 'profile', 'openid'],
       );
 
+      // Google remembers the last account and would sign in with it silently.
+      // Forget it first so the account chooser appears and the user can pick
+      // a different Google account after signing out.
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {
+        // Nothing was cached; the chooser shows anyway.
+      }
+
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         throw const AuthException('Google sign-in was cancelled by the user.');
@@ -132,6 +141,13 @@ class RailwayAuthService implements AuthService {
   @override
   Future<void> logout() async {
     await _apiClient.clearToken();
+    // Also drop the cached Google account so the next "Sign in with Google"
+    // asks which account to use instead of reusing this one.
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {
+      // Not signed in with Google, or plugin unavailable on this platform.
+    }
   }
 
   static String _describe(Object e) {
