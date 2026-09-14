@@ -8,6 +8,9 @@ class NotificationModel {
   final bool isUnread;
   final NotificationType type;
 
+  /// Deep-link payload from the server (chatId, postId, peer*, ...).
+  final Map<String, dynamic> data;
+
   const NotificationModel({
     this.id = '',
     required this.title,
@@ -15,7 +18,10 @@ class NotificationModel {
     required this.timeAgo,
     this.isUnread = false,
     required this.type,
+    this.data = const {},
   });
+
+  bool get hasTarget => data.isNotEmpty;
 
   /// Backend `type` values: match, message, update, system.
   static NotificationType typeFromApi(String? raw) {
@@ -42,6 +48,7 @@ class NotificationModel {
     String? timeAgo,
     bool? isUnread,
     NotificationType? type,
+    Map<String, dynamic>? data,
   }) {
     return NotificationModel(
       id: id ?? this.id,
@@ -50,6 +57,7 @@ class NotificationModel {
       timeAgo: timeAgo ?? this.timeAgo,
       isUnread: isUnread ?? this.isUnread,
       type: type ?? this.type,
+      data: data ?? this.data,
     );
   }
 }

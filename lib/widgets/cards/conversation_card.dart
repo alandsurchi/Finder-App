@@ -33,6 +33,8 @@ class ConversationCard extends StatelessWidget {
             ChatArgs.peerId: convo.peerId,
             ChatArgs.peerAvatarUrl: convo.avatarUrl,
             ChatArgs.postId: convo.postId,
+            ChatArgs.postOwnerId: convo.postOwnerId,
+            ChatArgs.postStatus: convo.postStatus,
           },
         );
       },

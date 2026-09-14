@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:finder/features/notifications/presentation/notification_navigator.dart';
+import 'package:finder/providers/post_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/models/notification_model.dart';
 import 'package:finder/providers/my_posts_provider.dart';
@@ -124,7 +126,9 @@ class NotificationsScreen extends ConsumerWidget {
 
   void _open(BuildContext context, WidgetRef ref, NotificationModel n) {
     ref.read(notificationsControllerProvider.notifier).markAsRead(n.id);
-    if (n.type == NotificationType.newMessage) {
+    if (n.hasTarget) {
+      openNotificationTarget(n.data, posts: ref.read(postServiceProvider));
+    } else if (n.type == NotificationType.newMessage) {
       Navigator.pushNamed(context, AppRoutes.messages);
     }
   }

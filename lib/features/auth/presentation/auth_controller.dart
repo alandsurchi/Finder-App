@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/services/push/push_service.dart';
 import '../../../app/di/app_providers.dart';
 import '../../../core/utils/result.dart';
 import 'auth_state_provider.dart';
@@ -84,6 +85,8 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   }
 
   Future<void> logout() async {
+    // Stop phone notifications for this account before the token goes.
+    await ref.read(pushServiceProvider).unregister();
     final repo = ref.read(authRepositoryProvider);
     await repo.logout();
     ref.read(authStateProvider.notifier).setUnauthenticated();

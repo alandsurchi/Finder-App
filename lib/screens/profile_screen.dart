@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/screens/admin/verification_queue_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/screens/edit_profile_screen.dart';
@@ -350,6 +351,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   MaterialPageRoute(builder: (_) => const GetVerifiedScreen()),
                 ),
               ),
+              if (profile.isAdmin)
+                SettingsTile(
+                  icon: Icons.admin_panel_settings_outlined,
+                  title: 'Admin · Review queue',
+                  subtitle: 'Identity verification requests',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const VerificationQueueScreen()),
+                  ),
+                ),
             ],
           ),
           SettingsGroup(

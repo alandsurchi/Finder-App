@@ -84,6 +84,26 @@ class ApiClient {
         () => _http.delete(_uri(path), headers: _headers(), body: json.encode(body)),
       );
 
+  /// Raw bytes of an authenticated GET (private images).
+  Future<Uint8List> getBytes(String path, {Duration? timeout}) async {
+    http.Response response;
+    try {
+      response = await _http
+          .get(_uri(path), headers: _headers()..remove('Content-Type'))
+          .timeout(timeout ?? this.timeout);
+    } on TimeoutException {
+      throw const NetworkException(
+        'The server took too long to respond. Check your connection and try again.',
+      );
+    } catch (_) {
+      throw NetworkException(_offlineMessage());
+    }
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.bodyBytes;
+    }
+    throw ApiException(response.statusCode, _errorMessage(response));
+  }
+
   /// Multipart upload of a single file (field `file`) plus text [fields].
   Future<dynamic> uploadFile(
     String path, {

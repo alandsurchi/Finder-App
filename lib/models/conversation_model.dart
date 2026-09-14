@@ -12,6 +12,8 @@ class ConversationModel {
   final Timestamp createdAt;
   final int unreadCount;
   final String itemName;
+  final String postOwnerId;
+  final String postStatus;
   final bool isOnline;
   final bool isVerified;
   final String avatarUrl;
@@ -28,6 +30,8 @@ class ConversationModel {
     required this.createdAt,
     this.unreadCount = 0,
     this.itemName = '',
+    this.postOwnerId = '',
+    this.postStatus = '',
     this.isOnline = false,
     this.isVerified = false,
     this.avatarUrl = '',
@@ -59,6 +63,8 @@ class ConversationModel {
       createdAt: map['createdAt'] ?? Timestamp.now(),
       unreadCount: (map['unreadCount'] as num?)?.toInt() ?? 0,
       itemName: map['itemName']?.toString() ?? '',
+      postOwnerId: map['postOwnerId']?.toString() ?? '',
+      postStatus: map['postStatus']?.toString() ?? '',
     );
   }
 
@@ -76,6 +82,8 @@ class ConversationModel {
             lastUpdatedAt.millisecondsSinceEpoch &&
         other.unreadCount == unreadCount &&
         other.itemName == itemName &&
+        other.postOwnerId == postOwnerId &&
+        other.postStatus == postStatus &&
         other.isVerified == isVerified &&
         other.avatarUrl == avatarUrl;
   }
@@ -91,6 +99,8 @@ class ConversationModel {
         lastUpdatedAt.millisecondsSinceEpoch,
         unreadCount,
         itemName,
+        postOwnerId,
+        postStatus,
         isVerified,
         avatarUrl,
       );

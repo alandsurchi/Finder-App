@@ -16,6 +16,13 @@ import '../core/utils/image_mime.dart';
 /// Where a picked image comes from.
 enum ImageSourceKind { gallery, camera }
 
+/// A file stored privately on the server plus the bytes for a local preview.
+class PrivateUpload {
+  final String fileId;
+  final Uint8List bytes;
+  const PrivateUpload({required this.fileId, required this.bytes});
+}
+
 /// Picks an image and uploads it to the Finder backend (`POST /uploads`),
 /// which stores it on its own volume and returns the public URL.
 class ImageUploadService {
@@ -43,6 +50,42 @@ class ImageUploadService {
     required String folder,
     required ImageSourceKind source,
   }) async {
+    final bytes = await _pickBytes(source: source);
+    if (bytes == null) return null;
+    return _upload(bytes, folder: folder);
+  }
+
+  /// Identity documents and selfies: stored privately, never public.
+  /// Returns null when the picker was cancelled.
+  Future<PrivateUpload?> pickAndUploadPrivate({
+    required String slot,
+    required ImageSourceKind source,
+    bool frontCamera = false,
+  }) async {
+    Uint8List? bytes;
+    if (kIsWeb) {
+      String? id;
+      final r = await web_picker.webPickAndUpload(
+        folder: slot,
+        upload: (b, {required String folder}) async {
+          bytes = b;
+          id = await _uploadPrivate(b, slot: slot);
+          return id!;
+        },
+      );
+      if (r == null || bytes == null) return null;
+      return PrivateUpload(fileId: r, bytes: bytes!);
+    }
+    bytes = await _pickBytes(source: source, frontCamera: frontCamera);
+    if (bytes == null) return null;
+    final id = await _uploadPrivate(bytes!, slot: slot);
+    return PrivateUpload(fileId: id, bytes: bytes!);
+  }
+
+  Future<Uint8List?> _pickBytes({
+    required ImageSourceKind source,
+    bool frontCamera = false,
+  }) async {
     final picker = ImagePicker();
     final XFile? picked;
     try {
@@ -50,6 +93,8 @@ class ImageUploadService {
         source: source == ImageSourceKind.camera
             ? ImageSource.camera
             : ImageSource.gallery,
+        preferredCameraDevice:
+            frontCamera ? CameraDevice.front : CameraDevice.rear,
         // Re-encodes large photos (including HEIC on most devices) to a
         // JPEG the whole app can display, and keeps uploads small.
         imageQuality: 82,
@@ -61,8 +106,29 @@ class ImageUploadService {
       throw ValidationException(_describePickerError(e, source));
     }
     if (picked == null) return null;
-    final bytes = await picked.readAsBytes();
-    return _upload(bytes, folder: folder);
+    return picked.readAsBytes();
+  }
+
+  Future<String> _uploadPrivate(Uint8List bytes, {required String slot}) async {
+    if (bytes.isEmpty) {
+      throw const ValidationException('The selected file is empty.');
+    }
+    if (bytes.lengthInBytes > maxBytes) {
+      throw const ValidationException('Please choose an image under 8 MB.');
+    }
+    final kind = sniffImage(bytes);
+    final res = await _apiClient.uploadFile(
+      '/profile/verification/upload',
+      bytes: bytes,
+      filename: 'image.${kind?.extension ?? 'bin'}',
+      contentType: kind?.mime ?? 'application/octet-stream',
+      fields: {'slot': slot},
+    );
+    final id = (res as Map)['fileId']?.toString();
+    if (id == null || id.isEmpty) {
+      throw const UnknownException('The server returned no file id.');
+    }
+    return id;
   }
 
   Future<String> _upload(Uint8List bytes, {required String folder}) async {

@@ -5,6 +5,7 @@ export 'package:finder/theme/app_color_tokens.dart';
 export 'package:finder/theme/beacon_tokens.dart';
 
 export 'app_avatar.dart';
+export 'auth_image.dart';
 export 'app_bottom_sheet.dart';
 export 'app_button.dart';
 export 'app_chip.dart';

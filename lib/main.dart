@@ -5,6 +5,8 @@ import 'providers/home_tab_provider.dart';
 import 'app/di/app_providers.dart';
 import 'app/lifecycle/app_lifecycle_provider.dart';
 import 'app/router/app_router.dart';
+import 'app/router/root_navigator.dart';
+import 'services/push/push_service.dart';
 import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
 import 'features/auth/presentation/auth_state_provider.dart';
@@ -27,9 +29,6 @@ import 'theme/theme_provider.dart';
 import 'widgets/common/action_feedback.dart';
 import 'widgets/state/loading_widget.dart';
 
-/// Root navigator, used to reset the stack when the session ends.
-final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -49,6 +48,8 @@ Future<void> main() async {
       () => container.read(authStateProvider.notifier).sessionExpired();
 
   _lifecycle = attachAppLifecycle(container);
+  // Phone notifications. A missing Firebase config only disables push.
+  await container.read(pushServiceProvider).init();
 
   runApp(
     UncontrolledProviderScope(
@@ -91,6 +92,13 @@ class FinderApp extends ConsumerWidget {
       final userChanged = previous?.userId != next.userId;
 
       if (userChanged) resetUserScopedProviders(ref);
+
+      // Register this phone for push as soon as someone is signed in, and
+      // open whatever notification launched the app.
+      if (next.isSignedIn && !wasSignedIn) {
+        final push = ref.read(pushServiceProvider);
+        push.syncToken().then((_) => push.flushPendingOpen());
+      }
 
       // A signed-in session ended (logout or expired token): throw away
       // every pushed screen and land on onboarding.

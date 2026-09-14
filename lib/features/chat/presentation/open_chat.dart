@@ -15,6 +15,8 @@ class ChatArgs {
   static const peerId = 'peerId';
   static const peerAvatarUrl = 'peerAvatarUrl';
   static const postId = 'postId';
+  static const postOwnerId = 'postOwnerId';
+  static const postStatus = 'postStatus';
 }
 
 /// Opens (creating if needed) the conversation with [peerId] and navigates
@@ -28,6 +30,8 @@ Future<void> openChatWith(
   String peerAvatarUrl = '',
   String? postId,
   String? itemName,
+  String? postOwnerId,
+  String? postStatus,
 }) async {
   final me = ref.read(authStateProvider).userId ?? '';
   if (me.isEmpty) {
@@ -56,6 +60,8 @@ Future<void> openChatWith(
         ChatArgs.peerId: peerId,
         ChatArgs.peerAvatarUrl: peerAvatarUrl,
         ChatArgs.postId: postId ?? '',
+        ChatArgs.postOwnerId: postOwnerId ?? '',
+        ChatArgs.postStatus: postStatus ?? '',
       },
     );
   } catch (e) {

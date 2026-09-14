@@ -31,6 +31,9 @@ class NotificationRepositoryImpl implements NotificationRepository {
           timeAgo: relativeTime((map['createdAtMs'] as num?)?.toInt()),
           isUnread: map['isUnread'] == true,
           type: NotificationModel.typeFromApi(map['type']?.toString()),
+          data: map['data'] is Map
+              ? Map<String, dynamic>.from(map['data'] as Map)
+              : const {},
         );
       }).toList();
       return Result.success(items);

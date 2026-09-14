@@ -11,6 +11,7 @@ class UserModel {
   final String job;
   final String avatarUrl;
   final bool identityVerified;
+  final bool isAdmin;
   final int postsCount;
   final String authProvider;
 
@@ -25,6 +26,7 @@ class UserModel {
     this.job = '',
     this.avatarUrl = '',
     this.identityVerified = false,
+    this.isAdmin = false,
     this.postsCount = 0,
     this.authProvider = 'email',
   });
@@ -60,6 +62,7 @@ class UserModel {
       job: map['job']?.toString() ?? '',
       avatarUrl: map['avatarUrl']?.toString() ?? '',
       identityVerified: map['identityVerified'] == true,
+      isAdmin: map['isAdmin'] == true,
       postsCount: (map['postsCount'] as num?)?.toInt() ?? 0,
       authProvider: map['authProvider']?.toString() ?? 'email',
       createdAt: Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
@@ -78,6 +81,7 @@ class UserModel {
       job: map['job'] ?? '',
       avatarUrl: map['avatarUrl'] ?? '',
       identityVerified: map['identityVerified'] ?? false,
+      isAdmin: map['isAdmin'] ?? false,
       postsCount: map['postsCount'] ?? 0,
     );
   }
@@ -94,6 +98,7 @@ class UserModel {
       'job': job,
       'avatarUrl': avatarUrl,
       'identityVerified': identityVerified,
+      'isAdmin': isAdmin,
       'postsCount': postsCount,
     };
   }
@@ -109,6 +114,7 @@ class UserModel {
     String? job,
     String? avatarUrl,
     bool? identityVerified,
+    bool? isAdmin,
     int? postsCount,
     String? authProvider,
   }) {
@@ -123,6 +129,7 @@ class UserModel {
       job: job ?? this.job,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       identityVerified: identityVerified ?? this.identityVerified,
+      isAdmin: isAdmin ?? this.isAdmin,
       postsCount: postsCount ?? this.postsCount,
       authProvider: authProvider ?? this.authProvider,
     );

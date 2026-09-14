@@ -211,6 +211,8 @@ class ItemDetailsScreen extends ConsumerWidget {
       peerAvatarUrl: owner?.avatarUrl ?? item.ownerAvatarUrl,
       postId: item.id,
       itemName: item.title,
+      postOwnerId: item.ownerId,
+      postStatus: item.isResolved ? 'resolved' : 'active',
     );
   }
 

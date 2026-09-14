@@ -73,6 +73,8 @@ class ChatService {
         'createdAt': Timestamp.fromMillisecondsSinceEpoch(updatedAtMs),
         'unreadCount': (map['unreadCounts'] as Map?)?[userId] ?? 0,
         'itemName': map['itemName'],
+        'postOwnerId': map['postOwnerId'],
+        'postStatus': map['postStatus'],
       };
       return ConversationModel.fromMap(resolvedMap, id, userId);
     }).toList();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/services/push/push_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/chat/domain/message.dart';
@@ -39,6 +40,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Tell the push layer which chat is on screen so its messages refresh
+    // the thread instead of showing a banner.
+    final id = _arg(ChatArgs.chatId);
+    if (id.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(activeChatIdProvider.notifier).state = id;
+      });
+    }
+  }
+
+  @override
+  void deactivate() {
+    final id = _arg(ChatArgs.chatId);
+    if (ref.read(activeChatIdProvider) == id) {
+      ref.read(activeChatIdProvider.notifier).state = null;
+    }
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
@@ -75,6 +98,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final peerAvatarUrl = _arg(ChatArgs.peerAvatarUrl);
     final postId = _arg(ChatArgs.postId);
     final currentUserId = ref.watch(authStateProvider).userId ?? '';
+    final postOwnerId = _arg(ChatArgs.postOwnerId);
+    final isPostOwner = postId.isNotEmpty &&
+        postOwnerId.isNotEmpty &&
+        postOwnerId == currentUserId;
+    // Fresh status from the server when we own the post (cheap, autoDispose).
+    final liveStatus = isPostOwner
+        ? ref.watch(postByIdProvider(postId)).value?.isResolved
+        : null;
+    final isReturned = liveStatus ?? (_arg(ChatArgs.postStatus) == 'resolved');
 
     if (chatId.isEmpty) {
       return Scaffold(
@@ -118,6 +150,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
               peerAvatarUrl,
               postId,
               t,
+              isPostOwner: isPostOwner,
+              isReturned: isReturned,
             ),
             Divider(color: t.outlineVariant, height: 1, thickness: 1),
             Expanded(
@@ -179,6 +213,60 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     );
   }
 
+  /// Owner shortcut: mark the post returned (or reopen it) from the chat.
+  Future<void> _confirmReturned(
+      String postId, String itemName, bool isReturned) async {
+    final chatId = _arg(ChatArgs.chatId);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isReturned ? 'Reopen this post?' : 'Mark as returned?'),
+        content: Text(
+          isReturned
+              ? '"$itemName" will show on Home again as an open post.'
+              : '"$itemName" leaves the Home feed but stays visible in Search. '
+                  'Everyone in this chat gets a note.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(isReturned ? 'Reopen' : 'Mark as returned'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    final notifier = ref.read(myPostsProvider.notifier);
+    final result = isReturned
+        ? await notifier.reopen(postId)
+        : await notifier.markResolved(postId);
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (_) async {
+        ref.invalidate(postByIdProvider(postId));
+        ref.invalidate(conversationsStreamProvider);
+        ActionFeedback.showSuccess(
+          context,
+          isReturned ? 'Post reopened.' : 'Marked as returned.',
+        );
+        // A short note in the thread so the other person sees the outcome.
+        if (chatId.isNotEmpty) {
+          await ref.read(chatMessagesProvider(chatId).notifier).send(
+                text: isReturned
+                    ? 'I reopened this post.'
+                    : 'I marked this item as returned. Thank you!',
+              );
+        }
+      },
+      onFailure: (f) => ActionFeedback.showError(context, f.message),
+    );
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollController.hasClients) return;
@@ -197,8 +285,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     String peerId,
     String peerAvatarUrl,
     String postId,
-    AppColorTokens t,
-  ) {
+    AppColorTokens t, {
+    bool isPostOwner = false,
+    bool isReturned = false,
+  }) {
     final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -245,6 +335,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (isReturned) ...[
+                        const SizedBox(width: BeaconSpace.xs),
+                        StatusBadge.resolved(small: true),
+                      ],
                     ],
                   )
                 else
@@ -259,7 +353,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             icon: Icons.more_vert_rounded,
             tooltip: 'More options',
             variant: AppIconButtonVariant.ghost,
-            onPressed: () => _showMoreSheet(userName, peerId, postId, itemName),
+            onPressed: () => _showMoreSheet(
+                userName, peerId, postId, itemName, isPostOwner, isReturned),
           ),
         ],
       ),
@@ -271,6 +366,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     String peerId,
     String postId,
     String itemName,
+    bool isPostOwner,
+    bool isReturned,
   ) {
     AppBottomSheet.show<void>(
       context,
@@ -281,6 +378,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (isPostOwner)
+              SheetOption(
+                icon: isReturned
+                    ? Icons.replay_rounded
+                    : Icons.assignment_turned_in_outlined,
+                label: isReturned ? 'Reopen the post' : 'Mark as returned',
+                subtitle: isReturned
+                    ? 'Show it on Home again'
+                    : 'The item is back with its owner',
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _confirmReturned(postId, itemName, isReturned);
+                },
+              ),
             if (postId.isNotEmpty)
               SheetOption(
                 icon: Icons.inventory_2_outlined,

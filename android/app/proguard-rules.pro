@@ -2,3 +2,5 @@
 # Keep Google Sign-In / Play Services model classes that are accessed reflectively.
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.android.gms.**
+-keep class com.google.firebase.** { *; }
+-keep class com.dexterous.flutterlocalnotifications.** { *; }
