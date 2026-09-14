@@ -54,7 +54,7 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
             AppPageHeader(
               title: 'My posts',
               subtitle: postsAsync.hasValue
-                  ? '$active active · $resolved resolved'
+                  ? '$active open · $resolved returned'
                   : null,
               actions: [
                 AppIconButton(
@@ -69,7 +69,7 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
               child: SegmentedPills(
-                options: const ['Active', 'Resolved'],
+                options: const ['Open', 'Returned'],
                 selectedIndex: _tabIndex,
                 onChanged: (i) => setState(() => _tabIndex = i),
               ),
@@ -94,10 +94,10 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
                       icon: _tabIndex == 0
                           ? Icons.post_add_rounded
                           : Icons.task_alt_rounded,
-                      title: _tabIndex == 0 ? 'No active posts' : 'No resolved posts',
+                      title: _tabIndex == 0 ? 'No open posts' : 'No returned items yet',
                       subtitle: _tabIndex == 0
                           ? 'Create your first post to get started.'
-                          : 'Posts you mark as resolved will appear here.',
+                          : 'Posts you mark as returned will appear here.',
                     );
                   }
                   return ListView.separated(
@@ -164,7 +164,7 @@ class _PostManageCard extends ConsumerWidget {
             ),
           if (!post.isResolved)
             AppButton.secondary(
-              label: 'Resolve',
+              label: 'Returned',
               icon: Icons.check_circle_outline_rounded,
               size: AppButtonSize.small,
               expand: false,
@@ -206,9 +206,9 @@ class _PostManageCard extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Mark as resolved?'),
+        title: const Text('Mark as returned?'),
         content: Text(
-            'Mark "${post.title}" as resolved? It will move to the Resolved tab.'),
+            'Mark "${post.title}" as returned? It leaves the Home feed but stays visible in Search.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -221,11 +221,11 @@ class _PostManageCard extends ConsumerWidget {
                   await ref.read(myPostsProvider.notifier).markResolved(post.id);
               if (!context.mounted) return;
               result.fold(
-                onSuccess: (_) => ActionFeedback.showSuccess(context, 'Marked as resolved.'),
+                onSuccess: (_) => ActionFeedback.showSuccess(context, 'Marked as returned.'),
                 onFailure: (f) => ActionFeedback.showError(context, f.message),
               );
             },
-            child: const Text('Resolve'),
+            child: const Text('Mark as returned'),
           ),
         ],
       ),

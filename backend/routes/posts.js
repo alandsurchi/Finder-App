@@ -56,7 +56,8 @@ router.get('/', verifyToken, async (req, res) => {
   }
 
   params.push(limit);
-  sql += ` ORDER BY p.created_at_ms DESC LIMIT $${params.length}`;
+  // Open posts first so returned ones never crowd them out of the page.
+  sql += ` ORDER BY CASE WHEN p.status = 'active' THEN 0 ELSE 1 END, p.created_at_ms DESC LIMIT $${params.length}`;
 
   try {
     const rows = await db.query(sql, params);

@@ -22,6 +22,8 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   SearchFilterData _activeFilters = SearchFilterData.initial();
+  /// Returned (resolved) posts stay searchable so people can see outcomes.
+  bool _showReturned = true;
 
   Timer? _queryDebounce;
 
@@ -116,6 +118,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       Text(
                         '${filteredItems.length} result${filteredItems.length == 1 ? '' : 's'}',
                         style: text.labelLarge?.copyWith(color: t.onSurfaceVar),
+                      ),
+                      const SizedBox(width: BeaconSpace.sm),
+                      AppChoiceChip(
+                        label: 'Returned',
+                        icon: Icons.assignment_turned_in_outlined,
+                        selected: _showReturned,
+                        onTap: () =>
+                            setState(() => _showReturned = !_showReturned),
                       ),
                       const Spacer(),
                       if (_hasActiveFilters)
@@ -222,6 +232,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         return false;
       }
 
+      if (!_showReturned && item.item.isResolved) {
+        return false;
+      }
+
       if (_activeFilters.selectedType == 'Lost' && !item.isLost) {
         return false;
       }
@@ -282,7 +296,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       results.sort((a, b) => a.location.compareTo(b.location));
     }
 
-    return results;
+    // Open posts first; returned ones keep their order after them.
+    final open = results.where((e) => !e.item.isResolved).toList();
+    final returned = results.where((e) => e.item.isResolved).toList();
+    return [...open, ...returned];
   }
 }
 

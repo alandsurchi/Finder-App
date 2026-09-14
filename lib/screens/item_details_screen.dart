@@ -148,7 +148,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                               const SizedBox(width: BeaconSpace.md),
                               Expanded(
                                 child: Text(
-                                  'This post is resolved and hidden from the feed.',
+                                  'Marked as returned. It no longer shows on Home, but stays in Search so people can see the outcome.',
                                   style: text.bodyMedium,
                                 ),
                               ),
@@ -388,8 +388,8 @@ class ItemDetailsScreen extends ConsumerWidget {
               SheetOption(
                 icon: item.isResolved
                     ? Icons.replay_rounded
-                    : Icons.check_circle_outline_rounded,
-                label: item.isResolved ? 'Reopen post' : 'Mark as resolved',
+                    : Icons.assignment_turned_in_outlined,
+                label: item.isResolved ? 'Reopen post' : 'Mark as returned',
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   item.isResolved
@@ -439,7 +439,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     result.fold(
       onSuccess: (_) {
         ref.invalidate(postByIdProvider(item.id));
-        ActionFeedback.showSuccess(context, 'Post marked as resolved.');
+        ActionFeedback.showSuccess(context, 'Marked as returned.');
       },
       onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
@@ -893,10 +893,10 @@ class ItemDetailsScreen extends ConsumerWidget {
                   },
                 ),
               AppButton.tonal(
-                label: item.isResolved ? 'Reopen' : 'Mark as resolved',
+                label: item.isResolved ? 'Reopen' : 'Mark as returned',
                 icon: item.isResolved
                     ? Icons.replay_rounded
-                    : Icons.check_circle_outline_rounded,
+                    : Icons.assignment_turned_in_outlined,
                 size: AppButtonSize.medium,
                 expand: false,
                 onPressed: () => item.isResolved

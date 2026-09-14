@@ -121,7 +121,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
-    final postsStream = ref.watch(postsStreamProvider);
+    final postsStream = ref.watch(activePostsProvider);
     final filters = ref.watch(postsFilterProvider);
     final profileState = ref.watch(profileControllerProvider);
     final categories = AppCategories.homeCategories;

@@ -85,15 +85,17 @@ class StatusBadge extends StatelessWidget {
     );
   }
 
+  /// A post whose item is back with its owner. Shown in Search and on the
+  /// post itself; such posts leave the Home feed.
   factory StatusBadge.resolved({Key? key, bool small = false}) {
     return StatusBadge._(
       key: key,
-      label: 'RESOLVED',
-      icon: Icons.verified_rounded,
+      label: 'RETURNED',
+      icon: Icons.assignment_turned_in_rounded,
       small: small,
       style: BadgeStyle.soft,
-      bg: (t) => t.primaryContainer,
-      fg: (t) => t.onPrimaryContainer,
+      bg: (t) => t.foundContainer,
+      fg: (t) => t.found,
     );
   }
 
