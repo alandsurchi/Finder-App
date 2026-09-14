@@ -1,0 +1,70 @@
+# Codemagic (cloud Mac) builds for the iPhone.
+#
+# ios-unsigned: an unsigned .ipa for free testing on your own iPhone via
+#   Sideloadly (free Apple ID, 7-day certificate, no push notifications).
+# ios-testflight: signed build uploaded to TestFlight. Needs the paid Apple
+#   Developer Program; fill in the integration + variables in Codemagic first.
+workflows:
+  ios-unsigned:
+    name: iOS unsigned IPA (sideload)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        API_URL: https://finder-app-production-7c49.up.railway.app
+    scripts:
+      - name: Flutter packages
+        script: flutter pub get
+      - name: Build (no code signing)
+        script: |
+          flutter build ios --release --no-codesign \
+            --dart-define=API_URL=$API_URL \
+            --build-number=$BUILD_NUMBER
+      - name: Package .ipa
+        script: |
+          set -e
+          cd build/ios/iphoneos
+          rm -rf Payload Finder.ipa
+          mkdir Payload
+          cp -R Runner.app Payload/
+          zip -qr Finder.ipa Payload
+          ls -la Finder.ipa
+    artifacts:
+      - build/ios/iphoneos/Finder.ipa
+
+  ios-testflight:
+    name: iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Finder ASC key   # create under Teams → Integrations
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.finderapp.finder
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        API_URL: https://finder-app-production-7c49.up.railway.app
+        APP_STORE_APPLE_ID: 0000000000   # App Store Connect → App → App Information → Apple ID
+    scripts:
+      - name: Flutter packages
+        script: flutter pub get
+      - name: Signing files
+        script: xcode-project use-profiles
+      - name: Build signed .ipa
+        script: |
+          flutter build ipa --release \
+            --dart-define=API_URL=$API_URL \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
