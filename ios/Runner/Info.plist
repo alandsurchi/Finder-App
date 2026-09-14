@@ -52,10 +52,23 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.685670849218-6vp6v6gpjujcb6krkqjcicd3gn5bcjeo</string>
+				<string>com.googleusercontent.apps.209379285612-99pter0t7h5bq4j30vht61k1qvrted6q</string>
 			</array>
 		</dict>
 	</array>
+	<!-- Google sign-in: the iOS client for this bundle id, and the Web client
+	     so the ID token's audience matches what the API verifies. -->
+	<key>GIDClientID</key>
+	<string>209379285612-99pter0t7h5bq4j30vht61k1qvrted6q.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>209379285612-tbfoc97sjf1p4c5lv3kvmoaub3n0a8h5.apps.googleusercontent.com</string>
+	<!-- Push while the app is in the background. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Finder uses your location to place lost and found items on the map.</string>
 	<key>NSCameraUsageDescription</key>
