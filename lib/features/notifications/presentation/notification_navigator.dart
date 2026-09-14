@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/router/root_navigator.dart';
 import '../../../routes.dart';
+import '../../../screens/admin/verification_queue_screen.dart';
 import '../../../services/post_service.dart';
 import '../../chat/presentation/open_chat.dart';
 
@@ -42,6 +43,12 @@ Future<void> openNotificationTarget(
 
   if (type == 'verification') {
     nav.pushNamed(AppRoutes.getVerified);
+    return;
+  }
+
+  if (type == 'verification_request') {
+    // Admin: someone submitted documents; open the review queue.
+    nav.push(MaterialPageRoute(builder: (_) => const VerificationQueueScreen()));
     return;
   }
 

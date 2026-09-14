@@ -12,6 +12,7 @@ const {
   displayName,
   bool,
   syncAdminFlag,
+  notify,
 } = require('../lib/helpers');
 const path = require('path');
 const fs = require('fs');
@@ -207,11 +208,29 @@ router.post('/verification', verifyToken, validate(schemas.verification), async 
       }
     }
     const now = Date.now();
+    const requestId = crypto.randomUUID();
     await db.exec(
       `INSERT INTO verification_requests (id, user_id, doc_type, front_url, back_url, selfie_url, status, created_at_ms)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [crypto.randomUUID(), req.userId, docType, frontUrl, backUrl || '', selfieUrl, 'pending', now]
+      [requestId, req.userId, docType, frontUrl, backUrl || '', selfieUrl, 'pending', now]
     );
+    // Tell the reviewers (in-app + push) so requests are not missed.
+    try {
+      const me = await db.queryOne('SELECT full_name, nick_name FROM users WHERE uid = $1', [req.userId]);
+      const admins = await db.query('SELECT uid, email, is_admin FROM users');
+      for (const a of admins) {
+        if (a.uid === req.userId) continue;
+        if (!(await syncAdminFlag(a))) continue;
+        await notify(a.uid, {
+          title: 'New verification request',
+          message: `${displayName(me)} submitted a ${docType.replace('_', ' ')} for review.`,
+          type: 'update',
+          data: { type: 'verification_request', requestId },
+        });
+      }
+    } catch (err) {
+      console.error('Admin notify error:', err.message);
+    }
     res.status(201).json({ status: 'pending', docType, createdAtMs: now });
   } catch (err) {
     console.error('Submit verification error:', err);
