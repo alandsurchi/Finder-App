@@ -201,6 +201,51 @@ class ItemModel {
     );
   }
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ItemModel &&
+        other.id == id &&
+        other.ownerId == ownerId &&
+        other.title == title &&
+        other.description == description &&
+        other.createdAt.millisecondsSinceEpoch ==
+            createdAt.millisecondsSinceEpoch &&
+        other.location == location &&
+        other.imagePath == imagePath &&
+        other.isLost == isLost &&
+        other.reward == reward &&
+        other.isVerified == isVerified &&
+        other.category == category &&
+        other.lostOn == lostOn &&
+        other.latitude == latitude &&
+        other.longitude == longitude &&
+        other.ownerName == ownerName &&
+        other.ownerAvatarUrl == ownerAvatarUrl &&
+        other.isResolved == isResolved;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        ownerId,
+        title,
+        description,
+        createdAt.millisecondsSinceEpoch,
+        location,
+        imagePath,
+        isLost,
+        reward,
+        isVerified,
+        category,
+        lostOn,
+        latitude,
+        longitude,
+        ownerName,
+        ownerAvatarUrl,
+        isResolved,
+      );
+
   factory ItemModel.empty() {
     return ItemModel(
       id: '',

@@ -283,13 +283,17 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
   }
 
   Widget _buildItemCard(ItemModel item, int index) {
+    final card = HomeItemCard(
+      item: item,
+      buttonLabel: item.isLost ? 'Contact Owner' : 'Contact Finder',
+    );
+    // Only the first screenful animates in; rows scrolled into view later
+    // render plain so scrolling never pays for an opacity layer per card.
+    if (index >= 4) return card;
     return StaggeredEntrance(
-      index: index.clamp(0, 6),
+      index: index,
       baseDelay: const Duration(milliseconds: 40),
-      child: HomeItemCard(
-        item: item,
-        buttonLabel: item.isLost ? 'Contact Owner' : 'Contact Finder',
-      ),
+      child: card,
     );
   }
 

@@ -10,7 +10,7 @@ class ChatService {
 
   ChatService({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  static const Duration conversationsInterval = Duration(seconds: 4);
+  static const Duration conversationsInterval = Duration(seconds: 8);
   static const Duration messagesInterval = Duration(seconds: 3);
 
   /// Opens (or returns) the conversation with [peerId]. With a [postId] the

@@ -9,6 +9,8 @@ import 'package:finder/models/conversation_model.dart';
 import 'package:finder/features/chat/domain/message.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import '../app/di/app_providers.dart';
+import '../app/lifecycle/app_lifecycle_provider.dart';
+import '../core/utils/polling.dart';
 
 final chatServiceProvider = Provider<ChatService>((ref) {
   return ChatService(apiClient: ref.read(apiClientProvider));
@@ -18,7 +20,12 @@ final conversationsStreamProvider = StreamProvider<List<ConversationModel>>((ref
   final chatService = ref.watch(chatServiceProvider);
   final userId = ref.watch(authStateProvider).userId ?? '';
   if (userId.isEmpty) return Stream.value(const []);
-  return chatService.getConversationsStream(userId);
+  return pollWhileVisible<List<ConversationModel>>(
+    ref,
+    interval: ChatService.conversationsInterval,
+    fetch: () => chatService.fetchConversations(userId),
+    equals: listsEqual,
+  );
 });
 
 /// Total unread conversations, for the Messages tab badge.
@@ -40,7 +47,9 @@ class ChatMessagesController extends StateNotifier<AsyncValue<List<Message>>> {
   ChatMessagesController(this.ref, this.chatId)
       : super(const AsyncValue.loading()) {
     load();
-    _timer = Timer.periodic(ChatService.messagesInterval, (_) => load());
+    _timer = Timer.periodic(ChatService.messagesInterval, (_) {
+      if (ref.read(appIsResumedProvider)) load();
+    });
   }
 
   ChatService get _service => ref.read(chatServiceProvider);

@@ -62,6 +62,39 @@ class ConversationModel {
     );
   }
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ConversationModel &&
+        other.chatId == chatId &&
+        other.postId == postId &&
+        other.name == name &&
+        other.peerId == peerId &&
+        other.message == message &&
+        other.lastMessageSenderId == lastMessageSenderId &&
+        other.lastUpdatedAt.millisecondsSinceEpoch ==
+            lastUpdatedAt.millisecondsSinceEpoch &&
+        other.unreadCount == unreadCount &&
+        other.itemName == itemName &&
+        other.isVerified == isVerified &&
+        other.avatarUrl == avatarUrl;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        chatId,
+        postId,
+        name,
+        peerId,
+        message,
+        lastMessageSenderId,
+        lastUpdatedAt.millisecondsSinceEpoch,
+        unreadCount,
+        itemName,
+        isVerified,
+        avatarUrl,
+      );
+
   Map<String, dynamic> toMap() {
     return {
       'postId': postId,

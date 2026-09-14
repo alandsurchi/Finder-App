@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/widgets/filter_bottom_sheet.dart';
@@ -21,8 +23,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   SearchFilterData _activeFilters = SearchFilterData.initial();
 
+  Timer? _queryDebounce;
+
+  /// Re-filters 250 ms after the last keystroke instead of on every one.
+  void _onQueryChanged(String _) {
+    _queryDebounce?.cancel();
+    _queryDebounce = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) setState(() {});
+    });
+  }
+
   @override
   void dispose() {
+    _queryDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -87,7 +100,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   child: SearchField(
                     controller: _searchController,
                     hint: 'Search items, places…',
-                    onChanged: (_) => setState(() {}),
+                    onChanged: _onQueryChanged,
                     onFilterTap: _openFilterBottomSheet,
                     filterActive: _hasActiveFilters,
                   ),
@@ -135,10 +148,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 const SizedBox(height: BeaconSpace.md),
                             itemBuilder: (context, index) {
                               final entry = filteredItems[index];
+                              final row = _buildResultRow(entry);
+                              if (index >= 8) return row;
                               return StaggeredEntrance(
-                                index: index.clamp(0, 8),
+                                index: index,
                                 baseDelay: const Duration(milliseconds: 35),
-                                child: _buildResultRow(entry),
+                                child: row,
                               );
                             },
                           ),

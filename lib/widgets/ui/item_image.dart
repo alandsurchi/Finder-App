@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
@@ -74,30 +75,25 @@ class ItemImage extends StatelessWidget {
         errorBuilder: (_, __, ___) => fallback(),
       );
     } else {
-      image = Image.network(
-        url,
+      final dpr = MediaQuery.devicePixelRatioOf(context);
+      int? px(double? v) =>
+          (v == null || !v.isFinite || v <= 0) ? null : (v * dpr).round();
+      image = CachedNetworkImage(
+        imageUrl: url,
         height: height,
         width: width,
         fit: fit,
-        gaplessPlayback: true,
-        frameBuilder: (context, child, frame, wasSync) {
-          if (wasSync) return child;
-          return AnimatedOpacity(
-            opacity: frame == null ? 0 : 1,
-            duration: BeaconMotion.scaled(context, BeaconMotion.enter),
-            curve: Curves.easeOut,
-            child: child,
-          );
-        },
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return Container(
-            height: height,
-            width: width,
-            color: t.surfaceHigh,
-          );
-        },
-        errorBuilder: (_, __, ___) => fallback(),
+        // Decode at the size we draw, not the size the phone camera took.
+        memCacheWidth: px(width),
+        memCacheHeight: px(height),
+        fadeInDuration: BeaconMotion.scaled(context, BeaconMotion.enter),
+        fadeOutDuration: Duration.zero,
+        placeholder: (_, __) => Container(
+          height: height,
+          width: width,
+          color: t.surfaceHigh,
+        ),
+        errorWidget: (_, __, ___) => fallback(),
       );
     }
 

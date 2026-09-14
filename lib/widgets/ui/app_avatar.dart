@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 
@@ -60,12 +61,18 @@ class AppAvatar extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => fallback,
               )
-            : Image.network(
-                url!,
+            : CachedNetworkImage(
+                imageUrl: url!,
                 width: size,
                 height: size,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => fallback,
+                memCacheWidth:
+                    (size * MediaQuery.devicePixelRatioOf(context)).round(),
+                memCacheHeight:
+                    (size * MediaQuery.devicePixelRatioOf(context)).round(),
+                fadeInDuration: const Duration(milliseconds: 150),
+                placeholder: (_, __) => fallback,
+                errorWidget: (_, __, ___) => fallback,
               );
 
     Widget avatar = ClipOval(

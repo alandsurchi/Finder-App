@@ -8,7 +8,9 @@ class PostService {
 
   PostService({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  static const Duration pollInterval = Duration(seconds: 5);
+  /// Feed refresh cadence while the app is visible. Push notifications
+  /// cover anything that must arrive faster.
+  static const Duration pollInterval = Duration(seconds: 15);
 
   /// Polls the feed. Emits an error only while there is no data yet; once
   /// something was loaded, transient failures keep the last good list.

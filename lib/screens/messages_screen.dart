@@ -139,11 +139,15 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                       padding: EdgeInsets.fromLTRB(
                           BeaconSpace.page, 0, BeaconSpace.page, navClearance),
                       itemCount: filteredItems.length,
-                      itemBuilder: (context, i) => StaggeredEntrance(
-                        index: i.clamp(0, 8),
-                        baseDelay: const Duration(milliseconds: 35),
-                        child: ConversationCard(convo: filteredItems[i]),
-                      ),
+                      itemBuilder: (context, i) {
+                        final card = ConversationCard(convo: filteredItems[i]);
+                        if (i >= 8) return card;
+                        return StaggeredEntrance(
+                          index: i,
+                          baseDelay: const Duration(milliseconds: 35),
+                          child: card,
+                        );
+                      },
                     );
                   },
                 ),

@@ -95,18 +95,20 @@ class NotificationsScreen extends ConsumerWidget {
                             NotificationStyleResolver.resolveIconColor(n, t);
                         final icon = NotificationStyleResolver.resolveIcon(n);
 
+                        final item = NotificationItem(
+                          title: n.title,
+                          message: n.message,
+                          timeAgo: n.timeAgo,
+                          isUnread: n.isUnread,
+                          icon: icon,
+                          iconColor: displayColor,
+                          onTap: () => _open(context, ref, n),
+                        );
+                        if (index >= 8) return item;
                         return StaggeredEntrance(
-                          index: index.clamp(0, 8),
+                          index: index,
                           baseDelay: const Duration(milliseconds: 35),
-                          child: NotificationItem(
-                            title: n.title,
-                            message: n.message,
-                            timeAgo: n.timeAgo,
-                            isUnread: n.isUnread,
-                            icon: icon,
-                            iconColor: displayColor,
-                            onTap: () => _open(context, ref, n),
-                          ),
+                          child: item,
                         );
                       },
                     ),

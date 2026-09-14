@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/home_tab_provider.dart';
 
 import 'app/di/app_providers.dart';
+import 'app/lifecycle/app_lifecycle_provider.dart';
 import 'app/router/app_router.dart';
 import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
@@ -47,6 +48,8 @@ Future<void> main() async {
   apiClient.onUnauthorized =
       () => container.read(authStateProvider.notifier).sessionExpired();
 
+  _lifecycle = attachAppLifecycle(container);
+
   runApp(
     UncontrolledProviderScope(
       container: container,
@@ -54,6 +57,9 @@ Future<void> main() async {
     ),
   );
 }
+
+/// Keeps the lifecycle listener alive for the whole process.
+AppLifecycleListener? _lifecycle;
 
 /// Everything that is scoped to the signed-in user. Reset whenever the
 /// session changes so no data leaks between accounts.

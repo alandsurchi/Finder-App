@@ -8,12 +8,20 @@ import 'beacon_tokens.dart';
 // BEACON THEME
 // Light → "Daylight"   · Dark → "Nightwatch"
 // Typography: Sora (display / headline / title-large) + Inter (everything else)
-// This is the only file that talks to google_fonts.
+// This is the only file that talks to google_fonts. The font files are
+// bundled under assets/google_fonts/ so nothing is downloaded at runtime.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class AppTheme {
-  static ThemeData light() => _build(BeaconColors.light, Brightness.light);
-  static ThemeData dark() => _build(BeaconColors.dark, Brightness.dark);
+  static ThemeData? _light;
+  static ThemeData? _dark;
+
+  /// Built once per process: the text theme resolves ~30 font styles and
+  /// `MaterialApp` asks for both themes on every rebuild.
+  static ThemeData light() =>
+      _light ??= _build(BeaconColors.light, Brightness.light);
+  static ThemeData dark() =>
+      _dark ??= _build(BeaconColors.dark, Brightness.dark);
 
   // ── Typography ────────────────────────────────────────────────────────────
   static TextTheme textTheme(BeaconColors c) {

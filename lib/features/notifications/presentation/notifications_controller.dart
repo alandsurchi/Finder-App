@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/di/app_providers.dart';
+import '../../../app/lifecycle/app_lifecycle_provider.dart';
 import '../../../core/utils/result.dart';
 import '../../../models/notification_model.dart';
 
@@ -11,11 +12,16 @@ class NotificationsController extends StateNotifier<AsyncValue<List<Notification
   final Ref ref;
   Timer? _timer;
 
-  static const Duration refreshInterval = Duration(seconds: 20);
+  static const Duration refreshInterval = Duration(seconds: 30);
 
   NotificationsController(this.ref) : super(const AsyncValue.loading()) {
     loadNotifications();
-    _timer = Timer.periodic(refreshInterval, (_) => loadNotifications(silent: true));
+    _timer = Timer.periodic(refreshInterval, (_) {
+      if (ref.read(appIsResumedProvider)) loadNotifications(silent: true);
+    });
+    ref.listen<bool>(appIsResumedProvider, (was, isNow) {
+      if (isNow && was == false) loadNotifications(silent: true);
+    });
   }
 
   Future<void> loadNotifications({bool silent = false}) async {
