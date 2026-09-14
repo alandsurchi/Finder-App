@@ -2,9 +2,12 @@
 // outbound SMTP, such as Railway's trial/hobby plans) and falls back to plain
 // SMTP through nodemailer for any other provider.
 //
-// Configuration (any one of these enables e-mail):
-//   RESEND_API_KEY=re_…                       → HTTPS API
-//   SMTP_HOST=smtp.resend.com + SMTP_PASS=re_… → HTTPS API (key taken from SMTP_PASS)
+// Configuration (any one of these enables e-mail; the first match wins):
+//   BREVO_API_KEY + BREVO_FROM=you@gmail.com   → Brevo HTTPS API (free 300/day, no domain
+//                                                needed: the sender address is verified once)
+//   RESEND_API_KEY=re_…                       → Resend HTTPS API (needs a verified domain
+//                                                to send to anyone but the account owner)
+//   SMTP_HOST=smtp.resend.com + SMTP_PASS=re_… → Resend API (key taken from SMTP_PASS)
 //   SMTP_HOST/SMTP_USER/SMTP_PASS (other host)  → SMTP
 const FROM_DEFAULT = 'Finder <onboarding@resend.dev>';
 
@@ -16,13 +19,44 @@ function resendKey() {
   return '';
 }
 
+function brevoKey() {
+  return (process.env.BREVO_API_KEY || '').trim();
+}
+
 function smtpConfigured() {
   return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
 /** True when the server can deliver e-mail at all. */
 function mailConfigured() {
-  return !!resendKey() || smtpConfigured();
+  return !!brevoKey() || !!resendKey() || smtpConfigured();
+}
+
+/** "Name <address>" → { name, email } for APIs that want them apart. */
+function parseFrom(value) {
+  const m = /^\s*(?:"?([^"<]*)"?\s*)?<([^>]+)>\s*$/.exec(value || '');
+  if (m) return { name: (m[1] || 'Finder').trim(), email: m[2].trim() };
+  return { name: 'Finder', email: String(value || '').trim() };
+}
+
+async function sendViaBrevo(key, { to, subject, text, html }) {
+  const sender = parseFrom(process.env.BREVO_FROM || process.env.SMTP_FROM || '');
+  if (!sender.email) throw new Error('BREVO_FROM must be the verified sender address.');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': key, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ sender, to: [{ email: to }], subject, textContent: text, htmlContent: html }),
+      signal: controller.signal,
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.message || `Brevo API responded ${res.status}`);
+    return { transport: 'brevo-api', id: body.messageId };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function fromAddress() {
@@ -72,10 +106,12 @@ async function sendViaSmtp({ to, subject, text, html }) {
  * Error. Callers decide whether to await it or fire-and-forget with logging.
  */
 async function sendMail(message) {
+  const brevo = brevoKey();
+  if (brevo) return sendViaBrevo(brevo, message);
   const key = resendKey();
   if (key) return sendViaResend(key, message);
   if (smtpConfigured()) return sendViaSmtp(message);
-  throw new Error('E-mail is not configured (set RESEND_API_KEY or SMTP_* variables).');
+  throw new Error('E-mail is not configured (set BREVO_API_KEY, RESEND_API_KEY or SMTP_* variables).');
 }
 
 /** Fire-and-forget with a log line either way. */
