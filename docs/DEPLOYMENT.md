@@ -126,3 +126,19 @@ automated document/face checks would need a KYC provider (the `provider_ref` col
 - Terms URL: `https://<api>/legal/terms`
 - In-app account deletion: Profile → Privacy & safety → Delete account
 - Launcher icons: generated into Android mipmaps, iOS AppIcon set and web icons from `assets/branding/icon-1024.png`
+
+### iOS (iPhone)
+
+Builds run on Codemagic (cloud Mac, free tier) from `codemagic.yaml`:
+
+- **ios-unsigned** produces `Finder.ipa` without code signing for free testing on your own iPhone:
+  install it from Windows with Sideloadly (free Apple ID, app expires after 7 days, re-sideload to
+  renew; push notifications do not work without the paid Apple program).
+- **ios-testflight** signs and uploads to TestFlight. Needs the Apple Developer Program: create the
+  App Store Connect API key integration in Codemagic ("Finder ASC key"), the app record in App Store
+  Connect (put its Apple ID in `APP_STORE_APPLE_ID`), and upload an APNs key in Firebase → Cloud
+  Messaging so push works on iPhone.
+
+Google sign-in on iOS uses the "Finder iOS" OAuth client (bundle `com.finderapp.finder`), set as
+`GIDClientID` in `ios/Runner/Info.plist` with the Web client as `GIDServerClientID`. The Firebase
+iOS app config lives in `ios/Runner/GoogleService-Info.plist`.
