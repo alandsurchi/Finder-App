@@ -141,8 +141,10 @@ async function syncAdminFlag(user) {
   if (!user) return false;
   if (truthy(user.is_admin)) return true;
   if (!isAdminEmail(user.email)) return false;
-  await db.exec('UPDATE users SET is_admin = $1 WHERE uid = $2', [bool(true), user.uid]);
+  // Staff accounts carry the verified tick automatically.
+  await db.exec('UPDATE users SET is_admin = $1, identity_verified = $1 WHERE uid = $2', [bool(true), user.uid]);
   user.is_admin = true;
+  user.identity_verified = true;
   return true;
 }
 

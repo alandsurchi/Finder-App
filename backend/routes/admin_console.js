@@ -153,7 +153,8 @@ router.post('/users/:uid/admin', validate(schemas.adminFlag), async (req, res) =
     if (!target) return;
     if (target.uid === req.userId && !admin) return res.status(400).json({ message: 'You cannot remove your own admin role.' });
     await db.exec('UPDATE users SET is_admin = $1 WHERE uid = $2', [bool(admin), target.uid]);
-    if (admin) await db.exec('UPDATE users SET is_banned = $1 WHERE uid = $2', [bool(false), target.uid]);
+    // Staff accounts are verified automatically and can never be suspended.
+    if (admin) await db.exec('UPDATE users SET is_banned = $1, identity_verified = $2 WHERE uid = $3', [bool(false), bool(true), target.uid]);
     await notify(target.uid, {
       title: admin ? 'You are now an administrator' : 'Admin role removed',
       message: admin

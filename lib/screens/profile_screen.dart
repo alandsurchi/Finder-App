@@ -43,7 +43,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final t = AppColorTokens.of(context);
     final profileState = ref.watch(profileControllerProvider);
     final profile = profileState.value ?? UserModel.empty();
-    final navClearance = CustomBottomNavBar.totalHeight(context) + BeaconSpace.lg;
+    final navClearance =
+        CustomBottomNavBar.totalHeight(context) + BeaconSpace.lg;
 
     return Scaffold(
       body: BeaconBackdrop(
@@ -58,13 +59,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   title: 'Profile',
                   showBack: false,
                   padding: EdgeInsets.fromLTRB(
-                      BeaconSpace.page, BeaconSpace.md, BeaconSpace.page, BeaconSpace.sm),
+                    BeaconSpace.page,
+                    BeaconSpace.md,
+                    BeaconSpace.page,
+                    BeaconSpace.sm,
+                  ),
                 ),
               ),
               StaggeredEntrance(
-                  index: 1, child: _buildProfileSummaryPanel(t, profile, profileState.isLoading)),
+                index: 1,
+                child: _buildProfileSummaryPanel(
+                  t,
+                  profile,
+                  profileState.isLoading,
+                ),
+              ),
               const SizedBox(height: BeaconSpace.lg),
-              StaggeredEntrance(index: 2, child: _buildActionButtons(t, profile)),
+              StaggeredEntrance(
+                index: 2,
+                child: _buildActionButtons(t, profile),
+              ),
               const SizedBox(height: BeaconSpace.xxxl),
               StaggeredEntrance(index: 3, child: _buildMenuSection(t, profile)),
             ],
@@ -74,7 +88,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileSummaryPanel(AppColorTokens t, UserModel profile, bool loading) {
+  Widget _buildProfileSummaryPanel(
+    AppColorTokens t,
+    UserModel profile,
+    bool loading,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
       child: SurfaceCard(
@@ -92,14 +110,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   fit: StackFit.expand,
                   children: [
                     BeaconGlow(alignment: Alignment(1.1, -0.6), radius: 0.9),
-                    BeaconRings(alignment: Alignment(1.05, -0.5), radius: 180, opacity: 0.18),
+                    BeaconRings(
+                      alignment: Alignment(1.05, -0.5),
+                      radius: 180,
+                      opacity: 0.18,
+                    ),
                   ],
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  BeaconSpace.lg, 56, BeaconSpace.lg, BeaconSpace.lg),
+                BeaconSpace.lg,
+                56,
+                BeaconSpace.lg,
+                BeaconSpace.lg,
+              ),
               child: Column(
                 children: [
                   _buildProfileHeader(t, profile, loading),
@@ -114,7 +140,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(AppColorTokens t, UserModel profile, bool loading) {
+  Widget _buildProfileHeader(
+    AppColorTokens t,
+    UserModel profile,
+    bool loading,
+  ) {
     final text = Theme.of(context).textTheme;
     final name = profile.uid.isEmpty
         ? (loading ? 'Loading…' : 'Finder member')
@@ -126,8 +156,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(color: t.surface, shape: BoxShape.circle),
-              child: AppAvatar(url: profile.avatarUrl, name: name, size: 96, ring: true),
+              decoration: BoxDecoration(
+                color: t.surface,
+                shape: BoxShape.circle,
+              ),
+              child: AppAvatar(
+                url: profile.avatarUrl,
+                name: name,
+                size: 96,
+                ring: true,
+              ),
             ),
             Positioned(
               bottom: 0,
@@ -148,15 +186,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Flexible(
-              child: Text(name,
-                  style: text.headlineSmall,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
+              child: Text(
+                name,
+                style: text.headlineSmall,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            if (profile.identityVerified) ...[
+            if (profile.identityVerified || profile.isAdmin) ...[
               const SizedBox(width: BeaconSpace.sm),
               Icon(Icons.verified_rounded, color: t.primary, size: 22),
+            ],
+            if (profile.isAdmin) ...[
+              const SizedBox(width: BeaconSpace.xs),
+              Icon(Icons.shield_rounded, color: kAdminColor, size: 22),
             ],
           ],
         ),
@@ -174,7 +218,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Wrap(
             spacing: BeaconSpace.sm,
             children: [
-              if (profile.identityVerified) StatusBadge.verified(),
+              if (profile.identityVerified || profile.isAdmin)
+                StatusBadge.verified(),
               if (profile.isAdmin) adminBadge(),
             ],
           ),
@@ -188,7 +233,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final saved = ref.watch(savedItemsProvider).value;
     final total = posts?.length;
     final resolved = posts?.where((p) => p.isResolved).length;
-    final active = (total != null && resolved != null) ? total - resolved : null;
+    final active = (total != null && resolved != null)
+        ? total - resolved
+        : null;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: BeaconSpace.md),
       decoration: BoxDecoration(
@@ -214,8 +261,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         children: [
           Text(value, style: text.titleLarge),
           const SizedBox(height: 2),
-          Text(label.toUpperCase(),
-              style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
+          Text(
+            label.toUpperCase(),
+            style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
+          ),
         ],
       ),
     );
@@ -308,7 +357,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
             const SizedBox(height: BeaconSpace.xl),
-            AppButton.tonal(label: 'Close', onPressed: () => Navigator.pop(sheetCtx)),
+            AppButton.tonal(
+              label: 'Close',
+              onPressed: () => Navigator.pop(sheetCtx),
+            ),
             const SizedBox(height: BeaconSpace.lg),
           ],
         ),
@@ -346,17 +398,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   MaterialPageRoute(builder: (_) => const SavedItemsScreen()),
                 ),
               ),
-              SettingsTile(
-                icon: Icons.verified_user_outlined,
-                title: profile.identityVerified ? 'Verified identity' : 'Get verified',
-                subtitle: profile.identityVerified
-                    ? 'Your badge is visible to the community'
-                    : 'Build trust with a verified badge',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const GetVerifiedScreen()),
+              if (!profile.isAdmin)
+                SettingsTile(
+                  icon: Icons.verified_user_outlined,
+                  title: profile.identityVerified
+                      ? 'Verified identity'
+                      : 'Get verified',
+                  subtitle: profile.identityVerified
+                      ? 'Your badge is visible to the community'
+                      : 'Build trust with a verified badge',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const GetVerifiedScreen(),
+                    ),
+                  ),
                 ),
-              ),
               if (profile.isAdmin)
                 SettingsTile(
                   icon: Icons.admin_panel_settings_outlined,
@@ -366,7 +423,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   trailing: adminBadge(),
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const AdminConsoleScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const AdminConsoleScreen(),
+                    ),
                   ),
                 ),
             ],
@@ -375,7 +434,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: 'Preferences',
             children: [
               ToggleTile(
-                icon: isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                icon: isDark
+                    ? Icons.dark_mode_outlined
+                    : Icons.light_mode_outlined,
                 title: 'Dark mode',
                 subtitle: isDark ? 'Nightwatch theme' : 'Daylight theme',
                 value: isDark,
@@ -397,7 +458,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: 'Privacy & safety',
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const PrivacySettingsScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const PrivacySettingsScreen(),
+                  ),
                 ),
               ),
             ],
@@ -419,7 +482,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => const LegalScreen(kind: LegalDocKind.terms)),
+                    builder: (_) => const LegalScreen(kind: LegalDocKind.terms),
+                  ),
                 ),
               ),
               SettingsTile(
@@ -428,7 +492,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => const LegalScreen(kind: LegalDocKind.privacy)),
+                    builder: (_) =>
+                        const LegalScreen(kind: LegalDocKind.privacy),
+                  ),
                 ),
               ),
               SettingsTile(
@@ -461,8 +527,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: const Text('Log out?'),
         content: const Text('You can sign back in at any time.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Log out')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Log out'),
+          ),
         ],
       ),
     );

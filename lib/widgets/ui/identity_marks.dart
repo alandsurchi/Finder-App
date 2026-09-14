@@ -28,10 +28,12 @@ class IdentityMarks extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isEmpty) return const SizedBox.shrink();
     final t = AppColorTokens.of(context);
+    // Administrators are trusted by definition: tick plus the staff shield.
+    final showTick = verified || admin;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (verified) ...[
+        if (showTick) ...[
           const SizedBox(width: BeaconSpace.xs),
           Tooltip(
             message: 'Verified identity',
