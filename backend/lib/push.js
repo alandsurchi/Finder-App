@@ -23,9 +23,9 @@ function fileAccount() {
   return null;
 }
 
-/** Env var wins; otherwise the file uploaded by an admin. */
+/** A key uploaded by an admin wins: it is newer than whatever the env var holds. */
 function currentAccount() {
-  return config.firebaseServiceAccount || fileAccount();
+  return fileAccount() || config.firebaseServiceAccount;
 }
 
 /** Saves a new service account and re-initialises messaging. */
@@ -142,7 +142,7 @@ function pushConfigured() {
 
 function pushInfo() {
   const a = currentAccount();
-  return { configured: !!a, projectId: a ? a.project_id : null, source: config.firebaseServiceAccount ? 'env' : (a ? 'file' : null) };
+  return { configured: !!a, projectId: a ? a.project_id : null, source: fileAccount() ? 'file' : (a ? 'env' : null) };
 }
 
 module.exports = { sendPush, pushConfigured, pushInfo, setServiceAccount, init };
