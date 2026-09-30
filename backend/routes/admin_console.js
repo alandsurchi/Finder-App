@@ -6,6 +6,10 @@ const { requireAdmin } = require('../lib/admin');
 const { notify, displayName, bool, truthy, POST_SELECT, mapPost } = require('../lib/helpers');
 const { deleteUserData, deletePostData } = require('../lib/users');
 const { validate, schemas } = require('../lib/validate');
+const push = require('../lib/push');
+const config = require('../config');
+const fs = require('fs');
+const path = require('path');
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -313,6 +317,76 @@ router.post('/reports/:id/resolve', validate(schemas.adminResolveReport), async 
     console.error('Admin resolve report error:', err);
     res.status(500).json({ message: 'Could not resolve the report.' });
   }
+});
+
+// ── Push key (when the hosting dashboard is not reachable) ───────────────────
+// GET /admin/push-key → { configured, projectId, source }
+router.get('/push-key', (req, res) => res.json(push.pushInfo()));
+
+// POST /admin/push-key { serviceAccount: <object> | <base64 or raw JSON string> }
+router.post('/push-key', async (req, res) => {
+  let raw = req.body && req.body.serviceAccount;
+  try {
+    if (typeof raw === 'string') {
+      const text = raw.trim().startsWith('{') ? raw.trim() : Buffer.from(raw.trim(), 'base64').toString('utf8');
+      raw = JSON.parse(text);
+    }
+    if (!raw || !raw.project_id || !raw.private_key || !raw.client_email) {
+      return res.status(400).json({ message: 'That is not a Firebase service-account key.' });
+    }
+    const ok = await push.setServiceAccount(raw);
+    console.log(`[ADMIN] ${req.adminUser.email} installed FCM key for ${raw.project_id}`);
+    res.json({ ...push.pushInfo(), ready: !!ok });
+  } catch (err) {
+    console.error('Admin push-key error:', err);
+    res.status(400).json({ message: 'Could not read the key: ' + err.message });
+  }
+});
+
+// ── Export (to move the data to another host) ───────────────────────────────
+// GET /admin/export → every table as JSON plus the list of stored files
+const EXPORT_TABLES = ['users', 'posts', 'chats', 'chat_participants', 'messages', 'saved_items',
+  'reports', 'notifications', 'blocked_users', 'user_settings', 'verification_requests', 'device_tokens'];
+
+async function listFiles(dir, prefix) {
+  const out = [];
+  async function walk(d, rel) {
+    for (const e of await fs.promises.readdir(d, { withFileTypes: true }).catch(() => [])) {
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      if (e.isDirectory()) await walk(path.join(d, e.name), r);
+      else out.push(`${prefix}/${r}`);
+    }
+  }
+  await walk(dir, '');
+  return out;
+}
+
+router.get('/export', async (req, res) => {
+  try {
+    const tables = {};
+    for (const t of EXPORT_TABLES) {
+      tables[t] = await db.query(`SELECT * FROM ${t}`).catch(() => []);
+    }
+    const files = {
+      uploads: await listFiles(config.uploadsDir, 'uploads'),
+      private: await listFiles(config.privateDir, 'private'),
+    };
+    console.log(`[ADMIN] ${req.adminUser.email} exported the database`);
+    res.setHeader('Content-Disposition', `attachment; filename="finder-export-${Date.now()}.json"`);
+    res.json({ exportedAt: Date.now(), database: db.isPostgres ? 'postgresql' : 'sqlite', tables, files });
+  } catch (err) {
+    console.error('Admin export error:', err);
+    res.status(500).json({ message: 'Export failed.' });
+  }
+});
+
+// GET /admin/export/file?path=private/verification/x.jpg  (uploads/… are public already)
+router.get('/export/file', async (req, res) => {
+  const rel = String(req.query.path || '');
+  const base = rel.startsWith('private/') ? config.privateDir : rel.startsWith('uploads/') ? config.uploadsDir : null;
+  const sub = rel.replace(/^(private|uploads)\//, '');
+  if (!base || sub.includes('..')) return res.status(400).json({ message: 'Bad path.' });
+  res.sendFile(sub, { root: base }, err => { if (err && !res.headersSent) res.status(404).json({ message: 'Not found.' }); });
 });
 
 module.exports = { router };

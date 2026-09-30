@@ -70,8 +70,12 @@ const config = {
   // The Web client id is the audience for both the web app and Android
   // (Android passes it as serverClientId).
   // E-mail addresses that get the admin role (verification review queue).
-  adminEmails: (process.env.ADMIN_EMAILS || '')
-    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+  // Founder accounts are always admins; ADMIN_EMAILS adds more.
+  adminEmails: [...new Set([
+    'aland.surchi456@gmail.com',
+    'whowho230@gmail.com',
+    ...(process.env.ADMIN_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+  ])],
   // Firebase Cloud Messaging service account (base64 JSON). Null disables push.
   firebaseServiceAccount: readServiceAccount(),
   // Files that must never be served publicly (identity documents, selfies).

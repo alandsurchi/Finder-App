@@ -142,3 +142,14 @@ Builds run on Codemagic (cloud Mac, free tier) from `codemagic.yaml`:
 Google sign-in on iOS uses the "Finder iOS" OAuth client (bundle `com.finderapp.finder`), set as
 `GIDClientID` in `ios/Runner/Info.plist` with the Web client as `GIDServerClientID`. The Firebase
 iOS app config lives in `ios/Runner/GoogleService-Info.plist`.
+
+### When the hosting dashboard is unreachable
+
+Founder accounts (`aland.surchi456@gmail.com`, `whowho230@gmail.com`) are admins by code, so the
+console works even if `ADMIN_EMAILS` cannot be edited. Two admin-only routes replace dashboard work:
+
+- `POST /admin/push-key {serviceAccount}` stores a Firebase service-account key on the volume
+  (`PRIVATE_DIR/fcm-service-account.json`); it is used when `FIREBASE_SERVICE_ACCOUNT` is unset or
+  stale. `GET /admin/push-key` shows what is active.
+- `GET /admin/export` dumps every table as JSON plus the list of stored files;
+  `GET /admin/export/file?path=…` streams one file. Use it to move the data to a new host.

@@ -9,17 +9,48 @@
 // here is a no-op that logs once.
 const config = require('../config');
 const db = require('../db');
+const fs = require('fs');
+const path = require('path');
+
+/** Where /admin/push-key stores the service account (persistent volume). */
+const KEY_FILE = path.join(config.privateDir, 'fcm-service-account.json');
+
+function fileAccount() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(KEY_FILE, 'utf8'));
+    if (parsed.project_id && parsed.private_key && parsed.client_email) return parsed;
+  } catch (_) { /* no file */ }
+  return null;
+}
+
+/** Env var wins; otherwise the file uploaded by an admin. */
+function currentAccount() {
+  return config.firebaseServiceAccount || fileAccount();
+}
+
+/** Saves a new service account and re-initialises messaging. */
+async function setServiceAccount(parsed) {
+  await fs.promises.mkdir(path.dirname(KEY_FILE), { recursive: true });
+  await fs.promises.writeFile(KEY_FILE, JSON.stringify(parsed), { mode: 0o600 });
+  messaging = null;
+  warned = false;
+  try {
+    const { getApps, deleteApp } = require('firebase-admin/app');
+    for (const app of getApps()) await deleteApp(app);
+  } catch (_) { /* nothing initialised yet */ }
+  return init();
+}
 
 let messaging = null;
 let warned = false;
 
 function init() {
   if (messaging) return messaging;
-  const account = config.firebaseServiceAccount;
+  const account = currentAccount();
   if (!account) {
     if (!warned) {
       warned = true;
-      console.warn('PUSH: FIREBASE_SERVICE_ACCOUNT not set; phone notifications are disabled.');
+      console.warn('PUSH: no service account (env FIREBASE_SERVICE_ACCOUNT or admin upload); phone notifications are disabled.');
     }
     return null;
   }
@@ -106,7 +137,12 @@ async function sendPush(userId, { title, body, data = {}, collapseKey } = {}) {
 
 /** True when push can actually be delivered (used by /health). */
 function pushConfigured() {
-  return !!config.firebaseServiceAccount;
+  return !!currentAccount();
 }
 
-module.exports = { sendPush, pushConfigured, init };
+function pushInfo() {
+  const a = currentAccount();
+  return { configured: !!a, projectId: a ? a.project_id : null, source: config.firebaseServiceAccount ? 'env' : (a ? 'file' : null) };
+}
+
+module.exports = { sendPush, pushConfigured, pushInfo, setServiceAccount, init };
