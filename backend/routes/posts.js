@@ -4,6 +4,7 @@ const { verifyToken } = require('./auth');
 const crypto = require('crypto');
 const { POST_SELECT, mapPost, bool, truthy, notify, blockedIdsFor, getSettings } = require('../lib/helpers');
 const { validate, schemas } = require('../lib/validate');
+const matching = require('../lib/matching');
 
 const router = express.Router();
 
@@ -83,6 +84,28 @@ router.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
+// GET /posts/:id/matches — smart matches for my own post (owner or admin)
+router.get('/:id/matches', verifyToken, async (req, res) => {
+  try {
+    const post = await db.queryOne('SELECT * FROM posts WHERE id = $1', [req.params.id]);
+    if (!post) return res.status(404).json({ message: 'Post not found.' });
+    if (post.owner_id !== req.userId) {
+      const me = await db.queryOne('SELECT is_admin FROM users WHERE uid = $1', [req.userId]);
+      if (!me || !truthy(me.is_admin)) return res.status(403).json({ message: 'You do not own this post.' });
+    }
+    const matches = await matching.findMatches(post, { limit: 10 });
+    res.status(200).json(matches.map(m => ({
+      ...mapPost(m.row),
+      matchScore: m.score,
+      distanceKm: m.distanceKm === null || m.distanceKm === undefined ? null : Math.round(m.distanceKm * 10) / 10,
+      matchReasons: m.reasons,
+    })));
+  } catch (err) {
+    console.error('Fetch matches error:', err);
+    res.status(500).json({ message: 'Error loading matches.' });
+  }
+});
+
 // GET /posts/:id/similar — same category, opposite lost/found first, newest
 router.get('/:id/similar', verifyToken, async (req, res) => {
   try {
@@ -122,6 +145,8 @@ router.post('/', verifyToken, validate(schemas.createPost), async (req, res) => 
 
     const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [id]);
     res.status(201).json(mapPost(row));
+    // Look for lost/found counterparts after replying; a slow match must never delay the post.
+    matching.notifyMatches(row).catch(err => console.error('Match error:', err.message));
   } catch (err) {
     console.error('Create post error:', err);
     res.status(500).json({ message: 'Error creating post.' });
@@ -188,6 +213,11 @@ router.put('/:id', verifyToken, validate(schemas.updatePost), async (req, res) =
 
     const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [id]);
     res.status(200).json(mapPost(row));
+    const changed = ['title', 'description', 'category', 'location', 'latitude', 'longitude']
+      .some(k => k in req.body && String(req.body[k] ?? '') !== String(post[k] ?? ''));
+    if (changed && nextStatus === 'active') {
+      matching.notifyMatches(row).catch(err => console.error('Match error:', err.message));
+    }
   } catch (err) {
     console.error('Update post error:', err);
     res.status(500).json({ message: 'Error updating post.' });

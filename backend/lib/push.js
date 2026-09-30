@@ -107,6 +107,7 @@ async function sendPush(userId, { title, body, data = {}, collapseKey } = {}) {
       notification: { channelId, ...(tag ? { tag } : {}), sound: 'default' },
     },
     apns: {
+      headers: { 'apns-priority': '10', ...(tag ? { 'apns-collapse-id': tag } : {}) },
       payload: { aps: { sound: 'default', ...(tag ? { 'thread-id': tag } : {}) } },
     },
   };

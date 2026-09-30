@@ -21,9 +21,11 @@ function displayName(row) {
 async function isBlocked(a, b) {
   if (!a || !b) return false;
   const row = await db.queryOne(
-    `SELECT 1 AS hit FROM blocked_users
-     WHERE (user_id = $1 AND blocked_user_id = $2)
-        OR (user_id = $3 AND blocked_user_id = $4)`,
+    `SELECT 1 AS hit FROM blocked_users bu
+     JOIN users t ON t.uid = bu.blocked_user_id
+     WHERE ((bu.user_id = $1 AND bu.blocked_user_id = $2)
+        OR (bu.user_id = $3 AND bu.blocked_user_id = $4))
+       AND COALESCE(t.is_admin, ${db.isPostgres ? 'FALSE' : '0'}) = ${db.isPostgres ? 'FALSE' : '0'}`,
     [a, b, b, a]
   );
   return !!row;
@@ -31,10 +33,13 @@ async function isBlocked(a, b) {
 
 /** Set of user ids that `userId` has blocked or that have blocked `userId`. */
 async function blockedIdsFor(userId) {
+  const notAdmin = `COALESCE(t.is_admin, ${db.isPostgres ? 'FALSE' : '0'}) = ${db.isPostgres ? 'FALSE' : '0'}`;
   const rows = await db.query(
-    `SELECT blocked_user_id AS id FROM blocked_users WHERE user_id = $1
+    `SELECT bu.blocked_user_id AS id FROM blocked_users bu JOIN users t ON t.uid = bu.blocked_user_id
+     WHERE bu.user_id = $1 AND ${notAdmin}
      UNION
-     SELECT user_id AS id FROM blocked_users WHERE blocked_user_id = $2`,
+     SELECT bu.user_id AS id FROM blocked_users bu JOIN users t ON t.uid = bu.blocked_user_id
+     WHERE bu.blocked_user_id = $2 AND ${notAdmin}`,
     [userId, userId]
   );
   return new Set(rows.map(r => r.id));
@@ -142,7 +147,8 @@ async function syncAdminFlag(user) {
   if (truthy(user.is_admin)) return true;
   if (!isAdminEmail(user.email)) return false;
   // Staff accounts carry the verified tick automatically.
-  await db.exec('UPDATE users SET is_admin = $1, identity_verified = $1 WHERE uid = $2', [bool(true), user.uid]);
+  // Placeholders are positional on SQLite, so every one is listed once.
+  await db.exec('UPDATE users SET is_admin = $1, identity_verified = $2 WHERE uid = $3', [bool(true), bool(true), user.uid]);
   user.is_admin = true;
   user.identity_verified = true;
   return true;
@@ -180,20 +186,47 @@ function mapPost(row) {
     createdAtMs: parseInt(row.created_at_ms),
     updatedAtMs: parseInt(row.updated_at_ms),
     status: row.status || 'active',
+    shareUrl: shareUrlFor(row.id),
   };
 }
 
+/** Public link for a post; empty when the server has no public URL. */
+function shareUrlFor(id) {
+  const base = require('../config').publicUrl;
+  return base ? `${base}/p/${encodeURIComponent(id)}` : '';
+}
+
 function mapMessage(row) {
+  const deleted = !!row.deleted_at_ms;
   return {
     id: row.id,
     chatId: row.chat_id,
     senderId: row.sender_id,
-    text: row.text || '',
-    imageUrl: row.image_url || '',
+    text: deleted ? '' : (row.text || ''),
+    imageUrl: deleted ? '' : (row.image_url || ''),
+    audioUrl: deleted ? '' : (row.audio_url || ''),
+    audioMs: deleted || row.audio_ms === null || row.audio_ms === undefined ? null : parseInt(row.audio_ms),
+    replyTo: row.reply_to_id ? {
+      id: row.reply_to_id,
+      senderId: row.r_sender_id || '',
+      text: row.r_deleted_at_ms ? '' : (row.r_text || ''),
+      imageUrl: row.r_deleted_at_ms ? '' : (row.r_image_url || ''),
+      audioUrl: row.r_deleted_at_ms ? '' : (row.r_audio_url || ''),
+      deleted: !!row.r_deleted_at_ms,
+    } : null,
+    deleted,
     createdAtMs: parseInt(row.created_at_ms),
     isRead: truthy(row.is_read),
   };
 }
+
+/** SELECT for messages with the quoted (replied-to) message joined in. */
+const MESSAGE_SELECT = `
+  SELECT m.*,
+         r.sender_id AS r_sender_id, r.text AS r_text, r.image_url AS r_image_url,
+         r.audio_url AS r_audio_url, r.deleted_at_ms AS r_deleted_at_ms
+  FROM messages m
+  LEFT JOIN messages r ON r.id = m.reply_to_id`;
 
 module.exports = {
   parseNotificationData,
@@ -211,5 +244,7 @@ module.exports = {
   notify,
   POST_SELECT,
   mapPost,
+  shareUrlFor,
   mapMessage,
+  MESSAGE_SELECT,
 };

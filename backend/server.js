@@ -18,6 +18,7 @@ const { router: adminRouter } = require('./routes/admin');
 const { router: adminConsoleRouter } = require('./routes/admin_console');
 const push = require('./lib/push');
 const geoRouter = require('./routes/geo');
+const share = require('./routes/share');
 const { initWebSocket } = require('./websocket');
 
 const app = express();
@@ -69,6 +70,10 @@ app.use('/uploads', express.static(config.uploadsDir, { maxAge: '7d', index: fal
 app.get('/legal/:doc(privacy|terms)', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'legal', `${req.params.doc}.html`));
 });
+// Public share pages and the app-link files that let those links open the app.
+app.use('/p', share.router);
+app.get('/.well-known/assetlinks.json', (req, res) => res.json(share.assetLinks()));
+app.get('/.well-known/apple-app-site-association', (req, res) => res.type('application/json').send(JSON.stringify(share.appleAssociation())));
 
 // Routes
 app.use('/auth/login', authLimiter);

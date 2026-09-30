@@ -56,7 +56,13 @@ const config = {
   jwtSecret: readJwtSecret(),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30d',
   corsOrigins: readCorsOrigins(),
-  publicUrl: (process.env.PUBLIC_URL || '').replace(/\/$/, ''),
+  // Public base URL for share links and uploads. Railway injects RAILWAY_PUBLIC_DOMAIN.
+  publicUrl: (process.env.PUBLIC_URL || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : '')).replace(/\/$/, ''),
+  // SHA-256 of the Android signing certificate(s), for /.well-known/assetlinks.json.
+  androidCertSha256: (process.env.ANDROID_CERT_SHA256 || '0E:3A:13:C5:64:DD:1A:26:41:D6:14:3E:9C:56:14:43:2E:6B:69:60:4A:8F:EE:53:C3:AA:1F:EC:28:D1:E5:A8')
+    .split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
+  // Apple team id for universal links (set after Apple Developer enrolment).
+  appleTeamId: (process.env.APPLE_TEAM_ID || '').trim(),
   // Where uploaded images live. Mount a persistent volume here in production.
   uploadsDir: path.resolve(process.env.UPLOADS_DIR || path.join(__dirname, 'uploads')),
   rateLimit: {

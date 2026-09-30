@@ -81,7 +81,10 @@ const schemas = {
   sendMessage: z.object({
     text: optionalTrimmed(2000),
     imageUrl: httpUrl(500).optional(),
-  }).refine(v => (v.text && v.text.length > 0) || (v.imageUrl && v.imageUrl.length > 0), {
+    audioUrl: httpUrl(500).optional(),
+    audioMs: z.number().int().min(1).max(600000).optional(),
+    replyToId: z.string().trim().max(64).optional(),
+  }).refine(v => (v.text && v.text.length > 0) || (v.imageUrl && v.imageUrl.length > 0) || (v.audioUrl && v.audioUrl.length > 0), {
     message: 'Message cannot be empty.',
   }),
 
@@ -92,6 +95,7 @@ const schemas = {
     address: optionalTrimmed(120),
     job: optionalTrimmed(80),
     avatarUrl: httpUrl(500).optional(),
+    coverUrl: z.union([httpUrl(500), z.literal('')]).optional(),
   }),
   privacy: z.object({
     showProfile: optionalBool,

@@ -13,7 +13,8 @@ const router = express.Router();
 
 // Identity documents are NOT here: they go through POST /profile/verification/upload
 // into config.privateDir and are only served to their owner and admins.
-const FOLDERS = ['posts', 'avatars', 'chat'];
+const FOLDERS = ['posts', 'avatars', 'chat', 'covers', 'voice'];
+const AUDIO_FOLDERS = new Set(['voice']);
 const MAX_BYTES = 8 * 1024 * 1024;
 
 /**
@@ -41,6 +42,22 @@ function sniffImage(buf) {
   return null;
 }
 
+/** Detects common audio containers from their first bytes (voice messages). */
+function sniffAudio(buf) {
+  if (!buf || buf.length < 12) return null;
+  const ascii = (from, to) => buf.toString('latin1', from, to);
+  if (ascii(4, 8) === 'ftyp') {
+    const brand = ascii(8, 12);
+    if (/^(M4A |M4B |mp42|isom|iso2|mp41|3gp|avc1|dash)/.test(brand)) return { mime: 'audio/mp4', ext: 'm4a' };
+  }
+  if (ascii(0, 3) === 'ID3' || (buf[0] === 0xff && (buf[1] & 0xe0) === 0xe0)) return { mime: 'audio/mpeg', ext: 'mp3' };
+  if (ascii(0, 4) === 'OggS') return { mime: 'audio/ogg', ext: 'ogg' };
+  if (ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WAVE') return { mime: 'audio/wav', ext: 'wav' };
+  if (buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) return { mime: 'audio/webm', ext: 'webm' };
+  if (ascii(0, 4) === 'fLaC') return { mime: 'audio/flac', ext: 'flac' };
+  return null;
+}
+
 for (const f of FOLDERS) fs.mkdirSync(path.join(config.uploadsDir, f), { recursive: true });
 
 const upload = multer({
@@ -50,10 +67,11 @@ const upload = multer({
     const type = (file.mimetype || '').toLowerCase();
     // Anything that claims to be an image, or has no useful type at all, is
     // accepted here; the bytes are checked once the upload has finished.
-    if (type.startsWith('image/') || type === 'application/octet-stream' || type === '') {
+    if (type.startsWith('image/') || type.startsWith('audio/') || type.startsWith('video/') ||
+        type === 'application/octet-stream' || type === '') {
       return cb(null, true);
     }
-    cb(Object.assign(new Error('Please choose an image file.'), { status: 400 }));
+    cb(Object.assign(new Error('Please choose an image or audio file.'), { status: 400 }));
   },
 });
 
@@ -82,10 +100,13 @@ router.post('/', verifyToken, (req, res, next) => {
   try {
     // The declared Content-Type is never trusted: only files whose bytes are a
     // real raster image are stored.
-    const sniffed = sniffImage(req.file.buffer);
+    const wantAudio = AUDIO_FOLDERS.has(folder);
+    const sniffed = wantAudio ? sniffAudio(req.file.buffer) : sniffImage(req.file.buffer);
     const ext = sniffed ? sniffed.ext : null;
     if (!ext) {
-      return res.status(400).json({ message: 'That file does not look like an image we can read.' });
+      return res.status(400).json({
+        message: wantAudio ? 'That file does not look like a voice recording we can play.' : 'That file does not look like an image we can read.',
+      });
     }
     const name = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${ext}`;
     await fs.promises.writeFile(path.join(config.uploadsDir, folder, name), req.file.buffer);
@@ -97,4 +118,4 @@ router.post('/', verifyToken, (req, res, next) => {
   }
 });
 
-module.exports = { router, upload, sniffImage };
+module.exports = { router, upload, sniffImage, sniffAudio, publicBase };

@@ -9,6 +9,7 @@ const {
   notify,
   displayName,
   mapMessage,
+  MESSAGE_SELECT,
   bool, truthy } = require('../lib/helpers');
 
 const { validate, schemas } = require('../lib/validate');
@@ -91,26 +92,28 @@ router.get('/:id/messages', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'You are not a participant in this chat.' });
     }
 
-    let sql = 'SELECT * FROM messages WHERE chat_id = $1';
+    let sql = `${MESSAGE_SELECT} WHERE m.chat_id = $1`;
     const params = [chatId];
 
     if (cursor !== null) {
       params.push(cursor);
-      sql += ` AND created_at_ms < $${params.length}`;
+      sql += ` AND m.created_at_ms < $${params.length}`;
     }
 
     params.push(limit);
-    sql += ` ORDER BY created_at_ms DESC LIMIT $${params.length}`;
+    sql += ` ORDER BY m.created_at_ms DESC LIMIT $${params.length}`;
 
     const messages = await db.query(sql, params);
     const items = messages.map(mapMessage);
 
-    // Reading the latest page clears the unread counter.
+    // Reading the latest page clears the unread counter and settles the
+    // "new message" notifications of this chat.
     if (cursor === null) {
       await db.exec(
         'UPDATE chat_participants SET unread_count = 0 WHERE chat_id = $1 AND user_id = $2',
         [chatId, req.userId]
       );
+      await markChatNotificationsRead(req.userId, chatId);
     }
 
     const hasMore = items.length === limit;
@@ -179,14 +182,67 @@ router.post('/initiate', verifyToken, validate(schemas.initiateChat), async (req
   }
 });
 
-// POST /chats/:id/messages - Send a text and/or image message
+/** Marks the "new message" notifications of one chat as read for a user. */
+async function markChatNotificationsRead(userId, chatId) {
+  await db.exec(
+    `UPDATE notifications SET is_unread = $1 WHERE user_id = $2 AND type = 'message' AND data LIKE $3`,
+    [bool(false), userId, `%"chatId":"${chatId}"%`]
+  );
+}
+
+// PUT /chats/:id/read - the chat is on screen: settle its unread state
+router.put('/:id/read', verifyToken, async (req, res) => {
+  const chatId = req.params.id;
+  try {
+    const isParticipant = await db.queryOne(
+      'SELECT 1 AS hit FROM chat_participants WHERE chat_id = $1 AND user_id = $2', [chatId, req.userId]);
+    if (!isParticipant) return res.status(403).json({ message: 'You are not a participant in this chat.' });
+    await db.exec('UPDATE chat_participants SET unread_count = 0 WHERE chat_id = $1 AND user_id = $2', [chatId, req.userId]);
+    await markChatNotificationsRead(req.userId, chatId);
+    res.status(200).json({ message: 'Chat marked as read.' });
+  } catch (err) {
+    console.error('Mark chat read error:', err);
+    res.status(500).json({ message: 'Error updating chat.' });
+  }
+});
+
+// DELETE /chats/:id/messages/:mid - the sender removes a message for everyone
+router.delete('/:id/messages/:mid', verifyToken, async (req, res) => {
+  const { id: chatId, mid } = req.params;
+  try {
+    const msg = await db.queryOne('SELECT * FROM messages WHERE id = $1 AND chat_id = $2', [mid, chatId]);
+    if (!msg) return res.status(404).json({ message: 'Message not found.' });
+    if (msg.sender_id !== req.userId) return res.status(403).json({ message: 'You can only delete your own messages.' });
+    if (!msg.deleted_at_ms) {
+      const now = Date.now();
+      await db.exec(
+        `UPDATE messages SET deleted_at_ms = $1, text = '', image_url = NULL, audio_url = NULL, audio_ms = NULL WHERE id = $2`,
+        [now, mid]
+      );
+      const last = await db.queryOne('SELECT id FROM messages WHERE chat_id = $1 ORDER BY created_at_ms DESC LIMIT 1', [chatId]);
+      if (last && last.id === mid) {
+        await db.exec('UPDATE chats SET last_message_text = $1 WHERE id = $2', ['This message was deleted', chatId]);
+      }
+    }
+    const row = await db.queryOne(`${MESSAGE_SELECT} WHERE m.id = $1`, [mid]);
+    res.status(200).json(mapMessage(row));
+  } catch (err) {
+    console.error('Delete message error:', err);
+    res.status(500).json({ message: 'Error deleting message.' });
+  }
+});
+
+// POST /chats/:id/messages - Send a text, image or voice message
 router.post('/:id/messages', verifyToken, validate(schemas.sendMessage), async (req, res) => {
   const chatId = req.params.id;
   const senderId = req.userId;
   const text = typeof req.body.text === 'string' ? req.body.text.trim() : '';
   const imageUrl = typeof req.body.imageUrl === 'string' ? req.body.imageUrl.trim() : '';
+  const audioUrl = typeof req.body.audioUrl === 'string' ? req.body.audioUrl.trim() : '';
+  const audioMs = audioUrl && Number.isFinite(req.body.audioMs) ? Math.round(req.body.audioMs) : null;
+  const replyToId = typeof req.body.replyToId === 'string' && req.body.replyToId ? req.body.replyToId : null;
 
-  if (!text && !imageUrl) {
+  if (!text && !imageUrl && !audioUrl) {
     return res.status(400).json({ message: 'Message cannot be empty.' });
   }
 
@@ -209,14 +265,19 @@ router.post('/:id/messages', verifyToken, validate(schemas.sendMessage), async (
       }
     }
 
+    if (replyToId) {
+      const quoted = await db.queryOne('SELECT id FROM messages WHERE id = $1 AND chat_id = $2', [replyToId, chatId]);
+      if (!quoted) return res.status(400).json({ message: 'The message you are replying to is not in this chat.' });
+    }
+
     const msgId = crypto.randomUUID();
     const now = Date.now();
-    const preview = text || 'Sent a photo';
+    const preview = text || (audioUrl ? '\u{1F3A4} Voice message' : 'Sent a photo');
 
     await db.exec(
-      `INSERT INTO messages (id, chat_id, sender_id, text, image_url, is_read, created_at_ms)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [msgId, chatId, senderId, text, imageUrl, bool(false), now]
+      `INSERT INTO messages (id, chat_id, sender_id, text, image_url, audio_url, audio_ms, reply_to_id, is_read, created_at_ms)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [msgId, chatId, senderId, text, imageUrl, audioUrl || null, audioMs, replyToId, bool(false), now]
     );
 
     await db.exec(
@@ -253,15 +314,8 @@ router.post('/:id/messages', verifyToken, validate(schemas.sendMessage), async (
       });
     }
 
-    res.status(201).json({
-      id: msgId,
-      chatId,
-      senderId,
-      text,
-      imageUrl,
-      createdAtMs: now,
-      isRead: false,
-    });
+    const created = await db.queryOne(`${MESSAGE_SELECT} WHERE m.id = $1`, [msgId]);
+    res.status(201).json(mapMessage(created));
   } catch (err) {
     console.error('Send message error:', err);
     res.status(500).json({ message: 'Error sending message.' });

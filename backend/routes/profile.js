@@ -36,6 +36,7 @@ function ownProfile(user) {
     address: user.address || '',
     job: user.job || '',
     avatarUrl: user.avatar_url || '',
+    coverUrl: user.cover_url || '',
     identityVerified: truthy(user.identity_verified),
     isAdmin: truthy(user.is_admin),
     authProvider: user.auth_provider || 'email',
@@ -58,7 +59,7 @@ router.get('/', verifyToken, async (req, res) => {
 
 // PUT /profile - update profile details
 router.put('/', verifyToken, validate(schemas.updateProfile), async (req, res) => {
-  const { fullName, nickName, phone, address, job, avatarUrl } = req.body;
+  const { fullName, nickName, phone, address, job, avatarUrl, coverUrl } = req.body;
 
   try {
     const user = await db.queryOne('SELECT * FROM users WHERE uid = $1', [req.userId]);
@@ -67,8 +68,8 @@ router.put('/', verifyToken, validate(schemas.updateProfile), async (req, res) =
     const now = Date.now();
     await db.exec(
       `UPDATE users
-       SET full_name = $1, nick_name = $2, phone = $3, address = $4, job = $5, avatar_url = $6, updated_at = $7
-       WHERE uid = $8`,
+       SET full_name = $1, nick_name = $2, phone = $3, address = $4, job = $5, avatar_url = $6, updated_at = $7, cover_url = $8
+       WHERE uid = $9`,
       [
         fullName !== undefined ? fullName : user.full_name,
         nickName !== undefined ? nickName : user.nick_name,
@@ -77,6 +78,7 @@ router.put('/', verifyToken, validate(schemas.updateProfile), async (req, res) =
         job !== undefined ? job : user.job,
         avatarUrl !== undefined ? avatarUrl : user.avatar_url,
         now,
+        coverUrl !== undefined ? (coverUrl || null) : user.cover_url,
         req.userId,
       ]
     );
@@ -343,8 +345,11 @@ router.post('/blocked', verifyToken, validate(schemas.blockUser), async (req, re
   if (blockedUserId === req.userId) return res.status(400).json({ message: 'You cannot block yourself.' });
 
   try {
-    const target = await db.queryOne('SELECT uid FROM users WHERE uid = $1', [blockedUserId]);
+    const target = await db.queryOne('SELECT uid, is_admin FROM users WHERE uid = $1', [blockedUserId]);
     if (!target) return res.status(404).json({ message: 'User not found.' });
+    if (truthy(target.is_admin)) {
+      return res.status(403).json({ message: 'Finder administrators cannot be blocked.' });
+    }
     const exists = await db.queryOne(
       'SELECT * FROM blocked_users WHERE user_id = $1 AND blocked_user_id = $2',
       [req.userId, blockedUserId]
@@ -475,6 +480,7 @@ router.get('/:userId', verifyToken, async (req, res) => {
       fullName: user.full_name || '',
       nickName: user.nick_name || '',
       avatarUrl: user.avatar_url || '',
+      coverUrl: user.cover_url || '',
       identityVerified: truthy(user.identity_verified),
       isAdmin: truthy(user.is_admin),
       memberSinceMs: parseInt(user.created_at),

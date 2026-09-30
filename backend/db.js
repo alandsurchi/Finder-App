@@ -230,6 +230,20 @@ async function initDb() {
       await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_updates BOOLEAN DEFAULT TRUE;');
       await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_marketing BOOLEAN DEFAULT FALSE;');
       await pgPool.query('ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS notify_email BOOLEAN DEFAULT TRUE;');
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS cover_url TEXT;');
+      await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS audio_url TEXT;');
+      await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS audio_ms INTEGER;');
+      await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS reply_to_id VARCHAR(255);');
+      await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_at_ms BIGINT;');
+      await pgPool.query(`CREATE TABLE IF NOT EXISTS post_matches (
+        post_id VARCHAR(255) REFERENCES posts(id) ON DELETE CASCADE,
+        matched_post_id VARCHAR(255) REFERENCES posts(id) ON DELETE CASCADE,
+        score REAL,
+        created_at_ms BIGINT NOT NULL,
+        PRIMARY KEY (post_id, matched_post_id)
+      );`);
+      // Administrators can never be blocked; drop any old rows that targeted one.
+      await pgPool.query('DELETE FROM blocked_users WHERE blocked_user_id IN (SELECT uid FROM users WHERE is_admin = TRUE);');
       await pgPool.query(`
         CREATE TABLE IF NOT EXISTS verification_requests (
           id VARCHAR(255) PRIMARY KEY,
@@ -426,6 +440,21 @@ async function initDb() {
         sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_updates INTEGER DEFAULT 1', () => {});
         sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_marketing INTEGER DEFAULT 0', () => {});
         sqliteDb.run('ALTER TABLE user_settings ADD COLUMN notify_email INTEGER DEFAULT 1', () => {});
+        sqliteDb.run('ALTER TABLE users ADD COLUMN cover_url TEXT', () => {});
+        sqliteDb.run('ALTER TABLE messages ADD COLUMN audio_url TEXT', () => {});
+        sqliteDb.run('ALTER TABLE messages ADD COLUMN audio_ms INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE messages ADD COLUMN reply_to_id TEXT', () => {});
+        sqliteDb.run('ALTER TABLE messages ADD COLUMN deleted_at_ms INTEGER', () => {});
+        sqliteDb.run(`
+          CREATE TABLE IF NOT EXISTS post_matches (
+            post_id TEXT,
+            matched_post_id TEXT,
+            score REAL,
+            created_at_ms INTEGER NOT NULL,
+            PRIMARY KEY (post_id, matched_post_id)
+          )
+        `);
+        sqliteDb.run('DELETE FROM blocked_users WHERE blocked_user_id IN (SELECT uid FROM users WHERE is_admin = 1)', () => {});
         sqliteDb.run(`
           CREATE TABLE IF NOT EXISTS verification_requests (
             id TEXT PRIMARY KEY,
