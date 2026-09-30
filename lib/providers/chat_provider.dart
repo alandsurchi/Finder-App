@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/core/errors/exceptions.dart';
@@ -74,13 +75,23 @@ class ChatMessagesController extends StateNotifier<AsyncValue<List<Message>>> {
   }
 
   /// Appends an optimistic bubble, sends, then swaps in the server copy.
-  Future<Result<Message>> send({String? text, String? imageUrl}) async {
+  /// A voice note ([localAudioPath]) is uploaded first, then sent.
+  Future<Result<Message>> send({
+    String? text,
+    String? imageUrl,
+    String? localAudioPath,
+    int? audioMs,
+    ReplyPreview? replyTo,
+  }) async {
     final me = ref.read(authStateProvider).userId ?? '';
     final local = Message(
       messageId: 'local-${DateTime.now().millisecondsSinceEpoch}-${_localSeq++}',
       senderId: me,
       text: text?.trim() ?? '',
       imageUrl: imageUrl ?? '',
+      localAudioPath: localAudioPath ?? '',
+      audioMs: audioMs,
+      replyTo: replyTo,
       createdAt: Timestamp.now(),
       isPending: true,
     );
@@ -91,10 +102,20 @@ class ChatMessagesController extends StateNotifier<AsyncValue<List<Message>>> {
 
   Future<Result<Message>> _deliver(Message local) async {
     try {
+      var audioUrl = local.audioUrl;
+      if (audioUrl.isEmpty && local.localAudioPath.isNotEmpty) {
+        final bytes = await File(local.localAudioPath).readAsBytes();
+        audioUrl = await _service.uploadVoice(bytes);
+        final idx = _pending.indexWhere((m) => m.messageId == local.messageId);
+        if (idx != -1) _pending[idx] = _pending[idx].copyWith(audioUrl: audioUrl);
+      }
       final sent = await _service.sendMessage(
         chatId,
         text: local.text,
         imageUrl: local.imageUrl,
+        audioUrl: audioUrl,
+        audioMs: local.audioMs,
+        replyToId: local.replyTo?.id,
       );
       _pending.removeWhere((m) => m.messageId == local.messageId);
       _server = [..._server, sent];
@@ -126,6 +147,18 @@ class ChatMessagesController extends StateNotifier<AsyncValue<List<Message>>> {
     _publish();
   }
 
+  /// Deletes one of my messages for everyone (a tombstone stays in place).
+  Future<Result<void>> deleteMessage(String messageId) async {
+    try {
+      final gone = await _service.deleteMessage(chatId, messageId);
+      _server = [for (final m in _server) m.messageId == messageId ? gone : m];
+      _publish();
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure(failureFrom(e, fallback: 'Could not delete the message.'));
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -137,3 +170,7 @@ final chatMessagesProvider = StateNotifierProvider.autoDispose
     .family<ChatMessagesController, AsyncValue<List<Message>>, String>(
   (ref, chatId) => ChatMessagesController(ref, chatId),
 );
+
+/// The message being replied to in the open chat (null = none).
+final replyDraftProvider =
+    StateProvider.autoDispose.family<ReplyPreview?, String>((ref, chatId) => null);

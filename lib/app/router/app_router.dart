@@ -9,7 +9,9 @@ import 'package:finder/screens/item_details_screen.dart';
 import 'package:finder/screens/login_screen.dart';
 import 'package:finder/screens/messages_screen.dart';
 import 'package:finder/screens/my_posts_screen.dart';
+import 'package:finder/features/posts/presentation/item_details_args.dart';
 import 'package:finder/screens/notification_settings_screen.dart';
+import 'package:finder/screens/user_profile_screen.dart';
 import 'package:finder/screens/notifications_screen.dart';
 import 'package:finder/screens/onboarding_screen.dart';
 import 'package:finder/screens/privacy_settings_screen.dart';
@@ -40,9 +42,39 @@ class AppRouter {
           builder: (_) => const ChatScreen(),
         );
       case RouteNames.itemDetails:
+        // With a hero on screen the page fades in behind the flying image;
+        // without one (links, notifications) the platform transition is used.
+        final details = ItemDetailsArgs.from(settings.arguments);
+        if (details?.heroTag == null) {
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (_) => const ItemDetailsScreen(),
+          );
+        }
+        return PageRouteBuilder<void>(
+          settings: settings,
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 260),
+          pageBuilder: (_, __, ___) => const ItemDetailsScreen(),
+          transitionsBuilder: (context, animation, secondary, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+            return FadeTransition(
+              opacity: curved,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.98, end: 1).animate(curved),
+                child: child,
+              ),
+            );
+          },
+        );
+      case RouteNames.userProfile:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => const ItemDetailsScreen(),
+          builder: (_) => const UserProfileScreen(),
         );
       case RouteNames.createPost:
         return MaterialPageRoute(builder: (_) => const CreatePostScreen());

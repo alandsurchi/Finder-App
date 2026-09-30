@@ -59,6 +59,10 @@ class PushService {
   bool get supported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   bool get isReady => _ready;
 
+  /// True once this device is registered for push. iPhones sideloaded with
+  /// a free Apple ID never get here; they fall back to local alerts.
+  bool get hasPushToken => _registeredToken != null;
+
   /// Call once at startup. Never throws: a missing Firebase config simply
   /// leaves push off.
   Future<void> init() async {
@@ -75,7 +79,12 @@ class PushService {
       await _local.initialize(
         settings: const InitializationSettings(
           android: AndroidInitializationSettings('@drawable/ic_notification'),
-          iOS: DarwinInitializationSettings(),
+          // Permission is requested once, by FCM in syncToken().
+          iOS: DarwinInitializationSettings(
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+          ),
         ),
         onDidReceiveNotificationResponse: (response) =>
             _openPayload(response.payload),
@@ -108,12 +117,64 @@ class PushService {
   Future<void> syncToken() async {
     if (!_ready) return;
     try {
-      await FirebaseMessaging.instance.requestPermission();
-      final token = await FirebaseMessaging.instance.getToken();
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+      if (Platform.isIOS) {
+        // FCM needs the APNs token first. Without a paid Apple team (free
+        // sideload) it never arrives: then push stays off, quietly.
+        String? apns;
+        for (var i = 0; i < 6 && apns == null; i++) {
+          apns = await messaging.getAPNSToken();
+          if (apns == null) await Future<void>.delayed(const Duration(seconds: 1));
+        }
+        if (apns == null) {
+          debugPrint('Push: no APNs token (app not signed for push); using local alerts.');
+          return;
+        }
+      }
+      final token = await messaging.getToken();
       if (token != null) await _register(token);
     } catch (e) {
       debugPrint('Push token sync failed: $e');
     }
+  }
+
+  /// Shows a banner from the app itself (foreground FCM message, or a poll
+  /// result on phones without push). Tapping it opens the same screen a
+  /// push notification would.
+  Future<void> showLocal({
+    required String title,
+    required String body,
+    required Map<String, dynamic> data,
+  }) async {
+    if (!_ready) return;
+    final type = data['type']?.toString() ?? '';
+    final chatId = data['chatId']?.toString() ?? '';
+    final channel = type == 'message' ? _messagesChannel : _updatesChannel;
+    final tag = chatId.isNotEmpty ? chatId : data['postId']?.toString();
+    await _local.show(
+      id: (tag ?? title).hashCode & 0x7fffffff,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          importance: channel.importance,
+          priority: Priority.high,
+          tag: tag,
+          icon: '@drawable/ic_notification',
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBanner: true,
+          presentSound: true,
+          threadIdentifier: tag,
+        ),
+      ),
+      payload: jsonEncode(data),
+    );
   }
 
   /// Stops phone notifications for this device (call before signing out).
@@ -131,6 +192,9 @@ class PushService {
       _registeredToken = null;
     }
   }
+
+  /// Marks the session as signed out for local alerts too.
+  void forgetSession() => _registeredToken = null;
 
   /// Opens the screen for a notification tapped before the app was ready
   /// (cold start). Call once the user is signed in and the navigator exists.
@@ -184,27 +248,7 @@ class PushService {
 
     final title = message.notification?.title ?? data['title']?.toString() ?? 'Finder';
     final body = message.notification?.body ?? data['body']?.toString() ?? '';
-    final channel = type == 'message' ? _messagesChannel : _updatesChannel;
-    final tag = chatId.isNotEmpty ? chatId : data['postId']?.toString();
-
-    await _local.show(
-      id: (tag ?? title).hashCode & 0x7fffffff,
-      title: title,
-      body: body,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel.id,
-          channel.name,
-          channelDescription: channel.description,
-          importance: channel.importance,
-          priority: Priority.high,
-          tag: tag,
-          icon: '@drawable/ic_notification',
-        ),
-        iOS: const DarwinNotificationDetails(),
-      ),
-      payload: jsonEncode(data),
-    );
+    await showLocal(title: title, body: body, data: data);
   }
 
   void _queueOpen(Map<String, dynamic> data) {

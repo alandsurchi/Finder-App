@@ -29,6 +29,10 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
       actionLabel: 'Block',
     );
     if (user == null || !mounted) return;
+    if (user.isAdmin) {
+      ActionFeedback.showError(context, 'Finder administrators cannot be blocked.');
+      return;
+    }
     final result = await ref.read(blockedUsersProvider.notifier).blockUser(
           user.uid,
           name: user.displayName,

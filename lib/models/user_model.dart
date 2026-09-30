@@ -10,6 +10,7 @@ class UserModel {
   final String address;
   final String job;
   final String avatarUrl;
+  final String coverUrl;
   final bool identityVerified;
   final bool isAdmin;
   final int postsCount;
@@ -25,6 +26,7 @@ class UserModel {
     this.address = '',
     this.job = '',
     this.avatarUrl = '',
+    this.coverUrl = '',
     this.identityVerified = false,
     this.isAdmin = false,
     this.postsCount = 0,
@@ -61,6 +63,7 @@ class UserModel {
       address: map['address']?.toString() ?? '',
       job: map['job']?.toString() ?? '',
       avatarUrl: map['avatarUrl']?.toString() ?? '',
+      coverUrl: map['coverUrl']?.toString() ?? '',
       identityVerified: map['identityVerified'] == true,
       isAdmin: map['isAdmin'] == true,
       postsCount: (map['postsCount'] as num?)?.toInt() ?? 0,
@@ -113,6 +116,7 @@ class UserModel {
     String? address,
     String? job,
     String? avatarUrl,
+    String? coverUrl,
     bool? identityVerified,
     bool? isAdmin,
     int? postsCount,
@@ -128,6 +132,7 @@ class UserModel {
       address: address ?? this.address,
       job: job ?? this.job,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      coverUrl: coverUrl ?? this.coverUrl,
       identityVerified: identityVerified ?? this.identityVerified,
       isAdmin: isAdmin ?? this.isAdmin,
       postsCount: postsCount ?? this.postsCount,

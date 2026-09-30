@@ -322,12 +322,21 @@ class _PreviewChat extends ChatMessagesController {
   }
 
   @override
-  Future<Result<Message>> send({String? text, String? imageUrl}) async {
+  Future<Result<Message>> send({
+    String? text,
+    String? imageUrl,
+    String? localAudioPath,
+    int? audioMs,
+    ReplyPreview? replyTo,
+  }) async {
     final m = Message(
       messageId: 'local-${DateTime.now().millisecondsSinceEpoch}',
       senderId: kPreviewUserId,
       text: text ?? '',
       imageUrl: imageUrl ?? '',
+      localAudioPath: localAudioPath ?? '',
+      audioMs: audioMs,
+      replyTo: replyTo,
       createdAt: Timestamp.now(),
     );
     state = AsyncValue.data([...(state.value ?? []), m]);

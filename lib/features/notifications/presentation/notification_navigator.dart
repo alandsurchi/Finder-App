@@ -5,6 +5,7 @@ import '../../../routes.dart';
 import '../../../screens/admin/verification_queue_screen.dart';
 import '../../../services/post_service.dart';
 import '../../chat/presentation/open_chat.dart';
+import '../../posts/presentation/item_details_args.dart';
 
 /// Opens the screen a notification points at, from its `data` payload.
 ///
@@ -55,7 +56,13 @@ Future<void> openNotificationTarget(
   if (postId.isNotEmpty) {
     try {
       final item = await posts.fetchById(postId);
-      nav.pushNamed(AppRoutes.itemDetails, arguments: item);
+      nav.pushNamed(
+        AppRoutes.itemDetails,
+        arguments: ItemDetailsArgs(
+          item,
+          matchedPostId: type == 'match' && v('myPostId').isNotEmpty ? v('myPostId') : null,
+        ),
+      );
       return;
     } catch (_) {
       // Post may have been deleted: fall through to the list.

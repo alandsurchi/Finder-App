@@ -29,6 +29,8 @@ class ItemModel {
   final String ownerAvatarUrl;
   final double? ownerTrustScore;
   final bool isResolved;
+  /// Public link to this post (`/p/<id>` on the API host); empty offline.
+  final String shareUrl;
 
   ItemModel({
     required this.id,
@@ -52,6 +54,7 @@ class ItemModel {
     this.ownerAvatarUrl = '',
     this.ownerTrustScore,
     this.isResolved = false,
+    this.shareUrl = '',
   }) : createdAt = createdAt ?? Timestamp.now();
 
   bool get hasReward => reward != null && reward!.trim().isNotEmpty;
@@ -86,6 +89,7 @@ class ItemModel {
       isVerified: map['ownerVerified'] == true,
       ownerIsAdmin: map['ownerIsAdmin'] == true,
       isResolved: map['status']?.toString() == 'resolved',
+      shareUrl: map['shareUrl']?.toString() ?? '',
       createdAt: Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
       timeAgo: relativeTime(createdAtMs),
     );
@@ -181,6 +185,7 @@ class ItemModel {
     String? ownerAvatarUrl,
     double? ownerTrustScore,
     bool? isResolved,
+    String? shareUrl,
   }) {
     return ItemModel(
       id: id ?? this.id,
@@ -204,6 +209,7 @@ class ItemModel {
       ownerAvatarUrl: ownerAvatarUrl ?? this.ownerAvatarUrl,
       ownerTrustScore: ownerTrustScore ?? this.ownerTrustScore,
       isResolved: isResolved ?? this.isResolved,
+      shareUrl: shareUrl ?? this.shareUrl,
     );
   }
 

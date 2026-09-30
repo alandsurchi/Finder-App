@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:finder/core/utils/hero_tags.dart';
+import 'package:finder/features/posts/presentation/item_details_args.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:finder/routes.dart';
@@ -134,12 +136,12 @@ class _PostManageCard extends ConsumerWidget {
     return ItemCard(
       item: post,
       layout: ItemCardLayout.row,
-      heroTag: 'item-image-${post.id}',
+      heroTag: HeroTags.item(HeroTags.myPosts, post.id),
       showDescription: false,
       onTap: () => Navigator.pushNamed(
         context,
         AppRoutes.itemDetails,
-        arguments: post,
+        arguments: ItemDetailsArgs(post, heroTag: HeroTags.item(HeroTags.myPosts, post.id)),
       ),
       footer: Wrap(
         spacing: BeaconSpace.sm,

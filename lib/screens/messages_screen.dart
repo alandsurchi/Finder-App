@@ -139,6 +139,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                       );
                     }
                     return ListView.builder(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: EdgeInsets.fromLTRB(
                           BeaconSpace.page, 0, BeaconSpace.page, navClearance),
                       itemCount: filteredItems.length,

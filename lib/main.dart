@@ -7,6 +7,8 @@ import 'app/lifecycle/app_lifecycle_provider.dart';
 import 'app/router/app_router.dart';
 import 'app/router/root_navigator.dart';
 import 'services/push/push_service.dart';
+import 'app/deep_links.dart';
+import 'services/push/local_alerts.dart';
 import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
 import 'features/auth/presentation/auth_state_provider.dart';
@@ -50,6 +52,8 @@ Future<void> main() async {
   _lifecycle = attachAppLifecycle(container);
   // Phone notifications. A missing Firebase config only disables push.
   await container.read(pushServiceProvider).init();
+  // Shared links (https://…/p/<id>, finder://post/<id>) open the post.
+  await container.read(deepLinksProvider).init();
 
   runApp(
     UncontrolledProviderScope(
@@ -98,11 +102,14 @@ class FinderApp extends ConsumerWidget {
       if (next.isSignedIn && !wasSignedIn) {
         final push = ref.read(pushServiceProvider);
         push.syncToken().then((_) => push.flushPendingOpen());
+        ref.read(deepLinksProvider).flushPending();
+        ref.read(localAlertsProvider).start();
       }
 
       // A signed-in session ended (logout or expired token): throw away
       // every pushed screen and land on onboarding.
       if (wasSignedIn && next.status == AuthStatus.unauthenticated) {
+        ref.read(localAlertsProvider).reset();
         final nav = rootNavigatorKey.currentState;
         if (nav == null) return;
         nav.pushNamedAndRemoveUntil(AppRoutes.onboarding, (route) => false);

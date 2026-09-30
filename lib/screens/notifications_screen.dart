@@ -83,6 +83,7 @@ class NotificationsScreen extends ConsumerWidget {
                         .read(notificationsControllerProvider.notifier)
                         .loadNotifications(),
                     child: ListView.builder(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
                         BeaconSpace.page,

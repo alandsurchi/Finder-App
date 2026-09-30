@@ -56,6 +56,23 @@ class NotificationsController extends StateNotifier<AsyncValue<List<Notification
     return result;
   }
 
+  /// The chat is on screen: its "new message" rows count as read. The
+  /// server does the same when the chat loads (`PUT /chats/:id/read`).
+  void markChatSeen(String chatId) {
+    if (chatId.isEmpty || !state.hasValue) return;
+    var changed = false;
+    final items = _current.map((n) {
+      final isChat = n.type == NotificationType.newMessage &&
+          n.data['chatId']?.toString() == chatId;
+      if (isChat && n.isUnread) {
+        changed = true;
+        return n.copyWith(isUnread: false);
+      }
+      return n;
+    }).toList();
+    if (changed) state = AsyncValue.data(items);
+  }
+
   Future<Result<void>> markAllRead() async {
     final before = _current;
     if (!before.any((n) => n.isUnread)) return Result.success(null);

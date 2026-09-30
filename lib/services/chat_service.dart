@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show Uint8List;
 import '../core/utils/timestamp.dart';
 import '../core/network/api_client.dart';
 import '../models/conversation_model.dart';
@@ -28,17 +29,47 @@ class ChatService {
     return (res as Map)['chatId'].toString();
   }
 
-  /// Sends a text and/or image message and returns the stored message.
+  /// Sends a text, image or voice message and returns the stored message.
   Future<Message> sendMessage(
     String chatId, {
     String? text,
     String? imageUrl,
+    String? audioUrl,
+    int? audioMs,
+    String? replyToId,
   }) async {
     final res = await _apiClient.post('/chats/$chatId/messages', {
       if (text != null && text.trim().isNotEmpty) 'text': text.trim(),
       if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+      if (audioUrl != null && audioUrl.isNotEmpty) 'audioUrl': audioUrl,
+      if (audioUrl != null && audioUrl.isNotEmpty && audioMs != null && audioMs > 0) 'audioMs': audioMs,
+      if (replyToId != null && replyToId.isNotEmpty) 'replyToId': replyToId,
     });
     return Message.fromApi(Map<String, dynamic>.from(res as Map));
+  }
+
+  /// Removes one of my messages for everyone; returns the tombstone.
+  Future<Message> deleteMessage(String chatId, String messageId) async {
+    final res = await _apiClient.delete('/chats/$chatId/messages/$messageId');
+    return Message.fromApi(Map<String, dynamic>.from(res as Map));
+  }
+
+  /// The chat is on screen: clears its unread counter and settles its
+  /// "new message" notifications.
+  Future<void> markRead(String chatId) async {
+    await _apiClient.put('/chats/$chatId/read', const {});
+  }
+
+  /// Uploads a recorded voice note and returns its public URL.
+  Future<String> uploadVoice(Uint8List bytes) async {
+    final res = await _apiClient.uploadFile(
+      '/uploads',
+      bytes: bytes,
+      filename: 'voice.m4a',
+      contentType: 'audio/mp4',
+      fields: const {'folder': 'voice'},
+    );
+    return (res as Map)['url'].toString();
   }
 
   Stream<List<ConversationModel>> getConversationsStream(String userId) async* {

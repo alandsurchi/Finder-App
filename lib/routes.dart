@@ -8,6 +8,7 @@ class AppRoutes {
   static const String notifications = RouteNames.notifications;
   static const String chat = RouteNames.chat;
   static const String itemDetails = RouteNames.itemDetails;
+  static const String userProfile = RouteNames.userProfile;
   static const String createPost = RouteNames.createPost;
   static const String editProfile = RouteNames.editProfile;
   static const String getVerified = RouteNames.getVerified;

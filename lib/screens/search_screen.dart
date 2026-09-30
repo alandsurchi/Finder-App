@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:finder/core/utils/hero_tags.dart';
+import 'package:finder/features/posts/presentation/item_details_args.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/widgets/filter_bottom_sheet.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
@@ -147,6 +149,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     : filteredItems.isEmpty
                         ? _buildNoResultState()
                         : ListView.separated(
+                            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                             padding: EdgeInsets.fromLTRB(
                               BeaconSpace.page,
                               BeaconSpace.xs,
@@ -193,7 +196,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return ItemCard(
       item: item,
       layout: ItemCardLayout.row,
-      heroTag: 'item-image-${entry.id}',
+      heroTag: HeroTags.item(HeroTags.search, entry.id),
       subtitle: (item.isVerified || item.ownerIsAdmin)
           ? NameWithMarks(
               name: (item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User',
@@ -206,7 +209,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       onTap: () => Navigator.pushNamed(
         context,
         AppRoutes.itemDetails,
-        arguments: entry.item,
+        arguments: ItemDetailsArgs(entry.item, heroTag: HeroTags.item(HeroTags.search, entry.id)),
       ),
     );
   }

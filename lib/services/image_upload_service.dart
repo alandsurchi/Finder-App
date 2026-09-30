@@ -82,6 +82,18 @@ class ImageUploadService {
     return PrivateUpload(fileId: id, bytes: bytes!);
   }
 
+  /// Picks a picture (camera or gallery) and returns its bytes, or null
+  /// when the user cancelled. Used by the photo editor.
+  Future<Uint8List?> pickBytes({
+    required ImageSourceKind source,
+    bool frontCamera = false,
+  }) =>
+      _pickBytes(source: source, frontCamera: frontCamera);
+
+  /// Uploads already-prepared image bytes (e.g. a cropped avatar).
+  Future<String> uploadBytes(Uint8List bytes, {required String folder}) =>
+      _upload(bytes, folder: folder);
+
   Future<Uint8List?> _pickBytes({
     required ImageSourceKind source,
     bool frontCamera = false,

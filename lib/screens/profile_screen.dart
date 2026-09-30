@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:finder/screens/admin/admin_console_screen.dart';
 import 'package:flutter/services.dart';
+import 'package:finder/features/share/share_service.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/screens/edit_profile_screen.dart';
 import 'package:finder/screens/my_posts_screen.dart';
@@ -13,6 +14,7 @@ import 'package:finder/screens/legal_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/widgets/ui/profile_cover.dart';
 import 'package:finder/theme/theme_provider.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/features/auth/presentation/auth_controller.dart';
@@ -103,26 +105,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               left: 0,
               right: 0,
               top: 0,
-              height: 104,
-              child: DecoratedBox(
-                decoration: BoxDecoration(gradient: t.primaryGradient),
-                child: const Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    BeaconGlow(alignment: Alignment(1.1, -0.6), radius: 0.9),
-                    BeaconRings(
-                      alignment: Alignment(1.05, -0.5),
-                      radius: 180,
-                      opacity: 0.18,
-                    ),
-                  ],
-                ),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _openEdit,
+                child: ProfileCover(url: profile.coverUrl, height: 140),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 BeaconSpace.lg,
-                56,
+                92,
                 BeaconSpace.lg,
                 BeaconSpace.lg,
               ),
@@ -282,11 +274,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _shareProfile(UserModel profile) async {
+    final ok = await ref.read(shareServiceProvider).shareProfile(context, profile);
+    if (ok || !mounted) return;
     final lines = [
       profile.displayName,
       if (profile.nickName.isNotEmpty) '@${profile.nickName}',
       if (profile.job.isNotEmpty) profile.job,
-      if (profile.address.isNotEmpty) profile.address,
       'Find me on Finder · member id ${profile.uid}',
     ];
     await Clipboard.setData(ClipboardData(text: lines.join('\n')));

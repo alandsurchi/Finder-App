@@ -63,6 +63,15 @@ class PostService {
         .toList();
   }
 
+  /// Smart lost/found matches for one of my posts.
+  Future<List<ItemModel>> fetchMatches(String id) async {
+    final res = await _apiClient.get('/posts/$id/matches');
+    final list = res as List<dynamic>? ?? [];
+    return list
+        .map((e) => ItemModel.fromApi(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
   Future<ItemModel> createPost(ItemModel post) async {
     final res = await _apiClient.post('/posts', post.toApiBody());
     return ItemModel.fromApi(Map<String, dynamic>.from(res as Map));

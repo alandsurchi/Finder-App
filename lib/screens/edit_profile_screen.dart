@@ -9,6 +9,9 @@ import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/widgets/ui/profile_cover.dart';
+import 'package:finder/widgets/sheets/image_source_sheet.dart';
+import 'package:finder/features/profile/presentation/photo_editor_screen.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -24,11 +27,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _addressCtrl = TextEditingController();
   final _jobCtrl = TextEditingController();
   String _avatarUrl = '';
+  String _coverUrl = '';
   String _email = '';
 
   bool _seeded = false;
   bool _isSaving = false;
   bool _isUploadingAvatar = false;
+  bool _isUploadingCover = false;
 
   @override
   void initState() {
@@ -45,6 +50,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _addressCtrl.text = profile.address;
     _jobCtrl.text = profile.job;
     _avatarUrl = profile.avatarUrl;
+    _coverUrl = profile.coverUrl;
     _email = profile.email;
   }
 
@@ -64,7 +70,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         _phoneCtrl.text.trim() != p.phone ||
         _addressCtrl.text.trim() != p.address ||
         _jobCtrl.text.trim() != p.job ||
-        _avatarUrl != p.avatarUrl;
+        _avatarUrl != p.avatarUrl ||
+        _coverUrl != p.coverUrl;
   }
 
   List<_FieldDef> get _fields => [
@@ -143,7 +150,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _buildAvatarSection(t),
+                            _buildCoverSection(t),
+                    const SizedBox(height: BeaconSpace.lg),
+                    _buildAvatarSection(t),
                             const SizedBox(height: BeaconSpace.xxxl),
                             AutofillGroup(
                               child: SurfaceCard(
@@ -221,6 +230,68 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
+  Widget _buildCoverSection(AppColorTokens t) {
+    final text = Theme.of(context).textTheme;
+    return ClipRRect(
+      borderRadius: BeaconRadius.rXl,
+      child: Stack(
+        children: [
+          ProfileCover(url: _coverUrl, height: 132),
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(onTap: _isUploadingCover ? null : _pickCover),
+            ),
+          ),
+          Positioned(
+            right: BeaconSpace.sm,
+            bottom: BeaconSpace.sm,
+            child: Row(
+              children: [
+                if (_coverUrl.isNotEmpty && !_isUploadingCover) ...[
+                  AppIconButton(
+                    icon: Icons.delete_outline_rounded,
+                    tooltip: 'Remove cover photo',
+                    size: 36,
+                    iconSize: 18,
+                    variant: AppIconButtonVariant.glass,
+                    onPressed: () => setState(() => _coverUrl = ''),
+                  ),
+                  const SizedBox(width: BeaconSpace.sm),
+                ],
+                _isUploadingCover
+                    ? Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(color: t.primary, shape: BoxShape.circle),
+                        padding: const EdgeInsets.all(9),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: t.onPrimary),
+                      )
+                    : AppIconButton(
+                        icon: Icons.photo_camera_outlined,
+                        tooltip: _coverUrl.isEmpty ? 'Add a cover photo' : 'Change cover photo',
+                        size: 36,
+                        iconSize: 18,
+                        variant: AppIconButtonVariant.filled,
+                        onPressed: _pickCover,
+                      ),
+              ],
+            ),
+          ),
+          if (_coverUrl.isEmpty)
+            Positioned(
+              left: BeaconSpace.lg,
+              bottom: BeaconSpace.md,
+              child: Text(
+                'Add a cover photo',
+                style: text.labelLarge?.copyWith(color: t.onPrimary),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAvatarSection(AppColorTokens t) {
     final name = _fullNameCtrl.text.trim();
     return Center(
@@ -279,20 +350,57 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
+  /// Camera or gallery → crop editor → upload. Returns the new URL.
+  Future<String?> _pickEditUpload({
+    required PhotoEditorMode mode,
+    required String folder,
+    required String title,
+  }) async {
+    final source = await showImageSourceSheet(context, title: title);
+    if (source == null || !mounted) return null;
+    final uploads = ref.read(imageUploadServiceProvider);
+    final bytes = await uploads.pickBytes(
+      source: source,
+      frontCamera: mode == PhotoEditorMode.avatar,
+    );
+    if (bytes == null || !mounted) return null;
+    final edited = await PhotoEditorScreen.open(context, bytes, mode);
+    if (edited == null || !mounted) return null;
+    return uploads.uploadBytes(edited, folder: folder);
+  }
+
   Future<void> _pickAndUploadAvatar() async {
     final uid = ref.read(authStateProvider).userId;
-    if (uid == null) return;
-    setState(() => _isUploadingAvatar = true);
+    if (uid == null || _isUploadingAvatar) return;
     try {
-      final url = await ref.read(imageUploadServiceProvider).pickAndUpload(
+      setState(() => _isUploadingAvatar = true);
+      final url = await _pickEditUpload(
+        mode: PhotoEditorMode.avatar,
         folder: 'avatars',
-        fileName: uid,
+        title: 'Profile photo',
       );
       if (url != null && mounted) setState(() => _avatarUrl = url);
     } catch (e) {
       if (mounted) ActionFeedback.showError(context, 'Upload failed. ${describeError(e)}');
     } finally {
       if (mounted) setState(() => _isUploadingAvatar = false);
+    }
+  }
+
+  Future<void> _pickCover() async {
+    if (_isUploadingCover) return;
+    try {
+      setState(() => _isUploadingCover = true);
+      final url = await _pickEditUpload(
+        mode: PhotoEditorMode.cover,
+        folder: 'covers',
+        title: 'Cover photo',
+      );
+      if (url != null && mounted) setState(() => _coverUrl = url);
+    } catch (e) {
+      if (mounted) ActionFeedback.showError(context, 'Upload failed. ${describeError(e)}');
+    } finally {
+      if (mounted) setState(() => _isUploadingCover = false);
     }
   }
 
@@ -312,6 +420,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       address: _addressCtrl.text.trim(),
       job: _jobCtrl.text.trim(),
       avatarUrl: _avatarUrl,
+      coverUrl: _coverUrl,
     );
 
     final result = await ref.read(profileControllerProvider.notifier).updateProfile(updated);

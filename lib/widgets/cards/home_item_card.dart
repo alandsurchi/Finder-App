@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:finder/core/utils/hero_tags.dart';
+import 'package:finder/features/posts/presentation/item_details_args.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/routes.dart';
@@ -69,9 +71,13 @@ class HomeItemCard extends ConsumerWidget {
       item: item,
       margin: const EdgeInsets.fromLTRB(
           BeaconSpace.page, 0, BeaconSpace.page, BeaconSpace.lg),
-      heroTag: 'item-image-${item.id}',
+      heroTag: HeroTags.item(HeroTags.home, item.id),
       onTap: () {
-        Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: item);
+        Navigator.pushNamed(
+          context,
+          AppRoutes.itemDetails,
+          arguments: ItemDetailsArgs(item, heroTag: HeroTags.item(HeroTags.home, item.id)),
+        );
       },
       badges: _badges(),
       banner: bannerText,

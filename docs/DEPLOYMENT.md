@@ -153,3 +153,25 @@ console works even if `ADMIN_EMAILS` cannot be edited. Two admin-only routes rep
   stale. `GET /admin/push-key` shows what is active.
 - `GET /admin/export` dumps every table as JSON plus the list of stored files;
   `GET /admin/export/file?path=…` streams one file. Use it to move the data to a new host.
+
+### Share links and app links
+
+- `GET /p/:id` is the public preview of a post (Open Graph tags, "Open in Finder" button using
+  `finder://post/<id>`). `mapPost` adds `shareUrl` built from `PUBLIC_URL` (Railway injects
+  `RAILWAY_PUBLIC_DOMAIN`, used as a fallback).
+- `/.well-known/assetlinks.json` lists the Android signing certificate (`ANDROID_CERT_SHA256`,
+  comma-separated; the current upload key is the default) so `https://<host>/p/...` opens the app
+  directly. `/.well-known/apple-app-site-association` needs `APPLE_TEAM_ID` (after Apple
+  enrolment) for iOS universal links.
+
+### iOS push checklist (after Apple Developer Program enrolment)
+
+1. Certificates, Identifiers & Profiles → Keys → create an **APNs key** (.p8), note Key ID + Team ID.
+2. Firebase console → project finder-510205 → Project settings → Cloud Messaging → iOS app →
+   upload the .p8 with Key ID and Team ID.
+3. `ios/Runner/Runner.entitlements` already carries `aps-environment`; the identifier
+   `com.finderapp.finder` must have Push Notifications enabled in the Apple portal.
+4. Build with the `ios-testflight` workflow (App Store Connect API key on Codemagic) and install
+   from TestFlight. Free-Apple-ID sideloads never receive push: the app then shows local alerts
+   only while it is open.
+5. Set `APPLE_TEAM_ID` on the API and add `applinks:<host>` to the entitlements for universal links.

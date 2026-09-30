@@ -11,6 +11,10 @@ import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/features/chat/presentation/open_chat.dart';
 import 'package:finder/features/posts/presentation/saved_items_controller.dart';
 import 'package:finder/features/posts/presentation/similar_items_provider.dart';
+import 'package:finder/features/posts/presentation/item_details_args.dart';
+import 'package:finder/features/posts/presentation/post_matches_provider.dart';
+import 'package:finder/features/share/share_service.dart';
+import 'package:finder/core/utils/hero_tags.dart';
 import 'package:finder/features/profile/presentation/blocked_users_controller.dart';
 import 'package:finder/widgets/cards/similar_card.dart';
 import 'package:finder/widgets/ui/ui.dart';
@@ -27,8 +31,10 @@ class ItemDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final args = ModalRoute.of(context)?.settings.arguments;
-    final argItem = (args is ItemModel) ? args : ItemModel.empty();
+    final routeArgs = ItemDetailsArgs.from(ModalRoute.of(context)?.settings.arguments);
+    final argItem = routeArgs?.item ?? ItemModel.empty();
+    final heroTag = routeArgs?.heroTag;
+    final matchedPostId = routeArgs?.matchedPostId;
     // Refresh from the server so status / edits made elsewhere show up.
     final fresh = argItem.id.isEmpty
         ? const AsyncValue<ItemModel>.loading()
@@ -50,7 +56,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          _buildSliverAppBar(context, ref, item, isOwner),
+          _buildSliverAppBar(context, ref, item, isOwner, heroTag),
 
           SliverToBoxAdapter(
             child: Padding(
@@ -59,6 +65,11 @@ class ItemDetailsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (matchedPostId != null && matchedPostId.isNotEmpty && !isOwner)
+                    _MatchBanner(
+                      item: item,
+                      onChat: () => _startChat(context, ref, item, ownerProfileAsync.value),
+                    ),
                   // ── Badges ──────────────────────────────────────────
                   StaggeredEntrance(
                     child: Wrap(
@@ -180,8 +191,16 @@ class ItemDetailsScreen extends ConsumerWidget {
 
                   const SizedBox(height: BeaconSpace.xxxl),
 
+                  if (isOwner && !item.isResolved) ...[
+                    StaggeredEntrance(
+                      index: 6,
+                      child: _buildMatchesSection(context, ref, item),
+                    ),
+                    const SizedBox(height: BeaconSpace.xxl),
+                  ],
+
                   StaggeredEntrance(
-                    index: 6,
+                    index: 7,
                     child: _buildSimilarSection(context, ref, item),
                   ),
 
@@ -221,7 +240,7 @@ class ItemDetailsScreen extends ConsumerWidget {
 
   // ── Sliver app bar with hero image ─────────────────────────────────────────
   Widget _buildSliverAppBar(
-      BuildContext context, WidgetRef ref, ItemModel item, bool isOwner) {
+      BuildContext context, WidgetRef ref, ItemModel item, bool isOwner, String? heroTag) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final topPad = MediaQuery.paddingOf(context).top;
@@ -275,11 +294,13 @@ class ItemDetailsScreen extends ConsumerWidget {
             onPressed: () => _toggleSaved(context, ref, item),
           ),
         if (!isOwner) const SizedBox(width: BeaconSpace.sm),
-        AppIconButton(
-          icon: Icons.share_outlined,
-          tooltip: 'Copy item details',
-          variant: AppIconButtonVariant.glass,
-          onPressed: () => _copyDetails(context, item),
+        Builder(
+          builder: (btnCtx) => AppIconButton(
+            icon: Icons.ios_share_rounded,
+            tooltip: 'Share',
+            variant: AppIconButtonVariant.glass,
+            onPressed: () => _share(btnCtx, ref, item),
+          ),
         ),
         const SizedBox(width: BeaconSpace.sm),
         AppIconButton(
@@ -314,7 +335,7 @@ class ItemDetailsScreen extends ConsumerWidget {
               children: [
                 ItemImage(
                   url: item.imagePath,
-                  heroTag: 'item-image-${item.id}',
+                  heroTag: heroTag,
                   fallbackIcon: categoryIcon(item.category),
                 ),
                 DecoratedBox(
@@ -337,13 +358,21 @@ class ItemDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _copyDetails(BuildContext context, ItemModel item) async {
-    final text = '${item.isLost ? 'Lost' : 'Found'} item: ${item.title}\n'
-        'Location: ${item.location}\n'
-        'Details: ${item.description}';
+  Future<void> _share(BuildContext context, WidgetRef ref, ItemModel item) async {
+    final ok = await ref.read(shareServiceProvider).sharePost(context, item);
+    if (!ok && context.mounted) {
+      await _copyLink(context, ref, item);
+    }
+  }
+
+  Future<void> _copyLink(BuildContext context, WidgetRef ref, ItemModel item) async {
+    final text = item.shareUrl.isNotEmpty
+        ? item.shareUrl
+        : ref.read(shareServiceProvider).postText(item);
     await Clipboard.setData(ClipboardData(text: text));
     if (!context.mounted) return;
-    ActionFeedback.showInfo(context, 'Item details copied to clipboard.');
+    ActionFeedback.showInfo(
+        context, item.shareUrl.isNotEmpty ? 'Link copied.' : 'Item details copied to clipboard.');
   }
 
   Future<void> _toggleSaved(BuildContext context, WidgetRef ref, ItemModel item) async {
@@ -369,11 +398,20 @@ class ItemDetailsScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SheetOption(
-              icon: Icons.copy_rounded,
-              label: 'Copy details',
+              icon: Icons.ios_share_rounded,
+              label: 'Share',
+              subtitle: 'Send the photo and a link to anyone',
               onTap: () {
                 Navigator.pop(sheetCtx);
-                _copyDetails(context, item);
+                _share(context, ref, item);
+              },
+            ),
+            SheetOption(
+              icon: Icons.link_rounded,
+              label: 'Copy link',
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _copyLink(context, ref, item);
               },
             ),
             if (isOwner) ...[
@@ -420,15 +458,16 @@ class ItemDetailsScreen extends ConsumerWidget {
                   _report(context, ref, item);
                 },
               ),
-              SheetOption(
-                icon: Icons.block_rounded,
-                label: 'Block this member',
-                destructive: true,
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  _confirmBlock(context, ref, item);
-                },
-              ),
+              if (!item.ownerIsAdmin)
+                SheetOption(
+                  icon: Icons.block_rounded,
+                  label: 'Block this member',
+                  destructive: true,
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    _confirmBlock(context, ref, item);
+                  },
+                ),
             ],
             const SizedBox(height: BeaconSpace.lg),
           ],
@@ -697,6 +736,9 @@ class ItemDetailsScreen extends ConsumerWidget {
     final postsCount = profile?.postsCount;
 
     return SurfaceCard(
+      onTap: item.ownerId.isEmpty || isOwner
+          ? null
+          : () => Navigator.pushNamed(context, AppRoutes.userProfile, arguments: item.ownerId),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -928,6 +970,65 @@ class ItemDetailsScreen extends ConsumerWidget {
   }
 
   // ── Similar items section ───────────────────────────────────────────────────
+  Widget _buildMatchesSection(BuildContext context, WidgetRef ref, ItemModel item) {
+    final matches = ref.watch(postMatchesProvider(item.id));
+    final t = AppColorTokens.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: 'Possible matches',
+          eyebrow: item.isLost
+              ? 'Found items that look like yours'
+              : 'Lost items that look like this one',
+          actionLabel: 'Refresh',
+          onAction: () => ref.invalidate(postMatchesProvider(item.id)),
+        ),
+        matches.when(
+          loading: () => const LoadingWidget(variant: LoadingVariant.rows, skeletonCount: 1),
+          error: (err, _) => ErrorStateWidget(
+            message: describeError(err),
+            onRetry: () => ref.invalidate(postMatchesProvider(item.id)),
+          ),
+          data: (items) {
+            if (items.isEmpty) {
+              return SurfaceCard(
+                tone: SurfaceTone.low,
+                child: Row(
+                  children: [
+                    Icon(Icons.radar_rounded, color: t.primary),
+                    const SizedBox(width: BeaconSpace.md),
+                    Expanded(
+                      child: Text(
+                        'No matches yet. We keep comparing new ${item.isLost ? 'found' : 'lost'} posts with this one and notify you the moment something looks alike.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: t.onSurfaceVar),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return SizedBox(
+              height: 196,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const SizedBox(width: BeaconSpace.md),
+                itemBuilder: (context, index) => SimilarCard(
+                  item: items[index],
+                  heroScope: '${HeroTags.similar}-${item.id}',
+                  matchedPostId: item.id,
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildSimilarSection(BuildContext context, WidgetRef ref, ItemModel item) {
     final similarState = ref.watch(similarItemsProvider(item.id));
 
@@ -961,12 +1062,65 @@ class ItemDetailsScreen extends ConsumerWidget {
                 clipBehavior: Clip.none,
                 itemCount: items.length,
                 separatorBuilder: (_, __) => const SizedBox(width: BeaconSpace.md),
-                itemBuilder: (context, index) => SimilarCard(item: items[index]),
+                itemBuilder: (context, index) => SimilarCard(
+                  item: items[index],
+                  heroScope: '${HeroTags.similar}-${item.id}',
+                ),
               ),
             );
           },
         ),
       ],
+    );
+  }
+}
+
+/// Shown when the post was opened from a "possible match" notification.
+class _MatchBanner extends StatelessWidget {
+  final ItemModel item;
+  final VoidCallback onChat;
+  const _MatchBanner({required this.item, required this.onChat});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: BeaconSpace.sm, bottom: BeaconSpace.lg),
+      child: SurfaceCard(
+        tone: SurfaceTone.primary,
+        padding: const EdgeInsets.all(BeaconSpace.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.radar_rounded, color: t.primary),
+                const SizedBox(width: BeaconSpace.sm),
+                Expanded(
+                  child: Text(
+                    item.isLost ? 'Could this be the item you found?' : 'Could this be your item?',
+                    style: text.titleSmall,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: BeaconSpace.xs),
+            Text(
+              item.isLost
+                  ? 'Someone reported losing something that looks like the item you found. Compare the details and message them.'
+                  : 'Someone reported finding something that looks like what you lost. Compare the details and message them.',
+              style: text.bodySmall?.copyWith(color: t.onSurfaceVar),
+            ),
+            const SizedBox(height: BeaconSpace.md),
+            AppButton(
+              label: item.isLost ? 'Message the owner' : 'Message the finder',
+              icon: Icons.chat_bubble_outline_rounded,
+              onPressed: onChat,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
