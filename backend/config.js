@@ -76,7 +76,7 @@ const config = {
   firebaseServiceAccount: readServiceAccount(),
   // Files that must never be served publicly (identity documents, selfies).
   privateDir: path.resolve(process.env.PRIVATE_DIR || path.join(process.env.UPLOADS_DIR ? path.dirname(path.resolve(process.env.UPLOADS_DIR)) : __dirname, 'private')),
-  googleClientIds: (process.env.GOOGLE_CLIENT_IDS || '209379285612-tbfoc97sjf1p4c5lv3kvmoaub3n0a8h5.apps.googleusercontent.com')
+  googleClientIds: (process.env.GOOGLE_CLIENT_IDS || '656301027375-21j9ba1v62mslnava8eknnu19dtpig7i.apps.googleusercontent.com')
     .split(',').map(s => s.trim()).filter(Boolean),
 };
 

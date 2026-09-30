@@ -69,7 +69,7 @@ cp android/key.properties.example android/key.properties   # fill in the passwor
 
 ### Google sign-in
 
-Google Cloud project **Finder App** (`finder-app-508520`, owner alandwork456@gmail.com) holds the
+Google Cloud project **Finder App** (`finder-510205`, owner alandwork456@gmail.com) holds the
 OAuth consent screen (published, External, basic scopes only) and three clients:
 
 | Client | Type | Bound to |
@@ -94,7 +94,7 @@ Railway cannot wake a closed phone app, so push goes through FCM (free). Everyth
 Railway: the app lists notifications from our own database; FCM only rings the phone.
 
 1. Firebase console → **Add project** → pick the existing Google Cloud project **Finder App**
-   (`finder-app-508520`) so it shares the OAuth clients.
+   (`finder-510205`) so it shares the OAuth clients.
 2. Add an Android app with package `com.finderapp.finder` and the two SHA-1s; download
    `google-services.json` into `android/app/` (it is not a secret and is committed).
 3. Project settings → Service accounts → **Generate new private key**. Encode it and store it on

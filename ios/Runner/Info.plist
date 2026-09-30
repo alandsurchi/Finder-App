@@ -52,16 +52,16 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.209379285612-99pter0t7h5bq4j30vht61k1qvrted6q</string>
+				<string>com.googleusercontent.apps.656301027375-tdkk6fj8kj5its58c3onfuiq7gfvcoo5</string>
 			</array>
 		</dict>
 	</array>
 	<!-- Google sign-in: the iOS client for this bundle id, and the Web client
 	     so the ID token's audience matches what the API verifies. -->
 	<key>GIDClientID</key>
-	<string>209379285612-99pter0t7h5bq4j30vht61k1qvrted6q.apps.googleusercontent.com</string>
+	<string>656301027375-tdkk6fj8kj5its58c3onfuiq7gfvcoo5.apps.googleusercontent.com</string>
 	<key>GIDServerClientID</key>
-	<string>209379285612-tbfoc97sjf1p4c5lv3kvmoaub3n0a8h5.apps.googleusercontent.com</string>
+	<string>656301027375-21j9ba1v62mslnava8eknnu19dtpig7i.apps.googleusercontent.com</string>
 	<!-- Push while the app is in the background. -->
 	<key>UIBackgroundModes</key>
 	<array>

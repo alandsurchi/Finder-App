@@ -22,7 +22,7 @@ class AppConfig {
   /// the ID token is issued for the backend's audience.
   static const String googleWebClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
-    defaultValue: '209379285612-tbfoc97sjf1p4c5lv3kvmoaub3n0a8h5.apps.googleusercontent.com',
+    defaultValue: '656301027375-21j9ba1v62mslnava8eknnu19dtpig7i.apps.googleusercontent.com',
   );
 
   /// The backend base URL without a trailing slash.

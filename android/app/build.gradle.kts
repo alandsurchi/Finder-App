@@ -57,6 +57,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Sign debug builds with the upload key too, so Google sign-in
+            // works from `flutter run` with the single registered Android
+            // OAuth client (one package + SHA-1 pair).
+            if (hasReleaseKeystore) signingConfig = signingConfigs.getByName("release")
+        }
         release {
             // Falls back to the debug key when key.properties is absent so
             // `flutter run --release` keeps working on a dev machine.
