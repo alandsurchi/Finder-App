@@ -3,34 +3,32 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>209379285612-99pter0t7h5bq4j30vht61k1qvrted6q.apps.googleusercontent.com</string>
+	<string>656301027375-tdkk6fj8kj5its58c3onfuiq7gfvcoo5.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.209379285612-99pter0t7h5bq4j30vht61k1qvrted6q</string>
-	<key>ANDROID_CLIENT_ID</key>
-	<string>209379285612-1t1k8352adjpuges74h6u1jru7u34eqh.apps.googleusercontent.com</string>
+	<string>com.googleusercontent.apps.656301027375-tdkk6fj8kj5its58c3onfuiq7gfvcoo5</string>
 	<key>API_KEY</key>
-	<string>AIzaSyBYUbpdmr1Jms4x6cC2IfGg4g7YCAZRhlk</string>
+	<string>AIzaSyDQ9KadL4DYVDMzvj29ecco9WJQxgLJ-OI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>209379285612</string>
+	<string>656301027375</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.finderapp.finder</string>
 	<key>PROJECT_ID</key>
-	<string>finder-app-508520</string>
+	<string>finder-510205</string>
 	<key>STORAGE_BUCKET</key>
-	<string>finder-app-508520.firebasestorage.app</string>
+	<string>finder-510205.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_GCM_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:209379285612:ios:463983fe86476ddd575649</string>
+	<string>1:656301027375:ios:c8f0fb43372c9525a156da</string>
 </dict>
 </plist>
