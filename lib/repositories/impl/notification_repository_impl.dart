@@ -2,7 +2,6 @@ import '../../l10n/l10n.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failure.dart';
 import '../../core/network/api_client.dart';
-import '../../core/utils/relative_time.dart';
 import '../../core/utils/result.dart';
 import '../../models/notification_model.dart';
 import '../notification_repository.dart';
@@ -27,9 +26,9 @@ class NotificationRepositoryImpl implements NotificationRepository {
         final map = Map<String, dynamic>.from(item as Map);
         return NotificationModel(
           id: map['id']?.toString() ?? '',
-          title: map['title']?.toString() ?? 'Notification',
+          title: map['title']?.toString() ?? L10n.current.commonNotifications,
           message: map['message']?.toString() ?? '',
-          timeAgo: relativeTime((map['createdAtMs'] as num?)?.toInt()),
+          createdAtMs: (map['createdAtMs'] as num?)?.toInt(),
           isUnread: map['isUnread'] == true,
           type: NotificationModel.typeFromApi(map['type']?.toString()),
           data: map['data'] is Map

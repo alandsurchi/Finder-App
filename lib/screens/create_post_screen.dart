@@ -748,7 +748,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       latitude: _place?.latitude,
       longitude: _place?.longitude,
       imagePath: _imagePath,
-      timeAgo: context.l10n.commonJustNow,
     );
 
     try {

@@ -68,7 +68,6 @@ final samplePosts = <ItemModel>[
     description:
         'Lost near the fountain at Central Park. Has a small scratch on the front and a photo of a dog inside.',
     location: 'Central Park, near the fountain',
-    timeAgo: '2h ago',
     imagePath: 'assets/postes/wallet.jpg',
     isLost: true,
     reward: '50',
@@ -84,7 +83,6 @@ final samplePosts = <ItemModel>[
     title: 'Set of car keys with a red keychain',
     description: 'Found on a bench outside the library. Toyota key and two house keys.',
     location: 'City Library, main entrance',
-    timeAgo: '5h ago',
     imagePath: 'assets/postes/keys.jpg',
     isLost: false,
     category: 'Keys',
@@ -97,7 +95,6 @@ final samplePosts = <ItemModel>[
     title: 'iPhone 15 in pink case',
     description: 'Left in a taxi on the way to the airport. Lock screen shows a mountain photo.',
     location: 'Airport road',
-    timeAgo: '1d ago',
     imagePath: 'assets/postes/iphone 15 pink.jpg',
     isLost: true,
     reward: '200',
@@ -111,7 +108,6 @@ final samplePosts = <ItemModel>[
     title: 'Golden retriever, answers to Max',
     description: 'Very friendly, wearing a blue collar. Found wandering near the river trail.',
     location: 'Riverside trail',
-    timeAgo: '1d ago',
     imagePath: 'assets/postes/dog.jpg',
     isLost: false,
     category: 'Pets',
@@ -124,7 +120,6 @@ final samplePosts = <ItemModel>[
     title: 'Silver necklace with a moon pendant',
     description: 'Sentimental value. Probably lost at the gym locker room.',
     location: 'Downtown Fitness',
-    timeAgo: '3d ago',
     imagePath: 'assets/postes/necklace.jpg',
     isLost: true,
     category: 'Watches & Jewelry',
@@ -214,10 +209,10 @@ final sampleMessages = <Message>[
 ];
 
 final sampleNotifications = <NotificationModel>[
-  const NotificationModel(id: 'n1', title: 'Possible match found', message: 'A found "brown wallet" was posted 400m from your last seen location.', timeAgo: '5m ago', isUnread: true, type: NotificationType.itemMatch),
-  const NotificationModel(id: 'n2', title: 'New message from Sarah', message: 'I think I found your wallet! Is the scratch…', timeAgo: '12m ago', isUnread: true, type: NotificationType.newMessage),
-  const NotificationModel(id: 'n3', title: 'Post approved', message: 'Your post "iPhone 15 in pink case" is now visible to the community.', timeAgo: '1d ago', type: NotificationType.postApproved),
-  const NotificationModel(id: 'n4', title: 'Welcome to Finder', message: 'Tips: add clear photos and a precise location to get matches faster.', timeAgo: '3d ago', type: NotificationType.system),
+  const NotificationModel(id: 'n1', title: 'Possible match found', message: 'A found "brown wallet" was posted 400m from your last seen location.', isUnread: true, type: NotificationType.itemMatch),
+  const NotificationModel(id: 'n2', title: 'New message from Sarah', message: 'I think I found your wallet! Is the scratch…', isUnread: true, type: NotificationType.newMessage),
+  const NotificationModel(id: 'n3', title: 'Post approved', message: 'Your post "iPhone 15 in pink case" is now visible to the community.', type: NotificationType.postApproved),
+  const NotificationModel(id: 'n4', title: 'Welcome to Finder', message: 'Tips: add clear photos and a precise location to get matches faster.', type: NotificationType.system),
 ];
 
 // ── Fake controllers ──────────────────────────────────────────────────────────
@@ -458,8 +453,12 @@ class PreviewApp extends ConsumerWidget {
     final chosenLocale = ref.watch(localeControllerProvider);
     // Resolve now (not in the callback) so the first frame already uses the
     // right fonts when the phone itself is set to Arabic or Kurdish.
-    final arabic = AppTheme.usesArabicScript(
-        resolveLocale(chosenLocale, WidgetsBinding.instance.platformDispatcher.locales));
+    final resolvedLocale =
+        resolveLocale(chosenLocale, WidgetsBinding.instance.platformDispatcher.locales);
+    // Strings built outside the widget tree (models, services) follow the
+    // same language from this frame on.
+    L10n.use(resolvedLocale);
+    final arabic = AppTheme.usesArabicScript(resolvedLocale);
     return MaterialApp(
       title: 'Finder preview',
       debugShowCheckedModeBanner: false,

@@ -1,10 +1,15 @@
+import '../core/utils/relative_time.dart';
+
 enum NotificationType { itemMatch, newMessage, postApproved, update, system }
 
 class NotificationModel {
   final String id;
   final String title;
   final String message;
-  final String timeAgo;
+  /// Epoch millis from the server; the label is computed on read so it
+  /// stays current and follows the app language.
+  final int? createdAtMs;
+  String get timeAgo => relativeTime(createdAtMs);
   final bool isUnread;
   final NotificationType type;
 
@@ -15,7 +20,7 @@ class NotificationModel {
     this.id = '',
     required this.title,
     required this.message,
-    required this.timeAgo,
+    this.createdAtMs,
     this.isUnread = false,
     required this.type,
     this.data = const {},
@@ -45,7 +50,7 @@ class NotificationModel {
     String? id,
     String? title,
     String? message,
-    String? timeAgo,
+    int? createdAtMs,
     bool? isUnread,
     NotificationType? type,
     Map<String, dynamic>? data,
@@ -54,7 +59,7 @@ class NotificationModel {
       id: id ?? this.id,
       title: title ?? this.title,
       message: message ?? this.message,
-      timeAgo: timeAgo ?? this.timeAgo,
+      createdAtMs: createdAtMs ?? this.createdAtMs,
       isUnread: isUnread ?? this.isUnread,
       type: type ?? this.type,
       data: data ?? this.data,

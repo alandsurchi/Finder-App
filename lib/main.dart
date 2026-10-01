@@ -136,8 +136,12 @@ class FinderApp extends ConsumerWidget {
 
     // Resolve now (not in the callback) so the first frame already uses the
     // right fonts when the phone itself is set to Arabic or Kurdish.
-    final arabic = AppTheme.usesArabicScript(
-        resolveLocale(chosenLocale, WidgetsBinding.instance.platformDispatcher.locales));
+    final resolvedLocale =
+        resolveLocale(chosenLocale, WidgetsBinding.instance.platformDispatcher.locales);
+    // Strings built outside the widget tree (models, services) follow the
+    // same language from this frame on.
+    L10n.use(resolvedLocale);
+    final arabic = AppTheme.usesArabicScript(resolvedLocale);
     return MaterialApp(
       title: 'Finder',
       debugShowCheckedModeBanner: false,

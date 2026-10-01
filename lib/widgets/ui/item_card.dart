@@ -1,3 +1,4 @@
+import 'package:finder/core/utils/relative_time.dart';
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
@@ -237,7 +238,7 @@ class ItemCard extends StatelessWidget {
                   const SizedBox(width: BeaconSpace.sm),
                   Padding(
                     padding: const EdgeInsets.only(top: 3),
-                    child: Text(item.timeAgo,
+                    child: Text(relativeTime(item.createdAt.millisecondsSinceEpoch, l10n: context.l10n),
                         style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
                   ),
                 ],
@@ -299,7 +300,7 @@ class ItemCard extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     ...(badges ?? _defaultBadges(context.l10n, includeStatus: true)),
-                    Text(item.timeAgo,
+                    Text(relativeTime(item.createdAt.millisecondsSinceEpoch, l10n: context.l10n),
                         style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
                   ],
                 ),

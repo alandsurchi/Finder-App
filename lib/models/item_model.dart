@@ -1,7 +1,6 @@
 import '../core/utils/relative_time.dart';
 import '../core/utils/timestamp.dart';
 import '../features/location/place.dart';
-import '../l10n/l10n.dart';
 
 /// A lost or found post as the app sees it.
 ///
@@ -13,8 +12,10 @@ class ItemModel {
   final String title;
   final String description;
   final Timestamp createdAt;
+
+  /// Always current and in the app language (never cached).
+  String get timeAgo => relativeTime(createdAt.millisecondsSinceEpoch);
   final String location;
-  final String timeAgo;
   final String imagePath;
   final bool isLost;
   final String? reward;
@@ -40,7 +41,6 @@ class ItemModel {
     required this.description,
     Timestamp? createdAt,
     required this.location,
-    required this.timeAgo,
     required this.imagePath,
     required this.isLost,
     this.reward,
@@ -92,7 +92,6 @@ class ItemModel {
       isResolved: map['status']?.toString() == 'resolved',
       shareUrl: map['shareUrl']?.toString() ?? '',
       createdAt: Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
-      timeAgo: relativeTime(createdAtMs),
     );
   }
 
@@ -121,7 +120,6 @@ class ItemModel {
       description: map['description'] ?? '',
       createdAt: map['createdAt'] ?? Timestamp.now(),
       location: map['location'] ?? '',
-      timeAgo: map['timeAgo'] ?? L10n.current.commonJustNow,
       imagePath: map['imagePath'] ?? '',
       isLost: map['isLost'] ?? true,
       reward: map['reward'],
@@ -145,7 +143,6 @@ class ItemModel {
       'description': description,
       'createdAt': createdAt,
       'location': location,
-      'timeAgo': timeAgo,
       'imagePath': imagePath,
       'isLost': isLost,
       'reward': reward,
@@ -169,7 +166,6 @@ class ItemModel {
     String? description,
     Timestamp? createdAt,
     String? location,
-    String? timeAgo,
     String? imagePath,
     bool? isLost,
     String? reward,
@@ -195,7 +191,6 @@ class ItemModel {
       description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
       location: location ?? this.location,
-      timeAgo: timeAgo ?? this.timeAgo,
       imagePath: imagePath ?? this.imagePath,
       isLost: isLost ?? this.isLost,
       reward: clearReward ? null : (reward ?? this.reward),
@@ -268,7 +263,6 @@ class ItemModel {
       description: '',
       createdAt: Timestamp.now(),
       location: '',
-      timeAgo: '',
       imagePath: '',
       isLost: true,
       reward: null,
