@@ -8,6 +8,7 @@ import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/features/posts/presentation/saved_items_controller.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
+import 'package:finder/l10n/l10n.dart';
 
 class SavedItemsScreen extends ConsumerWidget {
   const SavedItemsScreen({super.key});
@@ -16,21 +17,22 @@ class SavedItemsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final savedState = ref.watch(savedItemsProvider);
     final count = savedState.value?.length;
+    final l10n = context.l10n;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             AppPageHeader(
-              title: 'Saved items',
+              title: l10n.postSavedItems,
               subtitle: count == null
-                  ? "Keep track of items you're helping to return or find."
-                  : '$count saved · items you are helping to return or find',
+                  ? l10n.postSavedSubtitle
+                  : l10n.postSavedCount(count),
             ),
             Expanded(
               child: savedState.when(
-                loading: () => const LoadingWidget(
-                  message: 'Loading saved items...',
+                loading: () => LoadingWidget(
+                  message: l10n.postLoadingSaved,
                   variant: LoadingVariant.list,
                 ),
                 error: (err, _) => ErrorStateWidget(
@@ -40,10 +42,10 @@ class SavedItemsScreen extends ConsumerWidget {
                 ),
                 data: (items) {
                   if (items.isEmpty) {
-                    return const EmptyWidget(
+                    return EmptyWidget(
                       icon: Icons.bookmark_border_rounded,
-                      title: 'No saved items yet',
-                      subtitle: 'Tap the bookmark on any post to keep it here.',
+                      title: l10n.postNoSavedTitle,
+                      subtitle: l10n.postNoSavedSubtitle,
                     );
                   }
                   return ListView.separated(
@@ -69,7 +71,7 @@ class SavedItemsScreen extends ConsumerWidget {
                             if (!context.mounted) return;
                             result.fold(
                               onSuccess: (_) => ActionFeedback.showInfo(
-                                  context, 'Removed from saved items.'),
+                                  context, l10n.postRemovedFromSaved),
                               onFailure: (f) =>
                                   ActionFeedback.showError(context, f.message),
                             );

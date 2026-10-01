@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/app/di/app_providers.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 
@@ -78,7 +79,7 @@ class _AuthImageState extends ConsumerState<AuthImage> {
             }
             if (snap.hasError) {
               return _fallback(t, Icons.lock_outline_rounded,
-                  label: 'Could not load');
+                  label: context.l10n.uiCouldNotLoad);
             }
             return Container(
               color: t.surfaceHigh,

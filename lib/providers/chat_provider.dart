@@ -9,6 +9,7 @@ import 'package:finder/services/chat_service.dart';
 import 'package:finder/models/conversation_model.dart';
 import 'package:finder/features/chat/domain/message.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
+import 'package:finder/l10n/l10n.dart';
 import '../app/di/app_providers.dart';
 import '../app/lifecycle/app_lifecycle_provider.dart';
 import '../core/utils/polling.dart';
@@ -62,7 +63,7 @@ class ChatMessagesController extends StateNotifier<AsyncValue<List<Message>>> {
     } catch (e, st) {
       if (!state.hasValue) {
         state = AsyncValue.error(
-          failureFrom(e, fallback: 'Unable to load messages.'),
+          failureFrom(e, fallback: L10n.current.chatLoadFailed),
           st,
         );
       }
@@ -127,14 +128,14 @@ class ChatMessagesController extends StateNotifier<AsyncValue<List<Message>>> {
         _pending[idx] = local.copyWith(isPending: false, failed: true);
       }
       _publish();
-      return Result.failure(failureFrom(e, fallback: 'Message not sent.'));
+      return Result.failure(failureFrom(e, fallback: L10n.current.chatNotSentFailure));
     }
   }
 
   Future<Result<Message>> retry(String localId) async {
     final idx = _pending.indexWhere((m) => m.messageId == localId);
     if (idx == -1) {
-      return Result.failure(failureFrom(Object(), fallback: 'Nothing to retry.'));
+      return Result.failure(failureFrom(Object(), fallback: L10n.current.chatNothingToRetry));
     }
     final retrying = _pending[idx].copyWith(isPending: true, failed: false);
     _pending[idx] = retrying;
@@ -155,7 +156,7 @@ class ChatMessagesController extends StateNotifier<AsyncValue<List<Message>>> {
       _publish();
       return Result.success(null);
     } catch (e) {
-      return Result.failure(failureFrom(e, fallback: 'Could not delete the message.'));
+      return Result.failure(failureFrom(e, fallback: L10n.current.chatDeleteFailed));
     }
   }
 

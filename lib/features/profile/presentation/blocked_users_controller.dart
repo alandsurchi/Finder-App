@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/di/app_providers.dart';
 import '../../../core/utils/result.dart';
+import '../../../l10n/l10n.dart';
 import '../../../providers/chat_provider.dart';
 import '../../../providers/post_provider.dart';
 import '../domain/blocked_user.dart';
@@ -35,7 +36,7 @@ class BlockedUsersController extends StateNotifier<AsyncValue<List<BlockedUser>>
           0,
           BlockedUser(
             id: userId,
-            name: name ?? 'Member',
+            name: name ?? L10n.current.blockMemberFallback,
             avatarLabel: label.isEmpty ? '?' : label.substring(0, 1).toUpperCase(),
             avatarUrl: avatarUrl,
           ),

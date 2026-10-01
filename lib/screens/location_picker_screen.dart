@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/features/location/place.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
@@ -17,13 +18,15 @@ import 'package:finder/widgets/ui/ui.dart';
 class LocationPickerScreen extends ConsumerStatefulWidget {
   final Place? initial;
   final bool readOnly;
-  final String title;
+
+  /// App bar title; defaults to "Pick a location" / "Location" in the app language.
+  final String? title;
 
   const LocationPickerScreen({
     super.key,
     this.initial,
     this.readOnly = false,
-    this.title = 'Pick a location',
+    this.title,
   });
 
   /// Opens the picker and resolves with the chosen place, or null.
@@ -38,7 +41,7 @@ class LocationPickerScreen extends ConsumerStatefulWidget {
 
   /// Shows a place on a full map without editing.
   static Future<void> view(BuildContext context, Place place,
-      {String title = 'Location'}) {
+      {String? title}) {
     return Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) =>
@@ -220,13 +223,17 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     final initial = _place;
     final initialCenter = initial != null
         ? LatLng(initial.latitude, initial.longitude)
         : _worldCenter;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        title: Text(widget.title ??
+            (widget.readOnly ? l10n.commonLocation : l10n.mapPickLocation)),
+      ),
       body: Stack(
         children: [
           Positioned.fill(
@@ -293,7 +300,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
             padding: const EdgeInsets.all(BeaconSpace.xs),
             child: AppTextField(
               controller: _searchCtrl,
-              hint: 'Search a place or address',
+              hint: context.l10n.mapSearchHint,
               prefixIcon: Icons.search_rounded,
               textInputAction: TextInputAction.search,
               onChanged: _onSearchChanged,
@@ -319,7 +326,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                                 strokeWidth: 2, color: t.primary),
                           ),
                           const SizedBox(width: BeaconSpace.md),
-                          Text('Searching…', style: text.bodyMedium),
+                          Text(context.l10n.mapSearching, style: text.bodyMedium),
                         ],
                       ),
                     )
@@ -358,9 +365,10 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
 
   Widget _buildBottomPanel(AppColorTokens t) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final place = _place;
     final label = place == null
-        ? (widget.readOnly ? 'Location not specified' : 'Move the map to place the pin')
+        ? (widget.readOnly ? l10n.commonLocationNotSpecified : l10n.mapMoveToPlacePin)
         : place.label;
 
     return Positioned(
@@ -374,7 +382,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
           if (!widget.readOnly)
             AppIconButton(
               icon: Icons.my_location_rounded,
-              tooltip: 'Use my current location',
+              tooltip: l10n.mapUseMyLocation,
               variant: AppIconButtonVariant.filled,
               size: 48,
               iconSize: 22,
@@ -412,10 +420,10 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                 const SizedBox(height: BeaconSpace.xs),
                 Text(
                   place == null
-                      ? MapAttribution.text
+                      ? l10n.mapAttribution
                       : _resolving
-                          ? 'Finding the address…'
-                          : '${place.coordinates} · ${MapAttribution.text}',
+                          ? l10n.mapFindingAddress
+                          : '${place.coordinates} · ${l10n.mapAttribution}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
@@ -423,7 +431,7 @@ class _LocationPickerScreenState extends ConsumerState<LocationPickerScreen> {
                 if (!widget.readOnly) ...[
                   const SizedBox(height: BeaconSpace.md),
                   AppButton(
-                    label: 'Use this location',
+                    label: l10n.mapUseThisLocation,
                     icon: Icons.check_rounded,
                     size: AppButtonSize.medium,
                     onPressed: (place == null || _resolving) ? null : _confirm,

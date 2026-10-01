@@ -1,3 +1,5 @@
+import '../../l10n/l10n.dart';
+import 'server_messages.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -92,9 +94,7 @@ class ApiClient {
           .get(_uri(path), headers: _headers()..remove('Content-Type'))
           .timeout(timeout ?? this.timeout);
     } on TimeoutException {
-      throw const NetworkException(
-        'The server took too long to respond. Check your connection and try again.',
-      );
+      throw NetworkException(L10n.current.serverTimeout);
     } catch (_) {
       throw NetworkException(_offlineMessage());
     }
@@ -141,9 +141,7 @@ class ApiClient {
     try {
       response = await request().timeout(timeout ?? this.timeout);
     } on TimeoutException {
-      throw const NetworkException(
-        'The server took too long to respond. Check your connection and try again.',
-      );
+      throw NetworkException(L10n.current.serverTimeout);
     } on http.ClientException {
       throw NetworkException(_offlineMessage());
     } catch (e) {
@@ -156,7 +154,7 @@ class ApiClient {
   String _offlineMessage() =>
       kDebugMode
           ? 'Could not reach the server at $baseUrl. Is the backend running?'
-          : 'Could not reach the server. Check your connection and try again.';
+          : L10n.current.serverOffline;
 
   dynamic _handleResponse(String path, http.Response response) {
     final status = response.statusCode;
@@ -184,22 +182,23 @@ class ApiClient {
     try {
       final map = json.decode(response.body);
       if (map is Map && map['message'] != null) {
-        return map['message'].toString();
+        return localizeServerMessage(map['message'].toString());
       }
     } catch (_) {}
+    final s = L10n.current;
     switch (response.statusCode) {
       case 400:
-        return 'The request was not valid.';
+        return s.serverRequestNotValid;
       case 401:
-        return 'Your session has expired. Please sign in again.';
+        return s.serverSessionExpired;
       case 403:
-        return 'You are not allowed to do that.';
+        return s.serverNotAllowed;
       case 404:
-        return 'Not found.';
+        return s.serverNotFound;
       case 500:
-        return 'The server ran into a problem. Please try again.';
+        return s.serverProblem;
       default:
-        return 'Request failed (${response.statusCode}).';
+        return s.serverRequestFailed(response.statusCode);
     }
   }
 }

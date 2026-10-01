@@ -15,6 +15,7 @@ import 'package:finder/features/chat/presentation/voice_recorder_button.dart';
 import 'package:finder/features/notifications/presentation/notifications_controller.dart';
 import 'package:finder/features/posts/presentation/item_details_args.dart';
 import 'package:finder/features/profile/presentation/blocked_users_controller.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/chat_provider.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/providers/post_provider.dart';
@@ -173,8 +174,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     final chatId = _arg(ChatArgs.chatId);
-    final userName = _arg(ChatArgs.userName, 'Finder User');
+    final userName = _arg(ChatArgs.userName, l10n.commonFinderUser);
     final itemName = _arg(ChatArgs.itemName);
     final peerId = _arg(ChatArgs.peerId);
     final peerAvatarUrl = _arg(ChatArgs.peerAvatarUrl);
@@ -192,13 +194,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return Scaffold(
         body: SafeArea(
           child: Column(
-            children: const [
-              AppPageHeader(title: 'Conversation'),
+            children: [
+              AppPageHeader(title: l10n.chatConversationTitle),
               Expanded(
                 child: EmptyWidget(
                   icon: Icons.forum_outlined,
-                  title: 'Conversation not found',
-                  subtitle: 'Open a chat from a post or from Messages.',
+                  title: l10n.chatNotFoundTitle,
+                  subtitle: l10n.chatNotFoundSubtitle,
                 ),
               ),
             ],
@@ -250,7 +252,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 children: [
                   Positioned.fill(
                     child: messagesState.when(
-                      loading: () => const LoadingWidget(message: 'Loading messages...'),
+                      loading: () => LoadingWidget(message: l10n.chatLoadingMessages),
                       error: (err, _) => ErrorStateWidget(
                         message: describeError(err),
                         onRetry: () => ref.read(chatMessagesProvider(chatId).notifier).load(),
@@ -266,8 +268,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                   if (_awayFromBottom)
-                    Positioned(
-                      right: BeaconSpace.lg,
+                    PositionedDirectional(
+                      end: BeaconSpace.lg,
                       bottom: BeaconSpace.md,
                       child: ScrollToLatestPill(
                         newCount: _newWhileAway,
@@ -295,15 +297,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     required String itemName,
   }) {
     if (messages.isEmpty) {
+      final l10n = context.l10n;
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: _dismissKeyboard,
         child: EmptyWidget(
           icon: Icons.forum_outlined,
-          title: 'Say hello to $userName',
+          title: l10n.chatSayHello(userName),
           subtitle: itemName.isEmpty
-              ? 'Start the conversation by sending a message.'
-              : 'Ask about "$itemName" or arrange a safe hand-over.',
+              ? l10n.chatStartSubtitle
+              : l10n.chatAskAbout(itemName),
         ),
       );
     }
@@ -390,9 +393,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     required bool peerIsAdmin,
   }) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final canOpenProfile = peerId.isNotEmpty;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: const EdgeInsetsDirectional.fromSTEB(
         BeaconSpace.md,
         BeaconSpace.sm,
         BeaconSpace.sm,
@@ -402,7 +406,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           AppIconButton(
             icon: Icons.arrow_back_rounded,
-            tooltip: 'Back',
+            tooltip: l10n.commonBack,
             variant: AppIconButtonVariant.ghost,
             onPressed: () => Navigator.maybePop(context),
           ),
@@ -464,7 +468,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               )
                             else
                               Text(
-                                canOpenProfile ? 'Direct message · view profile' : 'Direct message',
+                                canOpenProfile ? l10n.chatDirectMessageViewProfile : l10n.chatDirectMessage,
                                 style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
                               ),
                           ],
@@ -478,7 +482,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           AppIconButton(
             icon: Icons.more_vert_rounded,
-            tooltip: 'More options',
+            tooltip: l10n.commonMoreOptions,
             variant: AppIconButtonVariant.ghost,
             onPressed: () => _showMoreSheet(
                 userName, peerId, postId, itemName, isPostOwner, isReturned, peerIsAdmin),
@@ -512,11 +516,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     bool isReturned,
     bool peerIsAdmin,
   ) {
+    final l10n = context.l10n;
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
         title: userName,
-        subtitle: itemName.isEmpty ? null : 'About "$itemName"',
+        subtitle: itemName.isEmpty ? null : l10n.chatAboutItem(itemName),
         scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -524,7 +529,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (peerId.isNotEmpty)
               SheetOption(
                 icon: Icons.person_outline_rounded,
-                label: 'View profile',
+                label: l10n.commonViewProfile,
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   _openProfile(peerId);
@@ -533,8 +538,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (isPostOwner)
               SheetOption(
                 icon: isReturned ? Icons.replay_rounded : Icons.assignment_turned_in_outlined,
-                label: isReturned ? 'Reopen the post' : 'Mark as returned',
-                subtitle: isReturned ? 'Show it on Home again' : 'The item is back with its owner',
+                label: isReturned ? l10n.chatReopenPost : l10n.commonMarkAsReturned,
+                subtitle: isReturned ? l10n.chatReopenSubtitle : l10n.chatReturnedSubtitle,
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   _confirmReturned(postId, itemName, isReturned);
@@ -543,7 +548,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (postId.isNotEmpty)
               SheetOption(
                 icon: Icons.inventory_2_outlined,
-                label: 'View the post',
+                label: l10n.chatViewPost,
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   _openPost(postId, itemName);
@@ -552,13 +557,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (postId.isNotEmpty)
               SheetOption(
                 icon: Icons.flag_outlined,
-                label: 'Report the post',
+                label: l10n.chatReportPost,
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   try {
                     await ref.read(postServiceProvider).reportPost(postId, 'Reported from chat');
                     if (!mounted) return;
-                    ActionFeedback.showSuccess(context, 'Thanks, the post has been reported.');
+                    ActionFeedback.showSuccess(context, l10n.chatPostReported);
                   } catch (e) {
                     if (!mounted) return;
                     ActionFeedback.showError(context, describeError(e));
@@ -568,7 +573,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (peerId.isNotEmpty && !peerIsAdmin)
               SheetOption(
                 icon: Icons.block_rounded,
-                label: 'Block $userName',
+                label: l10n.blockUserLabel(userName),
                 destructive: true,
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -585,21 +590,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// Owner shortcut: mark the post returned (or reopen it) from the chat.
   Future<void> _confirmReturned(String postId, String itemName, bool isReturned) async {
     final chatId = _arg(ChatArgs.chatId);
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isReturned ? 'Reopen this post?' : 'Mark as returned?'),
+        title: Text(isReturned ? l10n.chatReopenTitle : l10n.chatMarkReturnedTitle),
         content: Text(
-          isReturned
-              ? '"$itemName" will show on Home again as an open post.'
-              : '"$itemName" leaves the Home feed but stays visible in Search. '
-                  'Everyone in this chat gets a note.',
+          isReturned ? l10n.chatReopenBody(itemName) : l10n.chatMarkReturnedBody(itemName),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(isReturned ? 'Reopen' : 'Mark as returned'),
+            child: Text(isReturned ? l10n.commonReopen : l10n.commonMarkAsReturned),
           ),
         ],
       ),
@@ -613,12 +616,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       onSuccess: (_) async {
         ref.invalidate(postByIdProvider(postId));
         ref.invalidate(conversationsStreamProvider);
-        ActionFeedback.showSuccess(context, isReturned ? 'Post reopened.' : 'Marked as returned.');
+        ActionFeedback.showSuccess(
+            context, isReturned ? l10n.chatPostReopened : l10n.commonMarkedAsReturned);
         if (chatId.isNotEmpty) {
           await ref.read(chatMessagesProvider(chatId).notifier).send(
-                text: isReturned
-                    ? 'I reopened this post.'
-                    : 'I marked this item as returned. Thank you!',
+                text: isReturned ? l10n.chatAutoReopened : l10n.chatAutoReturned,
               );
         }
       },
@@ -628,15 +630,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _confirmBlock(String userName, String peerId) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Block $userName?'),
-        content: const Text(
-          'This conversation will disappear and neither of you can message the other. Undo it any time in Privacy & safety.',
-        ),
+        title: Text(l10n.blockUserTitle(userName)),
+        content: Text(l10n.blockChatConfirmBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: t.error, foregroundColor: t.onError),
             onPressed: () async {
@@ -646,13 +647,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               if (!mounted) return;
               result.fold(
                 onSuccess: (_) {
-                  ActionFeedback.showSuccess(context, '$userName has been blocked.');
+                  ActionFeedback.showSuccess(context, l10n.blockUserDone(userName));
                   Navigator.pop(context);
                 },
                 onFailure: (f) => ActionFeedback.showError(context, f.message),
               );
             },
-            child: const Text('Block'),
+            child: Text(l10n.commonBlock),
           ),
         ],
       ),
@@ -668,13 +669,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _showMessageActions(String chatId, Message msg, bool isMe) {
     HapticFeedback.selectionClick();
+    final l10n = context.l10n;
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
-        title: isMe ? 'Your message' : 'Message',
+        title: isMe ? l10n.chatYourMessage : l10n.chatMessage,
         subtitle: msg.text.isNotEmpty
             ? (msg.text.length > 80 ? '${msg.text.substring(0, 79)}…' : msg.text)
-            : (msg.hasAudio ? 'Voice message' : (msg.hasImage ? 'Photo' : null)),
+            : (msg.hasAudio ? l10n.msgVoiceMessage : (msg.hasImage ? l10n.msgPhoto : null)),
         scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -682,7 +684,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (!msg.deleted && !msg.isLocal)
               SheetOption(
                 icon: Icons.reply_rounded,
-                label: 'Reply',
+                label: l10n.chatReply,
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   _setReply(chatId, msg);
@@ -691,18 +693,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (msg.text.isNotEmpty)
               SheetOption(
                 icon: Icons.copy_rounded,
-                label: 'Copy text',
+                label: l10n.chatCopyText,
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   await Clipboard.setData(ClipboardData(text: msg.text));
                   if (!mounted) return;
-                  ActionFeedback.showInfo(context, 'Copied.');
+                  ActionFeedback.showInfo(context, l10n.commonCopied);
                 },
               ),
             if (msg.failed) ...[
               SheetOption(
                 icon: Icons.refresh_rounded,
-                label: 'Try again',
+                label: l10n.commonTryAgain,
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   _retry(chatId, msg.messageId);
@@ -710,7 +712,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
               SheetOption(
                 icon: Icons.delete_outline_rounded,
-                label: 'Discard',
+                label: l10n.commonDiscard,
                 destructive: true,
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -720,7 +722,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ] else if (isMe && !msg.deleted && !msg.isLocal)
               SheetOption(
                 icon: Icons.delete_outline_rounded,
-                label: 'Delete for everyone',
+                label: l10n.chatDeleteForEveryone,
                 destructive: true,
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -735,14 +737,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _confirmDelete(String chatId, Message msg) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete this message?'),
-        content: const Text('It is removed for everyone in this chat. This cannot be undone.'),
+        title: Text(l10n.chatDeleteTitle),
+        content: Text(l10n.chatDeleteBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDelete)),
         ],
       ),
     );
@@ -761,10 +764,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       AppColorTokens t, String chatId, ReplyPreview reply, String currentUserId, String userName) {
     return Container(
       color: t.surface,
-      padding: const EdgeInsets.fromLTRB(BeaconSpace.lg, BeaconSpace.sm, BeaconSpace.md, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(BeaconSpace.lg, BeaconSpace.sm, BeaconSpace.md, 0),
       child: ReplyQuote(
         reply: reply,
-        authorName: reply.senderId == currentUserId ? 'You' : userName,
+        authorName: reply.senderId == currentUserId ? context.l10n.commonYou : userName,
         onTap: () => _revealMessage(reply.id),
         onClose: () => ref.read(replyDraftProvider(chatId).notifier).state = null,
       ),
@@ -773,6 +776,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildInputArea(AppColorTokens t, String chatId, ReplyPreview? replyDraft) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final recorder = ref.read(voiceRecorderProvider);
     final canRecord = !kIsWeb && recorder.supported;
     final showMic = canRecord && !_hasText && !_sending;
@@ -806,7 +810,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   )
                 : AppIconButton(
                     icon: Icons.add_photo_alternate_outlined,
-                    tooltip: 'Send a photo',
+                    tooltip: l10n.chatSendPhoto,
                     size: 48,
                     variant: AppIconButtonVariant.tonal,
                     onPressed: () => _sendPhoto(chatId),
@@ -840,7 +844,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         style: text.bodyLarge,
                         cursorColor: t.primary,
                         decoration: InputDecoration(
-                          hintText: replyDraft != null ? 'Write a reply…' : 'Type a message…',
+                          hintText: replyDraft != null ? l10n.chatWriteReplyHint : l10n.chatTypeMessageHint,
                           hintStyle: text.bodyLarge?.copyWith(color: t.onSurfaceMuted),
                           filled: false,
                           border: InputBorder.none,
@@ -862,14 +866,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     key: const ValueKey('mic'),
                     recorder: recorder,
                     onRecordingChanged: (on) => setState(() => _recording = on),
-                    onPermissionDenied: () => ActionFeedback.showError(
-                        context, 'Allow microphone access to send voice messages.'),
+                    onPermissionDenied: () =>
+                        ActionFeedback.showError(context, l10n.chatMicPermission),
                     onRecorded: (rec) => _sendVoice(chatId, rec),
                   )
                 : AppIconButton(
                     key: const ValueKey('send'),
                     icon: Icons.send_rounded,
-                    tooltip: 'Send message',
+                    tooltip: l10n.chatSendMessage,
                     size: 48,
                     variant: AppIconButtonVariant.filled,
                     onPressed: _sending ? null : () => _sendText(chatId),
@@ -934,7 +938,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ActionFeedback.showError(context, 'Photo upload failed. ${describeError(e)}');
+        ActionFeedback.showError(context, context.l10n.photoUploadFailed(describeError(e)));
       }
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -978,6 +982,7 @@ class _ChatBubble extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     const r = Radius.circular(BeaconRadius.xl);
     const tail = Radius.circular(6);
     final failed = message.failed;
@@ -995,11 +1000,11 @@ class _ChatBubble extends ConsumerWidget {
           : const EdgeInsets.fromLTRB(BeaconSpace.lg, BeaconSpace.md, BeaconSpace.lg, BeaconSpace.sm),
       decoration: BoxDecoration(
         color: highlighted ? Color.alphaBlend(t.accent.withValues(alpha: 0.35), bg) : bg,
-        borderRadius: BorderRadius.only(
-          topLeft: (!isMe && continued) ? tail : r,
-          topRight: (isMe && continued) ? tail : r,
-          bottomLeft: isMe ? r : tail,
-          bottomRight: isMe ? tail : r,
+        borderRadius: BorderRadiusDirectional.only(
+          topStart: (!isMe && continued) ? tail : r,
+          topEnd: (isMe && continued) ? tail : r,
+          bottomStart: isMe ? r : tail,
+          bottomEnd: isMe ? tail : r,
         ),
         border: (isMe && !failed) ? null : Border.all(color: failed ? t.error : t.outlineVariant),
       ),
@@ -1014,8 +1019,8 @@ class _ChatBubble extends ConsumerWidget {
               child: ReplyQuote(
                 reply: replyTo,
                 authorName: replyTo.senderId == message.senderId
-                    ? (isMe ? 'You' : peerName)
-                    : (isMe ? peerName : 'You'),
+                    ? (isMe ? l10n.commonYou : peerName)
+                    : (isMe ? peerName : l10n.commonYou),
                 onPrimary: isMe && !failed,
                 onTap: onQuoteTap,
               ),
@@ -1027,7 +1032,7 @@ class _ChatBubble extends ConsumerWidget {
                 Icon(Icons.block_rounded, size: 14, color: meta),
                 const SizedBox(width: BeaconSpace.xs),
                 Text(
-                  'This message was deleted',
+                  l10n.msgDeleted,
                   style: text.bodyMedium?.copyWith(color: meta, fontStyle: FontStyle.italic),
                 ),
               ],
@@ -1062,7 +1067,7 @@ class _ChatBubble extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  failed ? 'Not sent' : clockTime(message.createdAt.millisecondsSinceEpoch),
+                  failed ? l10n.chatNotSent : clockTime(message.createdAt.millisecondsSinceEpoch),
                   style: text.labelSmall?.copyWith(color: meta),
                 ),
                 if (isMe && !failed && !deleted) ...[
@@ -1081,11 +1086,11 @@ class _ChatBubble extends ConsumerWidget {
     );
 
     return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isMe ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
         child: Semantics(
-          label: isMe ? 'You said' : 'They said',
+          label: isMe ? l10n.chatYouSaid : l10n.chatTheySaid,
           child: Column(
             crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
@@ -1104,13 +1109,13 @@ class _ChatBubble extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       AppButton.ghost(
-                        label: 'Retry',
+                        label: l10n.commonRetry,
                         icon: Icons.refresh_rounded,
                         size: AppButtonSize.small,
                         onPressed: onRetry,
                       ),
                       AppButton.ghost(
-                        label: 'Discard',
+                        label: l10n.commonDiscard,
                         size: AppButtonSize.small,
                         onPressed: onDiscard,
                       ),

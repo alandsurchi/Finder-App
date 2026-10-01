@@ -4,6 +4,7 @@ import 'dart:ui' show FontFeature;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../services/voice_recorder_service.dart';
 import '../../../widgets/ui/ui.dart';
 import 'voice_message_bubble.dart' show formatClip;
@@ -69,7 +70,7 @@ class _VoiceRecorderButtonState extends State<VoiceRecorderButton> {
     final rec = await widget.recorder.stop();
     if (!mounted) return;
     if (rec == null || rec.durationMs < VoiceRecorderButton.minDurationMs) {
-      ActionHint.show(context, 'Hold the microphone to record a voice message.');
+      ActionHint.show(context, context.l10n.voiceHoldHint);
       return;
     }
     HapticFeedback.selectionClick();
@@ -79,13 +80,15 @@ class _VoiceRecorderButtonState extends State<VoiceRecorderButton> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    // Slide "inwards" to cancel: left in LTR, right in RTL.
+    final dir = context.isRtl ? -1.0 : 1.0;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => ActionHint.show(context, 'Hold to record a voice message.'),
+      onTap: () => ActionHint.show(context, context.l10n.voiceHoldTap),
       onLongPressStart: (_) => _start(),
       onLongPressMoveUpdate: (d) {
         if (!_recording) return;
-        setState(() => _dragX = d.offsetFromOrigin.dx);
+        setState(() => _dragX = d.offsetFromOrigin.dx * dir);
         if (_dragX < -VoiceRecorderButton.cancelDistance) _finish(cancel: true);
       },
       onLongPressEnd: (_) => _finish(cancel: false),
@@ -151,6 +154,7 @@ class _VoiceRecordingBarState extends State<VoiceRecordingBar>
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.lg),
@@ -172,11 +176,11 @@ class _VoiceRecordingBarState extends State<VoiceRecordingBar>
           ),
           const Spacer(),
           Icon(Icons.chevron_left_rounded, size: 18, color: t.onSurfaceMuted),
-          Text('Slide to cancel', style: text.labelMedium?.copyWith(color: t.onSurfaceMuted)),
+          Text(l10n.voiceSlideToCancel, style: text.labelMedium?.copyWith(color: t.onSurfaceMuted)),
           const SizedBox(width: BeaconSpace.sm),
           AppIconButton(
             icon: Icons.close_rounded,
-            tooltip: 'Cancel recording',
+            tooltip: l10n.voiceCancelRecording,
             size: 36,
             iconSize: 18,
             variant: AppIconButtonVariant.ghost,

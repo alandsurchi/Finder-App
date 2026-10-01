@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/core/validation/validators.dart';
@@ -42,10 +43,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _handleSendResetCode({bool isResend = false}) async {
+    final l10n = context.l10n;
     final email = _emailCtrl.text.trim();
     if (!Validators.isEmail(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email address')),
+        SnackBar(content: Text(l10n.authForgotInvalidEmail)),
       );
       return;
     }
@@ -59,8 +61,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isResend
-              ? 'New verification code sent! Check your inbox or console logs.'
-              : 'Verification code sent! Check your inbox or console logs.'
+              ? l10n.authForgotCodeResent
+              : l10n.authForgotCodeSent
             ),
           ),
         );
@@ -77,12 +79,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _handleVerifyCode() async {
+    final l10n = context.l10n;
     final email = _emailCtrl.text.trim();
     final code = _codeCtrl.text.trim();
 
     if (code.length != 6 || int.tryParse(code) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the 6-digit numeric verification code')),
+        SnackBar(content: Text(l10n.authForgotEnterNumericCode)),
       );
       return;
     }
@@ -97,7 +100,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     result.fold(
       onSuccess: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Code verified successfully!')),
+          SnackBar(content: Text(l10n.authForgotCodeVerified)),
         );
         setState(() => _step = 3);
       },
@@ -110,6 +113,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _handleResetPassword() async {
+    final l10n = context.l10n;
     final email = _emailCtrl.text.trim();
     final code = _codeCtrl.text.trim();
     final password = _passwordCtrl.text.trim();
@@ -117,14 +121,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     if (!Validators.isStrongPassword(password)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(Validators.passwordRule)),
+        SnackBar(content: Text(l10n.authPasswordRule)),
       );
       return;
     }
 
     if (password != confirm) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
+        SnackBar(content: Text(l10n.authForgotPasswordsMismatch)),
       );
       return;
     }
@@ -140,7 +144,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     result.fold(
       onSuccess: (_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password updated successfully! Please log in.')),
+          SnackBar(content: Text(l10n.authForgotPasswordUpdated)),
         );
         Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
       },
@@ -166,17 +170,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     // Dynamic title, description and icon based on the active step
-    String titleText = 'Forgot password';
-    String descText = 'Enter your email address and we will send you a 6-digit verification code.';
+    final l10n = context.l10n;
+    String titleText = l10n.authForgotTitle;
+    String descText = l10n.authForgotSubtitle;
     IconData headerIcon = Icons.lock_reset_rounded;
 
     if (_step == 2) {
-      titleText = 'Check your inbox';
-      descText = 'Enter the 6-digit verification code sent to ${_emailCtrl.text.trim()}.';
+      titleText = l10n.authForgotCheckInboxTitle;
+      descText = l10n.authForgotCheckInboxSubtitle(_emailCtrl.text.trim());
       headerIcon = Icons.pin_outlined;
     } else if (_step == 3) {
-      titleText = 'Set a new password';
-      descText = 'Create a secure new password for your account.';
+      titleText = l10n.authForgotNewPasswordTitle;
+      descText = l10n.authForgotNewPasswordSubtitle;
       headerIcon = Icons.password_rounded;
     }
 
@@ -208,11 +213,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   List<Widget> _buildEmailStep() {
+    final l10n = context.l10n;
     return [
       AppTextField(
         controller: _emailCtrl,
-        label: 'Email address',
-        hint: 'yourname@example.com',
+        label: l10n.authEmailAddressLabel,
+        hint: l10n.authEmailAddressHint,
         prefixIcon: Icons.mail_outline_rounded,
         keyboardType: TextInputType.emailAddress,
         textInputAction: TextInputAction.done,
@@ -221,14 +227,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       ),
       const SizedBox(height: BeaconSpace.xxxl),
       AppButton(
-        label: 'Send verification code',
+        label: l10n.authForgotSendCode,
         isLoading: _isLoading,
         onPressed: _isLoading ? null : _handleSendResetCode,
       ),
       const SizedBox(height: BeaconSpace.lg),
       Center(
         child: AppButton.ghost(
-          label: 'Cancel and log in',
+          label: l10n.authForgotCancelAndLogIn,
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -236,11 +242,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   List<Widget> _buildCodeStep() {
+    final l10n = context.l10n;
     return [
       AppTextField(
         controller: _codeCtrl,
-        label: 'Verification code',
-        hint: '6-digit code',
+        label: l10n.authVerificationCodeLabel,
+        hint: l10n.authVerificationCodeHint,
         prefixIcon: Icons.pin_outlined,
         keyboardType: TextInputType.number,
         maxLength: 6,
@@ -250,7 +257,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       ),
       const SizedBox(height: BeaconSpace.xxxl),
       AppButton(
-        label: 'Verify code',
+        label: l10n.authVerifyCode,
         isLoading: _isLoading,
         onPressed: _isLoading ? null : _handleVerifyCode,
       ),
@@ -259,11 +266,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           AppButton.ghost(
-            label: 'Change email',
+            label: l10n.authChangeEmail,
             onPressed: () => setState(() => _step = 1),
           ),
           AppButton.ghost(
-            label: 'Resend code',
+            label: l10n.authResendCode,
             icon: Icons.refresh_rounded,
             onPressed: _isLoading ? null : () => _handleSendResetCode(isResend: true),
           ),
@@ -273,11 +280,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   List<Widget> _buildResetStep() {
+    final l10n = context.l10n;
     return [
       AppTextField(
         controller: _passwordCtrl,
-        label: 'New password',
-        hint: 'Min. 6 characters',
+        label: l10n.authNewPasswordLabel,
+        hint: l10n.authNewPasswordHint,
         prefixIcon: Icons.lock_outline_rounded,
         obscureText: true,
         textInputAction: TextInputAction.next,
@@ -286,8 +294,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       const SizedBox(height: BeaconSpace.lg),
       AppTextField(
         controller: _confirmPasswordCtrl,
-        label: 'Confirm new password',
-        hint: 'Retype new password',
+        label: l10n.authConfirmPasswordLabel,
+        hint: l10n.authConfirmPasswordHint,
         prefixIcon: Icons.lock_outline_rounded,
         obscureText: true,
         textInputAction: TextInputAction.done,
@@ -296,14 +304,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       ),
       const SizedBox(height: BeaconSpace.xxxl),
       AppButton(
-        label: 'Reset password',
+        label: l10n.authResetPassword,
         isLoading: _isLoading,
         onPressed: _isLoading ? null : _handleResetPassword,
       ),
       const SizedBox(height: BeaconSpace.lg),
       Center(
         child: AppButton.ghost(
-          label: 'Start over / change email',
+          label: l10n.authStartOver,
           onPressed: () => setState(() {
             _codeCtrl.clear();
             _passwordCtrl.clear();

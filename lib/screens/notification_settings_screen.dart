@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/features/profile/domain/notification_settings.dart';
 import 'package:finder/features/profile/presentation/notification_settings_controller.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/error_widget.dart';
@@ -15,6 +16,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final state = ref.watch(notificationSettingsProvider);
 
     Future<void> apply(NotificationSettings next) async {
@@ -31,10 +33,10 @@ class NotificationSettingsScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const AppPageHeader(title: 'Notifications'),
+            AppPageHeader(title: l10n.commonNotifications),
             Expanded(
               child: state.when(
-                loading: () => const LoadingWidget(message: 'Loading preferences...'),
+                loading: () => LoadingWidget(message: l10n.notifLoadingPreferences),
                 error: (err, _) => ErrorStateWidget(
                   message: describeError(err),
                   onRetry: () => ref.read(notificationSettingsProvider.notifier).load(),
@@ -62,12 +64,12 @@ class NotificationSettingsScreen extends ConsumerWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Stay connected',
+                                      Text(l10n.notifStayConnected,
                                           style: text.headlineSmall
                                               ?.copyWith(color: t.onPrimaryContainer)),
                                       const SizedBox(height: BeaconSpace.sm),
                                       Text(
-                                        'Choose which moments create a notification. Changes are saved instantly.',
+                                        l10n.notifStayConnectedBody,
                                         style: text.bodyMedium?.copyWith(
                                           color: t.onPrimaryContainer.withValues(alpha: 0.85),
                                         ),
@@ -91,10 +93,10 @@ class NotificationSettingsScreen extends ConsumerWidget {
                             children: [
                               ToggleTile(
                                 icon: Icons.settings_input_antenna_rounded,
-                                title: 'All notifications',
+                                title: l10n.notifAll,
                                 subtitle: allOff
-                                    ? 'Everything is muted'
-                                    : 'Turn everything off at once',
+                                    ? l10n.notifAllMuted
+                                    : l10n.notifAllOff,
                                 value: !allOff,
                                 onChanged: (v) => apply(s.copyWith(
                                   messages: v,
@@ -110,12 +112,12 @@ class NotificationSettingsScreen extends ConsumerWidget {
                         StaggeredEntrance(
                           index: 2,
                           child: SettingsGroup(
-                            title: 'Conversations',
+                            title: l10n.notifConversations,
                             children: [
                               ToggleTile(
                                 icon: Icons.chat_bubble_outline_rounded,
-                                title: 'New message',
-                                subtitle: 'When someone writes to you about a post',
+                                title: l10n.notifNewMessage,
+                                subtitle: l10n.notifNewMessageSubtitle,
                                 value: s.messages,
                                 onChanged: (v) => apply(s.copyWith(messages: v)),
                               ),
@@ -126,17 +128,16 @@ class NotificationSettingsScreen extends ConsumerWidget {
                         StaggeredEntrance(
                           index: 3,
                           child: SettingsGroup(
-                            title: 'Smart matching',
+                            title: l10n.notifSmartMatching,
                             children: [
                               ToggleTile(
                                 icon: Icons.auto_awesome_rounded,
-                                title: 'Item match alerts',
-                                subtitle:
-                                    'When a new post looks like something you lost or found',
+                                title: l10n.notifItemMatch,
+                                subtitle: l10n.notifItemMatchSubtitle,
                                 value: s.matches,
                                 onChanged: (v) => apply(s.copyWith(matches: v)),
                                 badge: StatusBadge.custom(
-                                  label: 'SMART',
+                                  label: l10n.notifSmartBadge,
                                   color: t.accent,
                                   onColor: t.onAccent,
                                   small: true,
@@ -144,8 +145,8 @@ class NotificationSettingsScreen extends ConsumerWidget {
                               ),
                               ToggleTile(
                                 icon: Icons.task_alt_rounded,
-                                title: 'Post updates',
-                                subtitle: 'When an item you chatted about is resolved',
+                                title: l10n.notifPostUpdates,
+                                subtitle: l10n.notifPostUpdatesSubtitle,
                                 value: s.updates,
                                 onChanged: (v) => apply(s.copyWith(updates: v)),
                               ),
@@ -156,19 +157,19 @@ class NotificationSettingsScreen extends ConsumerWidget {
                         StaggeredEntrance(
                           index: 4,
                           child: SettingsGroup(
-                            title: 'From Finder',
+                            title: l10n.notifFromFinder,
                             children: [
                               ToggleTile(
                                 icon: Icons.campaign_outlined,
-                                title: 'Tips and news',
-                                subtitle: 'Occasional product updates. Off by default.',
+                                title: l10n.notifTips,
+                                subtitle: l10n.notifTipsSubtitle,
                                 value: s.marketing,
                                 onChanged: (v) => apply(s.copyWith(marketing: v)),
                               ),
                               ToggleTile(
                                 icon: Icons.mail_outline_rounded,
-                                title: 'E-mail copies',
-                                subtitle: 'Also send important notifications by e-mail',
+                                title: l10n.notifEmailCopies,
+                                subtitle: l10n.notifEmailCopiesSubtitle,
                                 value: s.email,
                                 onChanged: (v) => apply(s.copyWith(email: v)),
                               ),
@@ -179,7 +180,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                         StaggeredEntrance(
                           index: 5,
                           child: Text(
-                            'Notifications are delivered inside the app. Push delivery to your phone will follow the same preferences.',
+                            l10n.notifFooter,
                             style: text.bodySmall,
                             textAlign: TextAlign.center,
                           ),

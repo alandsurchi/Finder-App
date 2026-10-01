@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 
@@ -76,7 +77,7 @@ class _AppTextFieldState extends State<AppTextField> {
     Widget? suffix = widget.suffix;
     if (widget.obscureText) {
       suffix = IconButton(
-        tooltip: _obscure ? 'Show password' : 'Hide password',
+        tooltip: _obscure ? context.l10n.uiShowPassword : context.l10n.uiHidePassword,
         onPressed: () => setState(() => _obscure = !_obscure),
         icon: Icon(
           _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,

@@ -14,6 +14,9 @@ import 'package:finder/screens/legal_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/l10n/l10n.dart';
+import 'package:finder/l10n/locale_controller.dart';
+import 'package:finder/features/settings/presentation/language_sheet.dart';
 import 'package:finder/widgets/ui/profile_cover.dart';
 import 'package:finder/theme/theme_provider.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
@@ -43,6 +46,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     final profileState = ref.watch(profileControllerProvider);
     final profile = profileState.value ?? UserModel.empty();
     final navClearance =
@@ -56,11 +60,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: ListView(
             padding: EdgeInsets.only(bottom: navClearance),
             children: [
-              const StaggeredEntrance(
+              StaggeredEntrance(
                 child: AppPageHeader(
-                  title: 'Profile',
+                  title: l10n.commonProfile,
                   showBack: false,
-                  padding: EdgeInsets.fromLTRB(
+                  padding: const EdgeInsets.fromLTRB(
                     BeaconSpace.page,
                     BeaconSpace.md,
                     BeaconSpace.page,
@@ -138,8 +142,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     bool loading,
   ) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final name = profile.uid.isEmpty
-        ? (loading ? 'Loading…' : 'Finder member')
+        ? (loading ? l10n.commonLoading : l10n.profileFinderMember)
         : profile.displayName;
     return Column(
       children: [
@@ -159,12 +164,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ring: true,
               ),
             ),
-            Positioned(
+            PositionedDirectional(
               bottom: 0,
-              right: 0,
+              end: 0,
               child: AppIconButton(
                 icon: Icons.camera_alt_rounded,
-                tooltip: 'Change photo',
+                tooltip: l10n.profileChangePhoto,
                 size: 32,
                 iconSize: 16,
                 variant: AppIconButtonVariant.filled,
@@ -221,6 +226,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildStats(AppColorTokens t) {
+    final l10n = context.l10n;
     final posts = ref.watch(myPostsProvider).value;
     final saved = ref.watch(savedItemsProvider).value;
     final total = posts?.length;
@@ -236,11 +242,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       child: Row(
         children: [
-          _statItem('Active', active?.toString() ?? '--', t),
+          _statItem(l10n.profileStatActive, active?.toString() ?? '--', t),
           _buildDivider(t),
-          _statItem('Resolved', resolved?.toString() ?? '--', t),
+          _statItem(l10n.profileStatResolved, resolved?.toString() ?? '--', t),
           _buildDivider(t),
-          _statItem('Saved', saved?.length.toString() ?? '--', t),
+          _statItem(l10n.profileStatSaved, saved?.length.toString() ?? '--', t),
         ],
       ),
     );
@@ -280,21 +286,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       profile.displayName,
       if (profile.nickName.isNotEmpty) '@${profile.nickName}',
       if (profile.job.isNotEmpty) profile.job,
-      'Find me on Finder · member id ${profile.uid}',
+      context.l10n.profileShareLine(profile.uid),
     ];
     await Clipboard.setData(ClipboardData(text: lines.join('\n')));
     if (!mounted) return;
-    ActionFeedback.showInfo(context, 'Profile details copied to clipboard.');
+    ActionFeedback.showInfo(context, context.l10n.profileCopied);
   }
 
   Widget _buildActionButtons(AppColorTokens t, UserModel profile) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
       child: Row(
         children: [
           Expanded(
             child: AppButton(
-              label: 'Edit profile',
+              label: l10n.profileEdit,
               icon: Icons.edit_outlined,
               size: AppButtonSize.medium,
               onPressed: _openEdit,
@@ -303,7 +310,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(width: BeaconSpace.md),
           AppIconButton(
             icon: Icons.share_outlined,
-            tooltip: 'Copy profile details',
+            tooltip: l10n.profileCopyDetails,
             variant: AppIconButtonVariant.outlined,
             onPressed: () => _shareProfile(profile),
           ),
@@ -315,17 +322,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void _showAbout() {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
-        title: 'About Finder',
-        subtitle: 'Version 1.0 · Beacon design',
+        title: l10n.profileAboutTitle,
+        subtitle: l10n.profileAboutVersion,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Finder helps a community reunite lost belongings with their owners. '
-              'Report what you lost or found, chat safely inside the app and mark items as resolved when they are back home.',
+              l10n.profileAboutBody,
               style: text.bodyLarge,
             ),
             const SizedBox(height: BeaconSpace.lg),
@@ -338,12 +345,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       Icon(Icons.shield_outlined, color: t.primary, size: 18),
                       const SizedBox(width: BeaconSpace.sm),
-                      Text('Safety first', style: text.titleSmall),
+                      Text(l10n.profileSafetyFirst, style: text.titleSmall),
                     ],
                   ),
                   const SizedBox(height: BeaconSpace.xs),
                   Text(
-                    'Meet in public places, never pay a reward before you have your item, and use in-app chat so you can block and report.',
+                    l10n.profileSafetyBody,
                     style: text.bodySmall,
                   ),
                 ],
@@ -351,7 +358,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: BeaconSpace.xl),
             AppButton.tonal(
-              label: 'Close',
+              label: l10n.commonClose,
               onPressed: () => Navigator.pop(sheetCtx),
             ),
             const SizedBox(height: BeaconSpace.lg),
@@ -364,6 +371,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildMenuSection(AppColorTokens t, UserModel profile) {
     final mode = ref.watch(themeControllerProvider);
     final isDark = mode == ThemeMode.dark;
+    final l10n = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
@@ -371,12 +379,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SettingsGroup(
-            title: 'Account',
+            title: l10n.profileAccount,
             children: [
               SettingsTile(
                 icon: Icons.description_outlined,
-                title: 'My posts',
-                subtitle: 'Manage what you have reported',
+                title: l10n.profileMyPosts,
+                subtitle: l10n.profileMyPostsSubtitle,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const MyPostsScreen()),
@@ -384,8 +392,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               SettingsTile(
                 icon: Icons.bookmark_border_rounded,
-                title: 'Saved items',
-                subtitle: 'Items you are keeping an eye on',
+                title: l10n.profileSavedItems,
+                subtitle: l10n.profileSavedItemsSubtitle,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const SavedItemsScreen()),
@@ -395,11 +403,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 SettingsTile(
                   icon: Icons.verified_user_outlined,
                   title: profile.identityVerified
-                      ? 'Verified identity'
-                      : 'Get verified',
+                      ? l10n.verifyVerifiedIdentity
+                      : l10n.verifyGetVerified,
                   subtitle: profile.identityVerified
-                      ? 'Your badge is visible to the community'
-                      : 'Build trust with a verified badge',
+                      ? l10n.verifyBadgeVisible
+                      : l10n.verifyBuildTrust,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -411,8 +419,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 SettingsTile(
                   icon: Icons.admin_panel_settings_outlined,
                   iconColor: kAdminColor,
-                  title: 'Admin console',
-                  subtitle: 'Users, posts, reports and verification',
+                  title: l10n.profileAdminConsole,
+                  subtitle: l10n.profileAdminConsoleSubtitle,
                   trailing: adminBadge(),
                   onTap: () => Navigator.push(
                     context,
@@ -424,21 +432,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
           SettingsGroup(
-            title: 'Preferences',
+            title: l10n.profilePreferences,
             children: [
               ToggleTile(
                 icon: isDark
                     ? Icons.dark_mode_outlined
                     : Icons.light_mode_outlined,
-                title: 'Dark mode',
-                subtitle: isDark ? 'Nightwatch theme' : 'Daylight theme',
+                title: l10n.profileDarkMode,
+                subtitle: isDark ? l10n.profileNightTheme : l10n.profileDayTheme,
                 value: isDark,
                 onChanged: (_) =>
                     ref.read(themeControllerProvider.notifier).toggleTheme(),
               ),
               SettingsTile(
+                icon: Icons.translate_rounded,
+                title: context.l10n.languageTitle,
+                subtitle: currentLanguageLabel(context, ref.watch(localeControllerProvider)),
+                onTap: () => showLanguageSheet(context, ref),
+              ),
+              SettingsTile(
                 icon: Icons.notifications_none_rounded,
-                title: 'Notifications',
+                title: l10n.commonNotifications,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -448,7 +462,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               SettingsTile(
                 icon: Icons.lock_outline_rounded,
-                title: 'Privacy & safety',
+                title: l10n.privacyTitle,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -459,11 +473,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
           SettingsGroup(
-            title: 'Support & legal',
+            title: l10n.profileSupportLegal,
             children: [
               SettingsTile(
                 icon: Icons.help_outline_rounded,
-                title: 'Help & support',
+                title: l10n.helpTitle,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
@@ -471,7 +485,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               SettingsTile(
                 icon: Icons.description_outlined,
-                title: 'Terms of service',
+                title: l10n.profileTerms,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -481,7 +495,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               SettingsTile(
                 icon: Icons.privacy_tip_outlined,
-                title: 'Privacy policy',
+                title: l10n.profilePrivacyPolicy,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -492,7 +506,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               SettingsTile(
                 icon: Icons.info_outline_rounded,
-                title: 'About Finder',
+                title: l10n.profileAboutTitle,
                 onTap: _showAbout,
               ),
             ],
@@ -501,7 +515,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               SettingsTile(
                 icon: Icons.logout_rounded,
-                title: 'Log out',
+                title: l10n.commonLogOut,
                 destructive: true,
                 showChevron: false,
                 onTap: _confirmLogout,
@@ -514,19 +528,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _confirmLogout() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Log out?'),
-        content: const Text('You can sign back in at any time.'),
+        title: Text(l10n.profileLogOutTitle),
+        content: Text(l10n.profileLogOutBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Log out'),
+            child: Text(l10n.commonLogOut),
           ),
         ],
       ),

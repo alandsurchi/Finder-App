@@ -4,6 +4,7 @@ import '../../../core/errors/exceptions.dart';
 import '../../../core/errors/failure.dart';
 import '../../../core/network/api_client.dart';
 import '../../../app/di/app_providers.dart';
+import '../../../l10n/l10n.dart';
 
 enum AuthStatus { loading, authenticated, unauthenticated, unverified }
 
@@ -115,9 +116,9 @@ class AuthStateController extends StateNotifier<AuthState> {
   /// Called when the server rejected the stored token.
   void sessionExpired() {
     if (state.status == AuthStatus.unauthenticated) return;
-    state = const AuthState.unauthenticated(
+    state = AuthState.unauthenticated(
       Failure(
-        message: 'Your session has expired. Please sign in again.',
+        message: L10n.current.authSessionExpired,
         type: FailureType.auth,
       ),
     );

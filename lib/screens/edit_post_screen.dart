@@ -9,6 +9,7 @@ import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/features/location/place.dart';
 import 'package:finder/screens/location_picker_screen.dart';
+import 'package:finder/l10n/l10n.dart';
 
 class EditPostScreen extends ConsumerStatefulWidget {
   final ItemModel post;
@@ -66,14 +67,15 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = context.l10n;
     final title = _titleCtrl.text.trim();
     if (title.isEmpty) {
-      _snack('Please enter a title.');
+      _snack(l10n.postErrTitleRequiredEdit);
       return;
     }
     final desc = _descCtrl.text.trim();
     if (desc.length < 10) {
-      _snack('Description must be at least 10 characters.');
+      _snack(l10n.postErrDescriptionShortEdit);
       return;
     }
 
@@ -104,7 +106,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
         Navigator.pop(context, true);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           final ctx = Navigator.of(context, rootNavigator: true).context;
-          ActionFeedback.showSuccess(ctx, 'Post updated.');
+          ActionFeedback.showSuccess(ctx, l10n.postUpdated);
         });
       },
       onFailure: (f) => ActionFeedback.showError(context, f.message),
@@ -116,6 +118,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
@@ -124,11 +127,11 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
         child: Column(
           children: [
             AppPageHeader(
-              title: 'Edit post',
+              title: l10n.postEditPost,
               subtitle: widget.post.title,
               actions: [
                 AppButton.ghost(
-                  label: 'Save',
+                  label: l10n.commonSave,
                   icon: Icons.check_rounded,
                   isLoading: _isSaving,
                   onPressed: _isSaving ? null : _save,
@@ -168,7 +171,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                     const SizedBox(height: BeaconSpace.xxl),
 
                     // ── Image ──
-                    const SectionHeader(title: 'Photo'),
+                    SectionHeader(title: l10n.postPhoto),
                     _buildImagePicker(t),
 
                     const SizedBox(height: BeaconSpace.xxl),
@@ -179,9 +182,9 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                         children: [
                           AppTextField(
                             controller: _titleCtrl,
-                            label: 'Item name',
+                            label: l10n.postItemName,
                             required: true,
-                            hint: 'e.g. Black wallet',
+                            hint: l10n.postItemNameHintEdit,
                             prefixIcon: Icons.label_outline_rounded,
                             textCapitalization: TextCapitalization.sentences,
                             textInputAction: TextInputAction.next,
@@ -191,10 +194,10 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                           const SizedBox(height: BeaconSpace.lg),
                           AppTextField(
                             controller: _descCtrl,
-                            label: 'Description',
+                            label: l10n.postDescription,
                             required: true,
-                            hint: 'Describe the item in detail…',
-                            helper: 'At least 10 characters',
+                            hint: l10n.postDescriptionHintEdit,
+                            helper: l10n.postDescriptionHelperEdit,
                             maxLines: 4,
                             textCapitalization: TextCapitalization.sentences,
                           ),
@@ -213,22 +216,22 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                             longitude: _place?.longitude,
                             height: 140,
                             label: _locationCtrl.text.trim().isEmpty
-                                ? 'No location selected'
+                                ? l10n.postNoLocationSelected
                                 : _locationCtrl.text.trim(),
                             onTap: _isSaving ? null : _pickOnMap,
                           ),
                           const SizedBox(height: BeaconSpace.md),
                           AppTextField(
                             controller: _locationCtrl,
-                            label: 'Location',
-                            hint: 'Where was it lost or found?',
+                            label: l10n.commonLocation,
+                            hint: l10n.postLocationHint,
                             prefixIcon: Icons.place_outlined,
                             textInputAction: TextInputAction.next,
                             onChanged: (_) => setState(() {}),
                           ),
                           const SizedBox(height: BeaconSpace.sm),
                           AppButton.ghost(
-                            label: _place == null ? 'Pick on map' : 'Move pin on map',
+                            label: _place == null ? l10n.postPickOnMap : l10n.postMovePinOnMap,
                             icon: Icons.map_outlined,
                             size: AppButtonSize.medium,
                             onPressed: _isSaving ? null : _pickOnMap,
@@ -236,8 +239,8 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                           const SizedBox(height: BeaconSpace.lg),
                           AppTextField(
                             controller: _lostOnCtrl,
-                            label: 'Date / time',
-                            hint: 'Tap to pick date',
+                            label: l10n.postDateTime,
+                            hint: l10n.postTapToPickDate,
                             prefixIcon: Icons.calendar_today_outlined,
                             readOnly: true,
                             onTap: _pickDate,
@@ -245,8 +248,8 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                           const SizedBox(height: BeaconSpace.lg),
                           AppTextField(
                             controller: _rewardCtrl,
-                            label: 'Reward (optional)',
-                            hint: 'e.g. 50',
+                            label: l10n.postRewardOptional,
+                            hint: l10n.postRewardHintEdit,
                             prefixIcon: Icons.workspace_premium_outlined,
                             keyboardType: TextInputType.number,
                           ),
@@ -266,7 +269,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
           padding: const EdgeInsets.fromLTRB(
               BeaconSpace.page, BeaconSpace.sm, BeaconSpace.page, BeaconSpace.lg),
           child: AppButton(
-            label: 'Save changes',
+            label: l10n.postSaveChanges,
             icon: Icons.check_rounded,
             isLoading: _isSaving,
             onPressed: _isSaving ? null : _save,
@@ -283,7 +286,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Category', style: text.titleSmall),
+        Text(context.l10n.postCategory, style: text.titleSmall),
         const SizedBox(height: BeaconSpace.sm),
         DropdownButtonFormField<String>(
           initialValue: _category,
@@ -301,7 +304,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
           items: _categories
               .map((c) => DropdownMenuItem(
                     value: c,
-                    child: Text(c, style: text.bodyLarge),
+                    child: Text(AppCategories.label(context.l10n, c), style: text.bodyLarge),
                   ))
               .toList(),
         ),
@@ -345,9 +348,10 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
   Widget _buildImagePicker(AppColorTokens t) {
     final url = _imageCtrl.text.trim();
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return Semantics(
       button: true,
-      label: url.isEmpty ? 'Add a photo' : 'Change photo',
+      label: url.isEmpty ? l10n.postAddPhoto : l10n.postChangePhoto,
       child: PressScale(
         enabled: !_isUploadingImage,
         scale: 0.985,
@@ -376,7 +380,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                                 strokeWidth: 2.5, color: t.primary),
                           ),
                           const SizedBox(height: BeaconSpace.sm),
-                          Text('Uploading image…', style: text.bodySmall),
+                          Text(l10n.postUploadingImage, style: text.bodySmall),
                         ],
                       ),
                     )
@@ -385,12 +389,12 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                           fit: StackFit.expand,
                           children: [
                             ItemImage(url: url, height: 168),
-                            Positioned(
+                            PositionedDirectional(
                               top: BeaconSpace.sm,
-                              right: BeaconSpace.sm,
+                              end: BeaconSpace.sm,
                               child: AppIconButton(
                                 icon: Icons.close_rounded,
-                                tooltip: 'Remove photo',
+                                tooltip: l10n.postRemovePhoto,
                                 size: 36,
                                 iconSize: 18,
                                 variant: AppIconButtonVariant.filled,
@@ -399,10 +403,10 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                                 onPressed: () => setState(() => _imageCtrl.text = ''),
                               ),
                             ),
-                            Positioned(
+                            PositionedDirectional(
                               bottom: BeaconSpace.sm,
-                              right: BeaconSpace.sm,
-                              child: StatusBadge.neutral('Tap to change',
+                              end: BeaconSpace.sm,
+                              child: StatusBadge.neutral(l10n.postTapToChange,
                                   icon: Icons.edit_outlined, small: true),
                             ),
                           ],
@@ -413,7 +417,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                             Icon(Icons.add_photo_alternate_outlined,
                                 color: t.primary, size: 32),
                             const SizedBox(height: BeaconSpace.sm),
-                            Text('Tap to pick from gallery', style: text.bodyMedium),
+                            Text(l10n.postTapToPickFromGallery, style: text.bodyMedium),
                           ],
                         ),
             ),
@@ -436,7 +440,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
         setState(() => _imageCtrl.text = url);
       }
     } catch (e) {
-      if (mounted) ActionFeedback.showError(context, 'Upload failed. $e');
+      if (mounted) ActionFeedback.showError(context, context.l10n.commonUploadFailed('$e'));
     } finally {
       if (mounted) setState(() => _isUploadingImage = false);
     }

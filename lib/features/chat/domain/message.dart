@@ -1,4 +1,5 @@
 import '../../../core/utils/timestamp.dart';
+import '../../../l10n/l10n.dart';
 
 /// The quoted message inside a reply.
 class ReplyPreview {
@@ -23,10 +24,10 @@ class ReplyPreview {
 
   /// One-line description for the quote block and the reply bar.
   String get summary {
-    if (deleted) return 'This message was deleted';
+    if (deleted) return L10n.current.msgDeleted;
     if (text.isNotEmpty) return text;
-    if (hasAudio) return 'Voice message';
-    if (hasImage) return 'Photo';
+    if (hasAudio) return L10n.current.msgVoiceMessage;
+    if (hasImage) return L10n.current.msgPhoto;
     return '';
   }
 

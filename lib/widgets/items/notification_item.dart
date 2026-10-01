@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/widgets/ui/surface_card.dart';
@@ -29,7 +30,7 @@ class NotificationItem extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return Semantics(
-      label: isUnread ? 'Unread notification' : null,
+      label: isUnread ? context.l10n.notifUnreadSemantics : null,
       child: SurfaceCard(
         margin: const EdgeInsets.only(bottom: BeaconSpace.md),
         padding: const EdgeInsets.all(BeaconSpace.md),

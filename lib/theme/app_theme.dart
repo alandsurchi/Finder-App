@@ -13,35 +13,56 @@ import 'beacon_tokens.dart';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class AppTheme {
-  static ThemeData? _light;
-  static ThemeData? _dark;
+  static final Map<String, ThemeData> _cache = {};
 
-  /// Built once per process: the text theme resolves ~30 font styles and
-  /// `MaterialApp` asks for both themes on every rebuild.
-  static ThemeData light() =>
-      _light ??= _build(BeaconColors.light, Brightness.light);
-  static ThemeData dark() =>
-      _dark ??= _build(BeaconColors.dark, Brightness.dark);
+  /// Built once per process and script: the text theme resolves ~30 font
+  /// styles and `MaterialApp` asks for both themes on every rebuild.
+  /// [arabicScript] switches to Vazirmatn for Arabic and Kurdish.
+  static ThemeData light({bool arabicScript = false}) =>
+      _cache['light-$arabicScript'] ??=
+          _build(BeaconColors.light, Brightness.light, arabicScript);
+  static ThemeData dark({bool arabicScript = false}) =>
+      _cache['dark-$arabicScript'] ??=
+          _build(BeaconColors.dark, Brightness.dark, arabicScript);
+
+  /// True for locales written in the Arabic script (Arabic, Kurdish).
+  static bool usesArabicScript(Locale? locale) =>
+      locale != null && const {'ar', 'ckb', 'ku', 'fa', 'ur'}.contains(locale.languageCode);
 
   // ── Typography ────────────────────────────────────────────────────────────
-  static TextTheme textTheme(BeaconColors c) {
-    TextStyle sora(double size, FontWeight w, {double h = 1.2, double ls = 0}) =>
-        GoogleFonts.sora(
+  static TextTheme textTheme(BeaconColors c, {bool arabicScript = false}) {
+    // Arabic-script text needs a taller line box and no negative tracking:
+    // letters join, so tightening the spacing breaks the word shapes.
+    TextStyle vazir(double size, FontWeight w,
+            {double h = 1.2, double ls = 0, Color? color}) =>
+        GoogleFonts.vazirmatn(
           fontSize: size,
           fontWeight: w,
-          height: h,
-          letterSpacing: ls,
-          color: c.onSurface,
-        );
+          height: h < 1.5 ? h + 0.3 : h + 0.15,
+          letterSpacing: 0,
+          color: color ?? c.onSurface,
+        ).copyWith(fontFamilyFallback: const ['Inter', 'Sora']);
+    TextStyle sora(double size, FontWeight w, {double h = 1.2, double ls = 0}) =>
+        arabicScript
+            ? vazir(size, w, h: h, ls: ls)
+            : GoogleFonts.sora(
+                fontSize: size,
+                fontWeight: w,
+                height: h,
+                letterSpacing: ls,
+                color: c.onSurface,
+              );
     TextStyle inter(double size, FontWeight w,
             {double h = 1.5, double ls = 0, Color? color}) =>
-        GoogleFonts.inter(
-          fontSize: size,
-          fontWeight: w,
-          height: h,
-          letterSpacing: ls,
-          color: color ?? c.onSurface,
-        );
+        arabicScript
+            ? vazir(size, w, h: h, ls: ls, color: color)
+            : GoogleFonts.inter(
+                fontSize: size,
+                fontWeight: w,
+                height: h,
+                letterSpacing: ls,
+                color: color ?? c.onSurface,
+              );
 
     return TextTheme(
       displayLarge: sora(44, FontWeight.w700, h: 1.1, ls: -1),
@@ -63,9 +84,9 @@ class AppTheme {
   }
 
   // ── Builder ───────────────────────────────────────────────────────────────
-  static ThemeData _build(BeaconColors c, Brightness brightness) {
+  static ThemeData _build(BeaconColors c, Brightness brightness, bool arabicScript) {
     final isDark = brightness == Brightness.dark;
-    final text = textTheme(c);
+    final text = textTheme(c, arabicScript: arabicScript);
 
     final scheme = ColorScheme(
       brightness: brightness,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/services/image_upload_service.dart' show ImageSourceKind;
 import 'package:finder/widgets/ui/ui.dart';
 
@@ -6,13 +7,14 @@ import 'package:finder/widgets/ui/ui.dart';
 /// Resolves with null when dismissed.
 Future<ImageSourceKind?> showImageSourceSheet(
   BuildContext context, {
-  String title = 'Add a photo',
+  String? title,
   String? subtitle,
 }) {
+  final l10n = context.l10n;
   return AppBottomSheet.show<ImageSourceKind>(
     context,
     builder: (sheetCtx) => AppBottomSheet(
-      title: title,
+      title: title ?? l10n.photoAddTitle,
       subtitle: subtitle,
       scrollable: false,
       child: Column(
@@ -20,14 +22,14 @@ Future<ImageSourceKind?> showImageSourceSheet(
         children: [
           SheetOption(
             icon: Icons.photo_camera_outlined,
-            label: 'Take a photo',
-            subtitle: 'Open the camera',
+            label: l10n.photoTakePhoto,
+            subtitle: l10n.photoOpenCamera,
             onTap: () => Navigator.pop(sheetCtx, ImageSourceKind.camera),
           ),
           SheetOption(
             icon: Icons.photo_library_outlined,
-            label: 'Choose from gallery',
-            subtitle: 'Pick an existing picture',
+            label: l10n.photoChooseGallery,
+            subtitle: l10n.photoPickExisting,
             onTap: () => Navigator.pop(sheetCtx, ImageSourceKind.gallery),
           ),
           const SizedBox(height: BeaconSpace.lg),

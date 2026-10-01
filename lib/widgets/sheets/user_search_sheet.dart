@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/errors/exceptions.dart';
+import '../../l10n/l10n.dart';
 import '../../providers/user_provider.dart';
 import '../../services/user_service.dart';
 import '../ui/ui.dart';
@@ -12,13 +13,18 @@ import '../ui/ui.dart';
 /// picked [UserSummary] (or null when dismissed).
 Future<UserSummary?> showUserSearchSheet(
   BuildContext context, {
-  String title = 'Find a member',
-  String hint = 'Search by name or email…',
-  String actionLabel = 'Select',
+  String? title,
+  String? hint,
+  String? actionLabel,
 }) {
+  final l10n = context.l10n;
   return AppBottomSheet.show<UserSummary>(
     context,
-    builder: (_) => _UserSearchSheet(title: title, hint: hint, actionLabel: actionLabel),
+    builder: (_) => _UserSearchSheet(
+      title: title ?? l10n.profileFindMember,
+      hint: hint ?? l10n.profileSearchMemberHint,
+      actionLabel: actionLabel ?? l10n.profileSelect,
+    ),
   );
 }
 
@@ -82,7 +88,7 @@ class _UserSearchSheetState extends ConsumerState<_UserSearchSheet> {
       if (!mounted || _lastQuery != q) return;
       setState(() {
         _loading = false;
-        _error = failureFrom(e, fallback: 'Search failed.').message;
+        _error = failureFrom(e, fallback: context.l10n.profileSearchFailed).message;
       });
     }
   }
@@ -91,11 +97,12 @@ class _UserSearchSheetState extends ConsumerState<_UserSearchSheet> {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final query = _ctrl.text.trim();
 
     return AppBottomSheet(
       title: widget.title,
-      subtitle: 'Type at least two letters of a name or e-mail address.',
+      subtitle: l10n.profileSearchSubtitle,
       maxHeightFactor: 0.9,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -127,7 +134,7 @@ class _UserSearchSheetState extends ConsumerState<_UserSearchSheet> {
                   const SizedBox(width: BeaconSpace.md),
                   Expanded(
                     child: Text(
-                      'Members you have blocked will not appear here.',
+                      l10n.profileSearchBlockedNote,
                       style: text.bodySmall,
                     ),
                   ),
@@ -137,7 +144,7 @@ class _UserSearchSheetState extends ConsumerState<_UserSearchSheet> {
           else if (_results.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: BeaconSpace.lg),
-              child: Text('No members match "$query".', style: text.bodyMedium),
+              child: Text(l10n.profileSearchNoMatch(query), style: text.bodyMedium),
             )
           else
             ..._results.map((u) => _UserRow(
@@ -164,7 +171,7 @@ class _UserRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Semantics(
       button: true,
-      label: '${user.displayName}, $actionLabel',
+      label: context.l10n.profileUserRowSemantics(user.displayName, actionLabel),
       child: Material(
         color: Colors.transparent,
         borderRadius: BeaconRadius.rLg,

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/errors/exceptions.dart';
 import '../core/errors/failure.dart';
 import '../core/utils/result.dart';
+import '../l10n/l10n.dart';
 import '../models/item_model.dart';
 import 'post_provider.dart';
 import '../features/auth/presentation/auth_state_provider.dart';
@@ -26,7 +27,7 @@ class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
       state = AsyncValue.data(posts);
     } catch (e, st) {
       state = AsyncValue.error(
-        failureFrom(e, fallback: 'Unable to load your posts.'),
+        failureFrom(e, fallback: L10n.current.postErrLoad),
         st,
       );
     }
@@ -41,7 +42,7 @@ class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
       ref.invalidate(postsStreamProvider);
       return Result.success(null);
     } catch (e) {
-      return Result.failure(failureFrom(e, fallback: 'Unable to delete the post.'));
+      return Result.failure(failureFrom(e, fallback: L10n.current.postErrDelete));
     }
   }
 
@@ -54,7 +55,7 @@ class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
       ref.invalidate(postsStreamProvider);
       return Result.success(null);
     } catch (e) {
-      return Result.failure(failureFrom(e, fallback: 'Unable to resolve the post.'));
+      return Result.failure(failureFrom(e, fallback: L10n.current.postErrResolve));
     }
   }
 
@@ -67,7 +68,7 @@ class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
       ref.invalidate(postsStreamProvider);
       return Result.success(null);
     } catch (e) {
-      return Result.failure(failureFrom(e, fallback: 'Unable to reopen the post.'));
+      return Result.failure(failureFrom(e, fallback: L10n.current.postErrReopen));
     }
   }
 
@@ -82,7 +83,7 @@ class MyPostsNotifier extends StateNotifier<AsyncValue<List<ItemModel>>> {
       ref.invalidate(postsStreamProvider);
       return Result.success(saved);
     } catch (e) {
-      return Result.failure(failureFrom(e, fallback: 'Unable to save the post.'));
+      return Result.failure(failureFrom(e, fallback: L10n.current.postErrSave));
     }
   }
 
@@ -101,5 +102,5 @@ final myPostsProvider =
 String describeError(Object error) {
   if (error is Failure) return error.message;
   if (error is AppException) return error.message;
-  return 'Something went wrong. Please try again.';
+  return L10n.current.commonSomethingWentWrong;
 }

@@ -1,4 +1,5 @@
 import '../core/utils/timestamp.dart';
+import '../l10n/l10n.dart';
 
 class UserModel {
   final String uid;
@@ -38,7 +39,7 @@ class UserModel {
   String get displayName {
     if (fullName.trim().isNotEmpty) return fullName.trim();
     if (nickName.trim().isNotEmpty) return nickName.trim();
-    return 'Finder User';
+    return L10n.current.commonFinderUser;
   }
 
   factory UserModel.empty() {

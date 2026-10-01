@@ -1,3 +1,4 @@
+import '../../l10n/l10n.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failure.dart';
 import '../../core/network/api_client.dart';
@@ -39,15 +40,15 @@ class NotificationRepositoryImpl implements NotificationRepository {
       return Result.success(items);
     } catch (e) {
       return Result.failure(
-        failureFrom(e, fallback: 'Unable to load notifications.'),
+        failureFrom(e, fallback: L10n.current.repoUnableLoadNotifications),
       );
     }
   }
 
   Failure? get _authFailure => _apiClient.isAuthenticated
       ? null
-      : const Failure(
-          message: 'Please log in to manage notifications.',
+      : Failure(
+          message: L10n.current.repoLoginToManageNotifications,
           type: FailureType.auth,
         );
 
@@ -61,7 +62,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
       return Result.success(null);
     } catch (e) {
       return Result.failure(
-        failureFrom(e, fallback: 'Unable to update the notification.'),
+        failureFrom(e, fallback: L10n.current.repoUnableUpdateNotification),
       );
     }
   }
@@ -75,7 +76,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
       return Result.success(null);
     } catch (e) {
       return Result.failure(
-        failureFrom(e, fallback: 'Unable to update notifications.'),
+        failureFrom(e, fallback: L10n.current.repoUnableUpdateNotifications),
       );
     }
   }

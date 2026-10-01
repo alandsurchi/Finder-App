@@ -17,6 +17,7 @@ import 'package:finder/features/location/place.dart';
 import 'package:finder/screens/location_picker_screen.dart';
 import 'package:finder/services/image_upload_service.dart' show ImageSourceKind;
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/l10n/l10n.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   /// Optional preselection for the Lost / Found toggle (presentation only).
@@ -136,16 +137,17 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   Widget _buildHeader(AppColorTokens t) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final done = _completedSteps;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('New post', style: text.headlineMedium),
+        Text(l10n.postNewPost, style: text.headlineMedium),
         const SizedBox(height: BeaconSpace.xs),
         Text(
           _isLostItem
-              ? 'Tell the community what you lost.'
-              : 'Help return what you found.',
+              ? l10n.postHeaderLost
+              : l10n.postHeaderFound,
           style: text.bodyMedium,
         ),
         const SizedBox(height: BeaconSpace.lg),
@@ -159,7 +161,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         ),
         const SizedBox(height: BeaconSpace.sm),
         Text(
-          done == 5 ? 'Ready to post' : '$done of 5 details added',
+          done == 5 ? l10n.postReadyToPost : l10n.postDetailsAdded(done),
           style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
         ),
       ],
@@ -190,15 +192,16 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   Widget _buildPhotoSection(AppColorTokens t) {
     final busy = _isSubmitting || _isUploadingImage;
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(
-          title: 'Photos',
-          eyebrow: 'Step 1',
+        SectionHeader(
+          title: l10n.postPhotos,
+          eyebrow: l10n.postStep(1),
         ),
         Text(
-          'Clear photos help others identify the item.',
+          l10n.postPhotosHint,
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: BeaconSpace.md),
@@ -206,13 +209,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           children: [
             _MediaTile(
               icon: Icons.photo_camera_outlined,
-              label: 'Camera',
+              label: l10n.postCamera,
               onTap: busy ? null : () => _pickAndUploadImage(ImageSourceKind.camera),
             ),
             const SizedBox(width: BeaconSpace.md),
             _MediaTile(
               icon: Icons.photo_library_outlined,
-              label: 'Gallery',
+              label: l10n.postGallery,
               onTap: busy ? null : () => _pickAndUploadImage(ImageSourceKind.gallery),
             ),
             const SizedBox(width: BeaconSpace.md),
@@ -236,12 +239,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           height: 92,
           borderRadius: BeaconRadius.rLg,
         ),
-        Positioned(
-          right: -8,
+        PositionedDirectional(
+          end: -8,
           top: -8,
           child: AppIconButton(
             icon: Icons.close_rounded,
-            tooltip: 'Remove photo',
+            tooltip: context.l10n.postRemovePhoto,
             size: 28,
             iconSize: 16,
             variant: AppIconButtonVariant.filled,
@@ -260,19 +263,20 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   Widget _buildItemInfoCard(AppColorTokens t) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Item details', eyebrow: 'Step 2'),
+        SectionHeader(title: l10n.postItemDetails, eyebrow: l10n.postStep(2)),
         SurfaceCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AppTextField(
                 controller: _titleCtrl,
-                label: 'Item name',
+                label: l10n.postItemName,
                 required: true,
-                hint: 'e.g. Blue backpack',
+                hint: l10n.postItemNameHint,
                 prefixIcon: Icons.label_outline_rounded,
                 textCapitalization: TextCapitalization.sentences,
                 textInputAction: TextInputAction.next,
@@ -280,9 +284,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               ),
               const SizedBox(height: BeaconSpace.lg),
               AppPickerField(
-                label: 'Category',
-                value: _category ?? '',
-                hint: 'Choose a category',
+                label: l10n.postCategory,
+                value: AppCategories.label(l10n, _category ?? ''),
+                hint: l10n.postChooseCategory,
                 prefixIcon: categoryIcon(_category ?? ''),
                 onTap: _isSubmitting ? null : _showCategoryPicker,
               ),
@@ -291,11 +295,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               const SizedBox(height: BeaconSpace.lg),
               AppTextField(
                 controller: _descCtrl,
-                label: 'Description',
+                label: l10n.postDescription,
                 required: true,
-                hint:
-                    'e.g. Last seen near the fountain at Central Park. It has a small scratch on the front…',
-                helper: '${_descCtrl.text.length}/500 · at least 10 characters',
+                hint: l10n.postDescriptionHint,
+                helper: l10n.postDescriptionHelper(_descCtrl.text.length),
                 maxLines: 4,
                 maxLength: 500,
                 textCapitalization: TextCapitalization.sentences,
@@ -305,14 +308,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 const SizedBox(height: BeaconSpace.lg),
                 AppTextField(
                   controller: _rewardCtrl,
-                  label: 'Reward (optional)',
-                  hint: r'e.g. $100',
+                  label: l10n.postRewardOptional,
+                  hint: l10n.postRewardHint,
                   prefixIcon: Icons.workspace_premium_outlined,
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: BeaconSpace.sm),
                 Text(
-                  'A reward is shown as an amber tag on your post.',
+                  l10n.postRewardNote,
                   style: text.bodySmall,
                 ),
               ],
@@ -330,7 +333,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       children: _categories.map((category) {
         final isSelected = _category == category;
         return AppChoiceChip(
-          label: category,
+          label: AppCategories.label(context.l10n, category),
           icon: categoryIcon(category),
           selected: isSelected,
           onTap: _isSubmitting
@@ -345,10 +348,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
   Widget _buildLocationTimeSection(AppColorTokens t) {
     final location = _locationCtrl.text.trim();
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Location & time', eyebrow: 'Step 3'),
+        SectionHeader(title: l10n.postLocationTime, eyebrow: l10n.postStep(3)),
         SurfaceCard(
           padding: EdgeInsets.zero,
           child: Column(
@@ -359,7 +363,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   latitude: _place?.latitude,
                   longitude: _place?.longitude,
                   height: 150,
-                  label: location.isEmpty ? 'No location selected' : location,
+                  label: location.isEmpty ? l10n.postNoLocationSelected : location,
                   onTap: _isSubmitting ? null : _pickOnMap,
                 ),
               ),
@@ -373,7 +377,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       children: [
                         Expanded(
                           child: AppButton.tonal(
-                            label: 'Locate me',
+                            label: l10n.postLocateMe,
                             icon: Icons.my_location_rounded,
                             size: AppButtonSize.medium,
                             isLoading: _locating,
@@ -385,7 +389,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         const SizedBox(width: BeaconSpace.sm),
                         Expanded(
                           child: AppButton.tonal(
-                            label: _place == null ? 'Open map' : 'Move pin',
+                            label: _place == null ? l10n.postOpenMap : l10n.postMovePin,
                             icon: Icons.map_outlined,
                             size: AppButtonSize.medium,
                             onPressed: _isSubmitting ? null : _pickOnMap,
@@ -395,7 +399,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     ),
                     const SizedBox(height: BeaconSpace.sm),
                     AppButton.ghost(
-                      label: 'Type an address instead',
+                      label: l10n.postTypeAddress,
                       icon: Icons.edit_location_alt_outlined,
                       size: AppButtonSize.medium,
                       onPressed: _isSubmitting ? null : _enterLocationManually,
@@ -405,7 +409,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       children: [
                         Expanded(
                           child: AppPickerField(
-                            label: 'Date',
+                            label: l10n.postDate,
                             value: _formatDateBadge(),
                             prefixIcon: Icons.calendar_today_outlined,
                             onTap: _isSubmitting ? null : _pickDateOnly,
@@ -414,7 +418,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                         const SizedBox(width: BeaconSpace.md),
                         Expanded(
                           child: AppPickerField(
-                            label: 'Time',
+                            label: l10n.postTime,
                             value: _formatTimeBadge(),
                             prefixIcon: Icons.schedule_rounded,
                             onTap: _isSubmitting ? null : _pickTimeOnly,
@@ -438,10 +442,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     if (_usePhone && _phoneCtrl.text.isEmpty && (profile?.phone.isNotEmpty ?? false)) {
       _phoneCtrl.text = profile!.phone;
     }
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'How people reach you', eyebrow: 'Step 4'),
+        SectionHeader(title: l10n.postHowPeopleReachYou, eyebrow: l10n.postStep(4)),
         SurfaceCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -462,13 +467,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('In-app chat', style: text.titleSmall),
-                        Text('Always on. Members contact you through Finder messages.',
+                        Text(l10n.postInAppChat, style: text.titleSmall),
+                        Text(l10n.postInAppChatNote,
                             style: text.bodySmall),
                       ],
                     ),
                   ),
-                  StatusBadge.neutral('ON', small: true),
+                  StatusBadge.neutral(l10n.postOn, small: true),
                 ],
               ),
               const SizedBox(height: BeaconSpace.lg),
@@ -477,8 +482,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 padding: const EdgeInsets.symmetric(vertical: BeaconSpace.xs),
                 child: ToggleTile(
                   icon: Icons.phone_outlined,
-                  title: 'Show my phone number',
-                  subtitle: 'Shown on your profile to signed-in members',
+                  title: l10n.postShowPhone,
+                  subtitle: l10n.postShowPhoneNote,
                   value: _usePhone,
                   onChanged: _isSubmitting ? null : (v) => setState(() => _usePhone = v),
                 ),
@@ -487,12 +492,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 const SizedBox(height: BeaconSpace.lg),
                 AppTextField(
                   controller: _phoneCtrl,
-                  label: 'Phone number',
-                  hint: 'e.g. +1 234 567 8900',
+                  label: l10n.postPhoneNumber,
+                  hint: l10n.postPhoneHint,
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
-                  helper: 'Saved to your profile and shared with signed-in members.',
+                  helper: l10n.postPhoneHelper,
                 ),
               ],
             ],
@@ -507,7 +512,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppButton(
-          label: 'Post now',
+          label: context.l10n.postPostNow,
           icon: Icons.send_rounded,
           iconTrailing: true,
           isLoading: _isSubmitting,
@@ -516,7 +521,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         const SizedBox(height: BeaconSpace.sm),
         Center(
           child: AppButton.ghost(
-            label: 'Save draft',
+            label: context.l10n.postSaveDraft,
             icon: Icons.save_outlined,
             onPressed: _isSubmitting ? null : _saveDraft,
           ),
@@ -532,12 +537,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       useSafeArea: true,
       builder: (context) {
         return AppBottomSheet(
-          title: 'Choose category',
+          title: context.l10n.postChooseCategoryTitle,
           child: Column(
             children: [
               ..._categories.map(
                 (c) => SheetOption(
-                  label: c,
+                  label: AppCategories.label(context.l10n, c),
                   icon: categoryIcon(c),
                   selected: _category == c,
                   onTap: () => Navigator.pop(context, c),
@@ -568,7 +573,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         _locationCtrl.text = place.label;
         _publicSearch = true;
       });
-      _showMessage('Location set to ${place.label}.');
+      _showMessage(context.l10n.postLocationSetTo(place.label));
     } catch (e) {
       if (mounted) _showMessage(describeError(e), isError: true);
     } finally {
@@ -592,10 +597,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Enter location'),
+          title: Text(context.l10n.postEnterLocation),
           content: AppTextField(
             controller: localCtrl,
-            hint: 'City, street or area',
+            hint: context.l10n.postEnterLocationHint,
             prefixIcon: Icons.place_outlined,
             autofocus: true,
             textInputAction: TextInputAction.done,
@@ -604,11 +609,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.commonCancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, localCtrl.text.trim()),
-              child: const Text('Save'),
+              child: Text(context.l10n.commonSave),
             ),
           ],
         );
@@ -679,29 +684,15 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   String _formatDateBadge() {
     final value = _selectedDateTime ?? DateTime.now();
     final now = DateTime.now();
+    final l10n = context.l10n;
 
     if (value.year == now.year &&
         value.month == now.month &&
         value.day == now.day) {
-      return 'Today';
+      return l10n.commonToday;
     }
 
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-
-    return '${value.day} ${months[value.month - 1]}';
+    return l10n.commonDayMonth(value.day, l10n.commonMonthShort('${value.month}'));
   }
 
   String _formatTimeBadge() {
@@ -716,24 +707,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
     final title = _titleCtrl.text.trim();
     if (title.isEmpty) {
-      _showMessage('Please enter the item name before posting.', isError: true);
+      _showMessage(context.l10n.postErrTitleRequired, isError: true);
       return;
     }
 
     final description = _descCtrl.text.trim();
     if (description.length < 10) {
-      _showMessage(
-        'Please add at least 10 characters in the description.',
-        isError: true,
-      );
+      _showMessage(context.l10n.postErrDescriptionShort, isError: true);
       return;
     }
 
     if (_usePhone && _phoneCtrl.text.trim().isEmpty) {
-      _showMessage(
-        'Please enter a phone number or turn off phone sharing.',
-        isError: true,
-      );
+      _showMessage(context.l10n.postErrPhoneRequired, isError: true);
       return;
     }
 
@@ -742,7 +727,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final uid = ref.read(authStateProvider).userId;
     if (uid == null) {
       if (mounted) setState(() => _isSubmitting = false);
-      _showMessage('You must be logged in to post.', isError: true);
+      _showMessage(context.l10n.postErrLoginRequired, isError: true);
       return;
     }
 
@@ -763,7 +748,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       latitude: _place?.latitude,
       longitude: _place?.longitude,
       imagePath: _imagePath,
-      timeAgo: 'Just now',
+      timeAgo: context.l10n.commonJustNow,
     );
 
     try {
@@ -777,7 +762,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       // Details opens on top of Home, so Back lands on the feed, not here.
       ref.read(createPrefillProvider.notifier).state = null;
       ref.read(homeTabProvider.notifier).state = HomeTabs.home;
-      ActionFeedback.showSuccess(context, 'Your post is live.');
+      ActionFeedback.showSuccess(context, context.l10n.postLive);
       Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: created);
     } catch (e) {
       if (!mounted) return;
@@ -831,10 +816,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       );
       if (url != null && mounted) {
         setState(() => _imagePath = url);
-        _showMessage('Photo added.');
+        _showMessage(context.l10n.postPhotoAdded);
       }
     } catch (e) {
-      if (mounted) _showMessage('Upload failed. ${describeError(e)}', isError: true);
+      if (mounted) _showMessage(context.l10n.commonUploadFailed(describeError(e)), isError: true);
     } finally {
       if (mounted) setState(() => _isUploadingImage = false);
     }
@@ -856,7 +841,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       'publicSearch': _publicSearch,
       'imagePath': _imagePath,
     };
-    _showMessage('Draft saved locally.');
+    _showMessage(context.l10n.postDraftSaved);
   }
 
   void _restoreDraftIfAvailable() {
@@ -927,9 +912,10 @@ class _MediaTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return Semantics(
       button: !loading,
-      label: loading ? 'Uploading photo' : 'Add photo from ${label!.toLowerCase()}',
+      label: loading ? l10n.postUploadingPhoto : l10n.postAddPhotoFrom(label!.toLowerCase()),
       child: PressScale(
         enabled: onTap != null,
         child: Material(

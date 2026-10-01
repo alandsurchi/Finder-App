@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/social_button.dart';
@@ -30,10 +31,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AuthShell(
       icon: Icons.radar_rounded,
-      title: 'Welcome back',
-      subtitle: 'Log in to continue finding what matters.',
+      title: l10n.authLoginTitle,
+      subtitle: l10n.authLoginSubtitle,
       children: [
         AutofillGroup(
           child: Column(
@@ -41,8 +43,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               AppTextField(
                 controller: _emailCtrl,
-                label: 'Email',
-                hint: 'you@example.com',
+                label: l10n.authEmailLabel,
+                hint: l10n.authEmailHint,
                 prefixIcon: Icons.mail_outline_rounded,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
@@ -51,8 +53,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: BeaconSpace.lg),
               AppTextField(
                 controller: _passwordCtrl,
-                label: 'Password',
-                hint: 'Your password',
+                label: l10n.authPasswordLabel,
+                hint: l10n.authPasswordHint,
                 prefixIcon: Icons.lock_outline_rounded,
                 obscureText: true,
                 textInputAction: TextInputAction.done,
@@ -63,34 +65,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerEnd,
           child: AppButton.ghost(
-            label: 'Forgot password?',
+            label: l10n.authForgotPassword,
             onPressed: _sendPasswordReset,
           ),
         ),
         Padding(
           padding: const EdgeInsets.only(top: BeaconSpace.sm, bottom: BeaconSpace.xxxl),
           child: AppButton(
-            label: 'Sign in',
+            label: l10n.authSignIn,
             isLoading: _isLoading,
             onPressed: _isLoading ? null : _submit,
           ),
         ),
-        const LabeledDivider(label: 'Or continue with'),
+        LabeledDivider(label: l10n.authOrContinueWith),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: BeaconSpace.xl),
           child: Center(
             child: SocialButton(
               imageAsset: 'assets/images/google_logo.png',
-              semanticLabel: 'Continue with Google',
+              semanticLabel: l10n.authContinueWithGoogle,
               onTap: _isLoading ? null : _handleGoogleSignIn,
             ),
           ),
         ),
         AuthFooterLink(
-          prompt: "Don't have an account?",
-          action: 'Sign up',
+          prompt: l10n.authNoAccountPrompt,
+          action: l10n.authSignUp,
           onTap: () => Navigator.pushNamed(context, AppRoutes.signup),
         ),
       ],
@@ -108,14 +110,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
     if (!Validators.isEmail(email)) {
-      ActionFeedback.showError(context, 'Enter a valid email address.');
+      ActionFeedback.showError(context, l10n.authInvalidEmail);
       return;
     }
     if (!Validators.hasMinLength(password, 6)) {
-      ActionFeedback.showError(context, 'Password must be at least 6 characters.');
+      ActionFeedback.showError(context, l10n.authPasswordMin6);
       return;
     }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:finder/features/notifications/presentation/notification_navigator.dart';
 import 'package:finder/providers/post_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/models/notification_model.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/routes.dart';
@@ -20,6 +21,7 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     final notificationsState = ref.watch(notificationsControllerProvider);
     final unreadCount = ref.watch(unreadNotificationsCountProvider);
 
@@ -28,14 +30,14 @@ class NotificationsScreen extends ConsumerWidget {
         child: Column(
           children: [
             AppPageHeader(
-              title: 'Notifications',
+              title: l10n.commonNotifications,
               subtitle: unreadCount > 0
-                  ? '$unreadCount unread'
-                  : (notificationsState.hasValue ? 'You are all caught up' : null),
+                  ? l10n.notifUnreadCount(unreadCount)
+                  : (notificationsState.hasValue ? l10n.notifCaughtUp : null),
               actions: [
                 if (unreadCount > 0)
                   AppButton.ghost(
-                    label: 'Mark all read',
+                    label: l10n.notifMarkAllRead,
                     size: AppButtonSize.small,
                     onPressed: () async {
                       final result = await ref
@@ -50,7 +52,7 @@ class NotificationsScreen extends ConsumerWidget {
                   ),
                 AppIconButton(
                   icon: Icons.refresh_rounded,
-                  tooltip: 'Refresh',
+                  tooltip: l10n.commonRefresh,
                   onPressed: () => ref
                       .read(notificationsControllerProvider.notifier)
                       .loadNotifications(),
@@ -59,8 +61,8 @@ class NotificationsScreen extends ConsumerWidget {
             ),
             Expanded(
               child: notificationsState.when(
-                loading: () => const LoadingWidget(
-                  message: 'Loading notifications...',
+                loading: () => LoadingWidget(
+                  message: l10n.notifLoading,
                   variant: LoadingVariant.rows,
                 ),
                 error: (err, _) => ErrorStateWidget(
@@ -71,11 +73,10 @@ class NotificationsScreen extends ConsumerWidget {
                 ),
                 data: (notifications) {
                   if (notifications.isEmpty) {
-                    return const EmptyWidget(
+                    return EmptyWidget(
                       icon: Icons.notifications_none_rounded,
-                      title: 'No notifications yet',
-                      subtitle:
-                          'You will hear from us when someone messages you, your post gets activity, or an item is resolved.',
+                      title: l10n.notifEmptyTitle,
+                      subtitle: l10n.notifEmptySubtitle,
                     );
                   }
                   return RefreshIndicator(

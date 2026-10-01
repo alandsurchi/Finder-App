@@ -1,0 +1,1825 @@
+{
+  "@@locale": "en",
+  "appName": "Finder",
+  "commonCancel": "Cancel",
+  "commonSave": "Save",
+  "commonDelete": "Delete",
+  "commonRemove": "Remove",
+  "commonDiscard": "Discard",
+  "commonDone": "Done",
+  "commonOk": "OK",
+  "commonClose": "Close",
+  "commonBack": "Back",
+  "commonNext": "Next",
+  "commonSkip": "Skip",
+  "commonContinue": "Continue",
+  "commonRetry": "Retry",
+  "commonTryAgain": "Try again",
+  "commonRefresh": "Refresh",
+  "commonOpen": "Open",
+  "commonEdit": "Edit",
+  "commonShare": "Share",
+  "commonReport": "Report",
+  "commonBlock": "Block",
+  "commonUnblock": "Unblock",
+  "commonSend": "Send",
+  "commonSearch": "Search",
+  "commonYes": "Yes",
+  "commonNo": "No",
+  "commonLoading": "Loading…",
+  "commonSaving": "Saving…",
+  "commonSending": "Sending…",
+  "commonUploading": "Uploading…",
+  "commonSeeAll": "See all",
+  "commonViewProfile": "View profile",
+  "commonMoreOptions": "More options",
+  "commonLogOut": "Log out",
+  "commonLost": "Lost",
+  "commonFound": "Found",
+  "commonReturned": "Returned",
+  "commonMarkAsReturned": "Mark as returned",
+  "commonMarkedAsReturned": "Marked as returned.",
+  "commonReopen": "Reopen",
+  "commonPosts": "Posts",
+  "commonMessages": "Messages",
+  "commonNotifications": "Notifications",
+  "commonProfile": "Profile",
+  "commonHome": "Home",
+  "commonLocation": "Location",
+  "commonLocationNotSpecified": "Location not specified",
+  "commonFinderUser": "Finder User",
+  "commonYou": "You",
+  "commonSomethingWentWrong": "Something went wrong. Please try again.",
+  "commonUploadFailed": "Upload failed. {detail}",
+  "@commonUploadFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "commonCopied": "Copied.",
+  "commonJustNow": "Just now",
+  "commonMinutesAgo": "{count}m ago",
+  "@commonMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commonHoursAgo": "{count}h ago",
+  "@commonHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commonDaysAgo": "{count}d ago",
+  "@commonDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commonWeeksAgo": "{count}w ago",
+  "@commonWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commonToday": "Today",
+  "commonYesterday": "Yesterday",
+  "commonMonthShort": "{month, select, 1{Jan} 2{Feb} 3{Mar} 4{Apr} 5{May} 6{Jun} 7{Jul} 8{Aug} 9{Sep} 10{Oct} 11{Nov} 12{Dec} other{}}",
+  "@commonMonthShort": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "commonWeekdayShort": "{day, select, 1{Mon} 2{Tue} 3{Wed} 4{Thu} 5{Fri} 6{Sat} 7{Sun} other{}}",
+  "@commonWeekdayShort": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDayMonth": "{day} {month}",
+  "@commonDayMonth": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDayMonthYear": "{day} {month} {year}",
+  "@commonDayMonthYear": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "languageTitle": "Language",
+  "languageSubtitle": "Choose the language Finder uses",
+  "languageSystem": "Use phone language",
+  "languageEnglish": "English",
+  "languageArabic": "العربية",
+  "languageKurdish": "کوردی",
+  "languageChanged": "Language updated.",
+  "authLoginTitle": "Welcome back",
+  "authLoginSubtitle": "Log in to continue finding what matters.",
+  "authEmailLabel": "Email",
+  "authEmailHint": "you@example.com",
+  "authPasswordLabel": "Password",
+  "authPasswordHint": "Your password",
+  "authForgotPassword": "Forgot password?",
+  "authSignIn": "Sign in",
+  "authOrContinueWith": "Or continue with",
+  "authContinueWithGoogle": "Continue with Google",
+  "authNoAccountPrompt": "Don't have an account?",
+  "authSignUp": "Sign up",
+  "authInvalidEmail": "Enter a valid email address.",
+  "authPasswordMin6": "Password must be at least 6 characters.",
+  "authSignupTitle": "Create your account",
+  "authSignupSubtitle": "Report and track lost & found items with the community.",
+  "authEmailAddressLabel": "Email address",
+  "authEmailAddressHint": "yourname@example.com",
+  "authNameLabel": "Your name",
+  "authNameHint": "How should we call you?",
+  "authPhoneLabel": "Phone number",
+  "authPhoneHint": "+1 234 567 8900",
+  "authSignupPasswordHint": "At least 8 characters",
+  "authPasswordRule": "Use at least 8 characters with a letter and a number.",
+  "authCreateAccount": "Create account",
+  "authOrSignUpWith": "Or sign up with",
+  "authSignUpWithGoogle": "Sign up with Google",
+  "authHaveAccountPrompt": "Already have an account?",
+  "authLogIn": "Log in",
+  "authForgotInvalidEmail": "Please enter a valid email address",
+  "authForgotCodeSent": "Verification code sent! Check your inbox or console logs.",
+  "authForgotCodeResent": "New verification code sent! Check your inbox or console logs.",
+  "authForgotEnterNumericCode": "Please enter the 6-digit numeric verification code",
+  "authForgotCodeVerified": "Code verified successfully!",
+  "authForgotPasswordsMismatch": "Passwords do not match",
+  "authForgotPasswordUpdated": "Password updated successfully! Please log in.",
+  "authForgotTitle": "Forgot password",
+  "authForgotSubtitle": "Enter your email address and we will send you a 6-digit verification code.",
+  "authForgotCheckInboxTitle": "Check your inbox",
+  "authForgotCheckInboxSubtitle": "Enter the 6-digit verification code sent to {email}.",
+  "@authForgotCheckInboxSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authForgotNewPasswordTitle": "Set a new password",
+  "authForgotNewPasswordSubtitle": "Create a secure new password for your account.",
+  "authForgotSendCode": "Send verification code",
+  "authForgotCancelAndLogIn": "Cancel and log in",
+  "authVerificationCodeLabel": "Verification code",
+  "authVerificationCodeHint": "6-digit code",
+  "authVerifyCode": "Verify code",
+  "authChangeEmail": "Change email",
+  "authResendCode": "Resend code",
+  "authNewPasswordLabel": "New password",
+  "authNewPasswordHint": "Min. 6 characters",
+  "authConfirmPasswordLabel": "Confirm new password",
+  "authConfirmPasswordHint": "Retype new password",
+  "authResetPassword": "Reset password",
+  "authStartOver": "Start over / change email",
+  "authVerifyEnterCode": "Please enter the 6-digit verification code.",
+  "authVerifiedWelcome": "Account verified. Welcome to Finder!",
+  "authVerifyCodeResent": "A new verification code has been sent to your email.",
+  "authVerifyTitle": "Verify your email",
+  "authVerifySubtitle": "We sent a 6-digit verification code to your registered email address. Enter it below to activate your account.",
+  "authVerifyAccount": "Verify account",
+  "authGoogleCancelled": "Google sign-in was cancelled by the user.",
+  "authGoogleTokenFailed": "Failed to retrieve Google ID token.",
+  "authSessionExpired": "Your session has expired. Please sign in again.",
+  "authSocialSemantic": "Continue with social account",
+  "authLegalAgreePrefix": "By creating an account you agree to the ",
+  "authLegalAgreeAnd": " and the ",
+  "authLegalAgreeSuffix": ".",
+  "onboardLostTitle": "Lost Something?",
+  "onboardLostDescription": "Report your missing essentials in seconds. Finder connects found items with their owners instantly.",
+  "onboardFoundTitle": "Found Something?",
+  "onboardFoundDescription": "Post found items and help return them to their rightful owners. Every good deed counts.",
+  "onboardConnectTitle": "Connect &\nCommunicate",
+  "onboardConnectDescription": "Chat, share details, and return items safely. Build trust within the community.",
+  "onboardGetStarted": "Get Started",
+  "onboardSkipForNow": "Skip for now",
+  "onboardRewardSample": "REWARD $50",
+  "onboardTrustSecured": "TRUST SECURED",
+  "legalOpenWebVersion": "Open web version",
+  "legalCouldNotOpen": "Could not open {url}",
+  "@legalCouldNotOpen": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "legalPrivacyTitle": "Privacy Policy",
+  "legalTermsTitle": "Terms of Service",
+  "legalUpdated": "Last updated 13 September 2026",
+  "legalPrivacyIntro": "Finder helps people report lost and found items and get in touch with each other. This policy explains what data the app collects, why, and what control you have over it.",
+  "legalPrivacy1Heading": "1. Data we collect",
+  "legalPrivacy1Body1": "Account data: e-mail, password (stored as a salted hash), name, nickname and optionally phone, city and occupation.",
+  "legalPrivacy1Body2": "Posts: title, description, category, location text, date and photos you attach.",
+  "legalPrivacy1Body3": "Messages: the text and photos you exchange with other members.",
+  "legalPrivacy1Body4": "Identity verification (optional): photos of an identity document and a selfie, used only to grant the verified badge.",
+  "legalPrivacy1Body5": "Technical data: request logs (IP address, endpoint, time) kept for security.",
+  "legalPrivacy1Body6": "Google sign-in: we receive your e-mail, name and profile picture from Google.",
+  "legalPrivacy2Heading": "2. How we use it",
+  "legalPrivacy2Body1": "To run the service: show posts, deliver messages and notifications, and let members contact each other. To keep the community safe: reports, blocks and identity verification. To send transactional e-mails such as verification codes and password resets. Product news is only sent if you opt in.",
+  "legalPrivacy2Body2": "We do not sell personal data and we do not show third-party advertising.",
+  "legalPrivacy3Heading": "3. What other members can see",
+  "legalPrivacy3Body": "Your name, photo and posts are visible to signed-in members. Your phone number is hidden unless you turn on sharing in Privacy & safety. Your e-mail address is never shown to other members. Members you block cannot see your posts or message you.",
+  "legalPrivacy4Heading": "4. Where data is stored",
+  "legalPrivacy4Body": "Data is stored on our hosting provider's servers and photos on Cloudinary, both under their own data-processing terms. Data is transmitted over HTTPS.",
+  "legalPrivacy5Heading": "5. How long we keep it",
+  "legalPrivacy5Body": "Account data is kept while your account exists. Verification documents are deleted once a decision has been made, and no later than 90 days after upload. Request logs are kept for 30 days.",
+  "legalPrivacy6Heading": "6. Your rights",
+  "legalPrivacy6Body1": "Access and correction: edit your profile in the app at any time.",
+  "legalPrivacy6Body2": "Deletion: delete your account from Privacy & safety → Delete account. Your posts, conversations, settings and profile are removed immediately; backups expire within 30 days.",
+  "legalPrivacy6Body3": "Portability and questions: write to privacy@finder.app.",
+  "legalPrivacy7Heading": "7. Children",
+  "legalPrivacy7Body": "Finder is not intended for children under 16. We remove accounts we learn belong to children.",
+  "legalPrivacy8Heading": "8. Changes",
+  "legalPrivacy8Body": "We will announce material changes in the app before they take effect. The date at the top shows when this policy was last revised.",
+  "legalTermsIntro": "By creating an account or using Finder you agree to these terms. If you do not agree, do not use the service.",
+  "legalTerms1Heading": "1. The service",
+  "legalTerms1Body": "Finder is a community notice board for lost and found items. We provide the place to post and talk; we do not take part in hand-overs, do not verify that an item belongs to a member, and are not a party to any reward arrangement between members.",
+  "legalTerms2Heading": "2. Your account",
+  "legalTerms2Body": "You must be at least 16 years old. Keep your password private; you are responsible for activity on your account. One person, one account. Do not impersonate others.",
+  "legalTerms3Heading": "3. Your content",
+  "legalTerms3Body": "You keep ownership of what you post. You give Finder a licence to store, display and distribute it inside the service so that other members can see it. Only post photos and information you have the right to share.",
+  "legalTerms4Heading": "4. Rules of conduct",
+  "legalTerms4Body1": "You must not: post false reports or claim an item that is not yours; ask for payment before returning an item or use the service for scams; harass, threaten or discriminate against other members; post illegal content or content that infringes someone else's rights; scrape the service, probe the API or interfere with its operation.",
+  "legalTerms4Body2": "We may remove content, suspend or delete accounts that break these rules, and cooperate with law enforcement where required.",
+  "legalTerms5Heading": "5. Safety",
+  "legalTerms5Body": "Meet in public places, bring someone with you, and never pay a reward before you have your item. Use in-app chat so you can block and report. Finder cannot guarantee the honesty of any member.",
+  "legalTerms6Heading": "6. Identity verification",
+  "legalTerms6Body": "The verified badge means a member submitted an identity document that our team reviewed. It is not a guarantee of identity or good faith.",
+  "legalTerms7Heading": "7. Availability and changes",
+  "legalTerms7Body": "We may change or discontinue features at any time. We try to keep the service available but do not promise uninterrupted operation.",
+  "legalTerms8Heading": "8. Liability",
+  "legalTerms8Body": "To the extent permitted by law, Finder is provided \"as is\" and we are not liable for losses arising from your use of the service, from other members' conduct, or from items that are not recovered.",
+  "legalTerms9Heading": "9. Termination",
+  "legalTerms9Body": "You can delete your account at any time from Privacy & safety. We can terminate accounts that violate these terms.",
+  "legalTerms10Heading": "10. Contact",
+  "legalTerms10Body": "Questions about these terms: support@finder.app",
+  "adminConsoleTitle": "Admin console",
+  "adminConsoleSubtitle": "Users, posts, reports and verification",
+  "adminModeration": "Moderation",
+  "adminUsersTitle": "Users",
+  "adminUsersTileSubtitle": "Search, verify, suspend, promote or delete accounts",
+  "adminPostsTileSubtitle": "Every lost and found post, open or returned",
+  "adminReportsTitle": "Reports",
+  "adminReportsSubtitle": "Posts flagged by members",
+  "adminVerificationTitle": "Identity verification",
+  "adminVerificationTileSubtitle": "Review documents and selfies",
+  "adminStatMembers": "Members",
+  "adminVerifiedLabel": "Verified",
+  "adminStatOpenPosts": "Open posts",
+  "adminStatToVerify": "To verify",
+  "adminSuspendedLabel": "Suspended",
+  "adminStatMessages24h": "Messages 24h",
+  "adminPostsSubtitle": "Everything on the feed",
+  "adminPostsSearchHint": "Title, description, owner",
+  "adminFilterAll": "All",
+  "adminFilterOpen": "Open",
+  "adminFilterReported": "Reported",
+  "adminFilterHandled": "Handled",
+  "adminFilterAdmins": "Admins",
+  "adminFilterPending": "Pending",
+  "adminFilterApproved": "Approved",
+  "adminFilterRejected": "Rejected",
+  "adminNoPostsHere": "No posts here",
+  "adminPostSheetSubtitle": "by {owner} · {status}",
+  "@adminPostSheetSubtitle": {
+    "placeholders": {
+      "owner": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStatusReturned": "returned",
+  "adminStatusOpen": "open",
+  "adminOpenThePost": "Open the post",
+  "adminReopenThePost": "Reopen the post",
+  "adminPostReopened": "Post reopened.",
+  "adminRemoveThePost": "Remove the post",
+  "adminRemovePostOwnerNotified": "The owner is notified with your reason",
+  "adminPostRemoved": "Post removed.",
+  "adminRemovePostTitle": "Remove this post?",
+  "adminRemovePostReasonSubtitle": "A short reason is sent to the owner.",
+  "adminReasonOptionalLabel": "Reason (optional)",
+  "adminReasonPostHint": "e.g. Not a lost or found item",
+  "adminNoOpenReports": "No open reports",
+  "adminNothingHandledYet": "Nothing handled yet",
+  "adminBadgeOpen": "OPEN",
+  "adminBadgeHandled": "HANDLED",
+  "adminNoReasonGiven": "No reason given",
+  "adminQuotedReason": "\"{reason}\"",
+  "@adminQuotedReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "adminReportedBy": "Reported by {name} · {time}",
+  "@adminReportedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "adminPostBySuffix": " · post by {name}",
+  "@adminPostBySuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminDismissReport": "Dismiss the report",
+  "adminPostStaysUp": "The post stays up",
+  "adminRemovePostSettles": "Settles every report on it; the owner is notified",
+  "adminRemovePostConfirmBody": "\"{title}\" and its chats are deleted. This cannot be undone.",
+  "@adminRemovePostConfirmBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "adminReportDismissed": "Report dismissed.",
+  "adminUsersSubtitle": "Accounts on Finder",
+  "adminUsersSearchHint": "Name, nickname or e-mail",
+  "adminNoAccountsMatch": "No accounts match",
+  "adminRemoveVerifiedBadge": "Remove verified badge",
+  "adminMarkAsVerified": "Mark as verified",
+  "adminRemoveBadgeSubtitle": "The tick disappears from their profile and posts",
+  "adminGrantBadgeSubtitle": "Grants the tick without a document review",
+  "adminVerifiedBadgeRemoved": "Verified badge removed.",
+  "adminMarkedAsVerified": "Marked as verified.",
+  "adminRemoveAdminRole": "Remove admin role",
+  "adminMakeAdministrator": "Make administrator",
+  "adminLoseConsoleAccess": "They lose access to this console",
+  "adminFullAccess": "Full access to users, posts and reports",
+  "adminRemoveAdminRoleTitle": "Remove admin role?",
+  "adminMakeAdminTitle": "Make {name} an administrator?",
+  "@adminMakeAdminTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRemoveAdminBody": "{name} will no longer be able to moderate Finder.",
+  "@adminRemoveAdminBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminMakeAdminBody": "Administrators can suspend or delete any account and remove any post.",
+  "adminRemoveRole": "Remove role",
+  "adminMakeAdmin": "Make admin",
+  "adminRoleRemoved": "Admin role removed.",
+  "adminNowAdmin": "{name} is now an admin.",
+  "@adminNowAdmin": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminLiftSuspension": "Lift suspension",
+  "adminSuspendAccount": "Suspend account",
+  "adminCanSignInAgain": "They can sign in again",
+  "adminSignedOutCannotSignIn": "They are signed out and cannot sign in",
+  "adminLiftSuspensionTitle": "Lift the suspension?",
+  "adminSuspendTitle": "Suspend {name}?",
+  "@adminSuspendTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminLiftBody": "The account works normally again.",
+  "adminSuspendBody": "Their posts stay visible. They lose access until you lift the suspension.",
+  "adminLift": "Lift",
+  "adminSuspend": "Suspend",
+  "adminSuspensionLifted": "Suspension lifted.",
+  "adminAccountSuspended": "Account suspended.",
+  "adminDeleteAccount": "Delete account",
+  "adminDeleteAccountSubtitle": "Removes the account, its posts and chats. Cannot be undone.",
+  "adminDeleteTitle": "Delete {name}?",
+  "@adminDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminDeleteBody": "Everything they posted and every chat they were in is erased permanently.",
+  "adminAccountDeleted": "Account deleted.",
+  "adminYouSuffix": "{name} (you)",
+  "@adminYouSuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminPostsCount": "{count, plural, =1{1 post} other{{count} posts}}",
+  "@adminPostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminReportsCount": "{count, plural, =1{1 report} other{{count} reports}}",
+  "@adminReportsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminJoined": "joined {time}",
+  "@adminJoined": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "adminBadgeSuspended": "SUSPENDED",
+  "adminQueueTitle": "Review queue",
+  "adminQueueSubtitle": "Identity verification requests",
+  "adminNothingToReview": "Nothing to review",
+  "adminNoRequestsHere": "No requests here",
+  "adminNewRequestsShowHere": "New verification requests will show up here.",
+  "adminBadgeRejected": "REJECTED",
+  "adminBadgePending": "PENDING",
+  "adminDocIdCard": "Identity card",
+  "adminDocDriversLicense": "Driver's license",
+  "adminDocPassport": "Passport",
+  "adminDocDocument": "Document",
+  "adminSubmitted": "{doc} · submitted {time}",
+  "@adminSubmitted": {
+    "placeholders": {
+      "doc": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "adminReviewedStatus": "{status, select, approved{approved {time}} rejected{rejected {time}} other{{status} {time}}}",
+  "@adminReviewedStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "adminReasonPrefix": "Reason: {reason}",
+  "@adminReasonPrefix": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "adminDocumentSection": "Document",
+  "adminStep1": "Step 1",
+  "adminLiveSelfie": "Live selfie",
+  "adminStep2": "Step 2",
+  "adminFrontOfId": "Front of ID",
+  "adminPhotoPage": "Photo page",
+  "adminBackOfId": "Back of ID",
+  "adminSelfieCaption": "Selfie taken with the front camera",
+  "adminReviewGuidance": "Compare the face on the document with the selfie, check the name matches the account, and that the document is not expired or edited.",
+  "adminTapToZoom": "{caption} · tap to zoom",
+  "@adminTapToZoom": {
+    "placeholders": {
+      "caption": {
+        "type": "String"
+      }
+    }
+  },
+  "adminReject": "Reject",
+  "adminApprove": "Approve",
+  "adminApproveTitle": "Approve this identity?",
+  "adminApproveBody": "{name} gets the verified badge and a notification.",
+  "@adminApproveBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminIdentityApproved": "Identity approved.",
+  "adminRejectRequestTitle": "Reject request",
+  "adminRejectReasonSubtitle": "The reason is sent to {name} so they can fix it.",
+  "@adminRejectReasonSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminReasonLabel": "Reason",
+  "adminRejectReasonHint": "e.g. The selfie is too dark to compare with the document.",
+  "adminRequestRejected": "Request rejected.",
+  "stateErrorTitle": "Something went wrong",
+  "stateLoading": "Loading",
+  "uiShowPassword": "Show password",
+  "uiHidePassword": "Hide password",
+  "uiCouldNotLoad": "Could not load",
+  "chatConversationTitle": "Conversation",
+  "chatNotFoundTitle": "Conversation not found",
+  "chatNotFoundSubtitle": "Open a chat from a post or from Messages.",
+  "chatLoadingMessages": "Loading messages...",
+  "chatSayHello": "Say hello to {name}",
+  "@chatSayHello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatStartSubtitle": "Start the conversation by sending a message.",
+  "chatAskAbout": "Ask about \"{item}\" or arrange a safe hand-over.",
+  "@chatAskAbout": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "chatDirectMessageViewProfile": "Direct message · view profile",
+  "chatDirectMessage": "Direct message",
+  "chatAboutItem": "About \"{item}\"",
+  "@chatAboutItem": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "chatReopenPost": "Reopen the post",
+  "chatReopenSubtitle": "Show it on Home again",
+  "chatReturnedSubtitle": "The item is back with its owner",
+  "chatViewPost": "View the post",
+  "chatReportPost": "Report the post",
+  "chatPostReported": "Thanks, the post has been reported.",
+  "chatReopenTitle": "Reopen this post?",
+  "chatMarkReturnedTitle": "Mark as returned?",
+  "chatReopenBody": "\"{item}\" will show on Home again as an open post.",
+  "@chatReopenBody": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "chatMarkReturnedBody": "\"{item}\" leaves the Home feed but stays visible in Search. Everyone in this chat gets a note.",
+  "@chatMarkReturnedBody": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "chatPostReopened": "Post reopened.",
+  "chatAutoReopened": "I reopened this post.",
+  "chatAutoReturned": "I marked this item as returned. Thank you!",
+  "chatYourMessage": "Your message",
+  "chatMessage": "Message",
+  "chatReply": "Reply",
+  "chatCopyText": "Copy text",
+  "chatDeleteForEveryone": "Delete for everyone",
+  "chatDeleteTitle": "Delete this message?",
+  "chatDeleteBody": "It is removed for everyone in this chat. This cannot be undone.",
+  "chatSendPhoto": "Send a photo",
+  "chatWriteReplyHint": "Write a reply…",
+  "chatTypeMessageHint": "Type a message…",
+  "chatMicPermission": "Allow microphone access to send voice messages.",
+  "chatSendMessage": "Send message",
+  "chatNotSent": "Not sent",
+  "chatYouSaid": "You said",
+  "chatTheySaid": "They said",
+  "chatCancelReply": "Cancel reply",
+  "chatNewCount": "{count} new",
+  "@chatNewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatLatest": "Latest",
+  "chatSignInToMessage": "Please sign in to send messages.",
+  "chatOwnPost": "This is your own post.",
+  "chatOpenFailed": "Could not open the conversation.",
+  "chatLoadFailed": "Unable to load messages.",
+  "chatNotSentFailure": "Message not sent.",
+  "chatNothingToRetry": "Nothing to retry.",
+  "chatDeleteFailed": "Could not delete the message.",
+  "msgDeleted": "This message was deleted",
+  "msgVoiceMessage": "Voice message",
+  "msgPhoto": "Photo",
+  "msgNoMessagesYet": "No messages yet",
+  "msgNewConversation": "New conversation",
+  "msgNewChat": "New chat",
+  "msgUnreadConversations": "{count, plural, =1{1 unread conversation} other{{count} unread conversations}}",
+  "@msgUnreadConversations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "msgSubtitle": "Chat safely with owners and finders",
+  "msgSearchHint": "Search conversations…",
+  "msgLoading": "Loading conversations...",
+  "msgNoConversations": "No conversations yet",
+  "msgNoConversationsFound": "No conversations found",
+  "msgEmptySubtitle": "Contact an owner or finder from any post, or start a new chat.",
+  "msgTryAnother": "Try another name or keyword.",
+  "notifUnreadCount": "{count} unread",
+  "@notifUnreadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifCaughtUp": "You are all caught up",
+  "notifMarkAllRead": "Mark all read",
+  "notifLoading": "Loading notifications...",
+  "notifEmptyTitle": "No notifications yet",
+  "notifEmptySubtitle": "You will hear from us when someone messages you, your post gets activity, or an item is resolved.",
+  "notifUnreadSemantics": "Unread notification",
+  "notifLoadingPreferences": "Loading preferences...",
+  "notifStayConnected": "Stay connected",
+  "notifStayConnectedBody": "Choose which moments create a notification. Changes are saved instantly.",
+  "notifAll": "All notifications",
+  "notifAllMuted": "Everything is muted",
+  "notifAllOff": "Turn everything off at once",
+  "notifConversations": "Conversations",
+  "notifNewMessage": "New message",
+  "notifNewMessageSubtitle": "When someone writes to you about a post",
+  "notifSmartMatching": "Smart matching",
+  "notifItemMatch": "Item match alerts",
+  "notifItemMatchSubtitle": "When a new post looks like something you lost or found",
+  "notifSmartBadge": "SMART",
+  "notifPostUpdates": "Post updates",
+  "notifPostUpdatesSubtitle": "When an item you chatted about is resolved",
+  "notifFromFinder": "From Finder",
+  "notifTips": "Tips and news",
+  "notifTipsSubtitle": "Occasional product updates. Off by default.",
+  "notifEmailCopies": "E-mail copies",
+  "notifEmailCopiesSubtitle": "Also send important notifications by e-mail",
+  "notifFooter": "Notifications are delivered inside the app. Push delivery to your phone will follow the same preferences.",
+  "privacyTitle": "Privacy & safety",
+  "privacyBlockMemberTitle": "Block a member",
+  "privacyAdminCannotBlock": "Finder administrators cannot be blocked.",
+  "privacyDeleteAccountTitle": "Delete your account?",
+  "privacyDeleteAccountBody": "Your posts, conversations, saved items and profile are removed immediately. This cannot be undone.",
+  "privacyTypeDeleteLabel": "Type DELETE to confirm",
+  "privacyPasswordLabel": "Your password",
+  "privacyTypeDeleteHint": "DELETE",
+  "privacyPasswordHint": "Password",
+  "privacyDeleteAccount": "Delete account",
+  "privacyTypeDeleteError": "Type DELETE to confirm.",
+  "privacyEnterPassword": "Please enter your password.",
+  "privacyAccountDeleted": "Your account has been deleted.",
+  "privacyLoadingSettings": "Loading settings...",
+  "privacyHeadline": "Your data, your control",
+  "privacyIntro": "Decide what other members can see and who can reach you. Changes apply immediately.",
+  "privacyVisibility": "Visibility",
+  "privacyShowProfile": "Show my profile",
+  "privacyShowProfileSubtitle": "Off shows only your name and photo on posts; job, phone and location stay hidden.",
+  "privacyAllowMessages": "Allow direct messages",
+  "privacyAllowMessagesSubtitle": "Let members start a conversation with you. Existing chats stay open.",
+  "privacyShowCity": "Show my city",
+  "privacyShowCitySubtitle": "Shares the address from your profile with other members.",
+  "privacyHidePhone": "Hide my phone number",
+  "privacyHidePhoneSubtitle": "When on, members can only reach you through in-app chat.",
+  "privacyBlockedMembersLabel": "BLOCKED MEMBERS",
+  "privacyBlockedMembers": "Blocked members",
+  "privacyBlockedMembersBody": "Blocked members can't see your posts or message you, and you won't see theirs.",
+  "privacyBlockedTotal": "{count} total",
+  "@privacyBlockedTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "privacyLoadingBlocked": "Loading blocked members...",
+  "privacyNoBlocked": "No blocked members",
+  "privacyNoBlockedSubtitle": "Members you block will appear here.",
+  "privacyBlockAnother": "Block another member",
+  "privacyDeleteAccountSubtitle": "Permanently remove your account, posts and conversations.",
+  "blockUserLabel": "Block {name}",
+  "@blockUserLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockUserTitle": "Block {name}?",
+  "@blockUserTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockUserDone": "{name} has been blocked.",
+  "@blockUserDone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockUnblocked": "{name} can contact you again.",
+  "@blockUnblocked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockChatConfirmBody": "This conversation will disappear and neither of you can message the other. Undo it any time in Privacy & safety.",
+  "blockProfileSubtitle": "Neither of you can see or message the other",
+  "blockProfileConfirmBody": "Undo it any time in Privacy & safety.",
+  "blockStaffSubtitle": "Staff accounts cannot be blocked",
+  "blockMemberFallback": "Member",
+  "profileFinderMember": "Finder member",
+  "profileChangePhoto": "Change photo",
+  "profileStatActive": "Active",
+  "profileStatResolved": "Resolved",
+  "profileStatSaved": "Saved",
+  "profileShareLine": "Find me on Finder · member id {id}",
+  "@profileShareLine": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "profileCopied": "Profile details copied to clipboard.",
+  "profileEdit": "Edit profile",
+  "profileCopyDetails": "Copy profile details",
+  "profileAboutTitle": "About Finder",
+  "profileAboutVersion": "Version 1.0 · Beacon design",
+  "profileAboutBody": "Finder helps a community reunite lost belongings with their owners. Report what you lost or found, chat safely inside the app and mark items as resolved when they are back home.",
+  "profileSafetyFirst": "Safety first",
+  "profileSafetyBody": "Meet in public places, never pay a reward before you have your item, and use in-app chat so you can block and report.",
+  "profileAccount": "Account",
+  "profileMyPosts": "My posts",
+  "profileMyPostsSubtitle": "Manage what you have reported",
+  "profileSavedItems": "Saved items",
+  "profileSavedItemsSubtitle": "Items you are keeping an eye on",
+  "profileAdminConsole": "Admin console",
+  "profileAdminConsoleSubtitle": "Users, posts, reports and verification",
+  "profilePreferences": "Preferences",
+  "profileDarkMode": "Dark mode",
+  "profileNightTheme": "Nightwatch theme",
+  "profileDayTheme": "Daylight theme",
+  "profileSupportLegal": "Support & legal",
+  "profileTerms": "Terms of service",
+  "profilePrivacyPolicy": "Privacy policy",
+  "profileLogOutTitle": "Log out?",
+  "profileLogOutBody": "You can sign back in at any time.",
+  "profileDiscardTitle": "Discard changes?",
+  "profileDiscardBody": "Your edits have not been saved.",
+  "profileKeepEditing": "Keep editing",
+  "profileLoading": "Loading your profile...",
+  "profileFullName": "Full name",
+  "profileFullNameHint": "Your name",
+  "profileNickname": "Nickname",
+  "profileNicknameHint": "How friends know you",
+  "profilePhone": "Phone",
+  "profilePhoneHint": "+1 234 567 8900",
+  "profileCity": "City",
+  "profileCityHint": "City, country",
+  "profileJob": "Job / occupation",
+  "profileJobHint": "What do you do?",
+  "profileSignInEmailLabel": "SIGN-IN E-MAIL",
+  "profileEmailNote": "Your e-mail is used to sign in and cannot be changed here.",
+  "profileSaveChanges": "Save changes",
+  "profileEnterName": "Please enter your name.",
+  "profileUpdated": "Profile updated.",
+  "profileLoadingOther": "Loading profile…",
+  "profileUnavailableTitle": "This member is not available",
+  "profileUnavailableSubtitle": "The account may have been removed, or you cannot see each other.",
+  "profileMore": "More",
+  "profileMemberSince": "Member since {time}",
+  "@profileMemberSince": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "profilePostsCount": "{count, plural, =1{1 post} other{{count} posts}}",
+  "@profilePostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileMessageFirstName": "Message {name}",
+  "@profileMessageFirstName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "profileItemsReported": "Items {name} reported",
+  "@profileItemsReported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "profileNoPosts": "No posts yet",
+  "profileSendMessage": "Send a message",
+  "profileFinderAdmin": "Finder administrator",
+  "profileAdminBadge": "ADMIN",
+  "profileFindMember": "Find a member",
+  "profileSearchMemberHint": "Search by name or email…",
+  "profileSelect": "Select",
+  "profileSearchFailed": "Search failed.",
+  "profileSearchSubtitle": "Type at least two letters of a name or e-mail address.",
+  "profileSearchBlockedNote": "Members you have blocked will not appear here.",
+  "profileSearchNoMatch": "No members match \"{query}\".",
+  "@profileSearchNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "profileUserRowSemantics": "{name}, {action}",
+  "@profileUserRowSemantics": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyVerifiedIdentity": "Verified identity",
+  "verifyGetVerified": "Get verified",
+  "verifyBadgeVisible": "Your badge is visible to the community",
+  "verifyBuildTrust": "Build trust with a verified badge",
+  "verifyPassport": "Passport",
+  "verifyIdentityCard": "Identity card",
+  "verifyDriversLicense": "Driver's license",
+  "verifyTitle": "Verify identity",
+  "verifyApprovedSubtitle": "Your identity is verified",
+  "verifyUnderReview": "Under review",
+  "verifyNeedsNewPhotos": "Needs new photos",
+  "verifyStepsComplete": "{count} of 3 steps complete",
+  "@verifyStepsComplete": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyCheckingStatus": "Checking your status...",
+  "verifyVerifiedMember": "Verified member",
+  "verifyReviewedByPerson": "Reviewed by a person",
+  "verifyThanks": "Thanks for helping keep Finder trustworthy.",
+  "verifyHeroHeadline": "Verified accounts help build a safer community for everyone.",
+  "verifyApprovedBody": "Your posts and messages now show the verified badge.",
+  "verifyHeroBody": "Your photos are stored privately and only seen by the Finder team member who checks them. Review usually takes a day.",
+  "verifyHowItWorks": "How it works",
+  "verifyStep1Title": "Photograph your ID",
+  "verifyStep1Body": "Camera or gallery. Every corner in frame, no glare.",
+  "verifyStep2Title": "Take a live selfie",
+  "verifyStep2Body": "Front camera only, so we know it is really you.",
+  "verifyStep3Title": "A person reviews it",
+  "verifyStep3Body": "They compare the face on the ID with your selfie and the name on your account. You get a notification either way.",
+  "verifyIdentityVerified": "Identity verified",
+  "verifyPending": "Verification pending",
+  "verifyPendingBadge": "PENDING",
+  "verifyVerifiedWith": "Verified with your {doc}.",
+  "@verifyVerifiedWith": {
+    "placeholders": {
+      "doc": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyReceived": "We received your {doc} {time}. A Finder team member is reviewing it; you will get a notification when it is done.",
+  "@verifyReceived": {
+    "placeholders": {
+      "doc": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyNotApproved": "Not approved yet",
+  "verifyNeedsPhotosBadge": "NEEDS PHOTOS",
+  "verifyPhotosRejected": "The photos could not be verified.",
+  "verifyReviewedAt": "Reviewed {time}",
+  "@verifyReviewedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "verifySubmitNewPhotos": "Submit new photos",
+  "verifyDocTypeLower": "{type, select, id_card{identity card} drivers_license{driver's license} passport{passport} other{document}}",
+  "@verifyDocTypeLower": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyDocSelection": "Document selection",
+  "verifyDocSelectionSubtitle": "Choose the ID you wish to use for verification",
+  "verifyDocPhotos": "Document photos",
+  "verifyBothSides": "Both sides of your ID, camera or gallery",
+  "verifyPhotoPage": "The photo page, camera or gallery",
+  "verifyFrontOfId": "Front of ID",
+  "verifyPhotoPageLabel": "Photo page",
+  "verifyBackOfId": "Back of ID",
+  "verifyLiveSelfie": "Live selfie",
+  "verifyLiveSelfieSubtitle": "Taken now with the front camera; gallery photos are not accepted.",
+  "verifyRetakeSelfie": "Retake selfie",
+  "verifyTakeSelfie": "Take a selfie",
+  "verifyTip": "Use a well-lit area, keep the whole document in frame and remove hats or sunglasses for the selfie.",
+  "verifyFrontOfYourId": "Front of your ID",
+  "verifyBackOfYourId": "Back of your ID",
+  "verifyStoredPrivately": "Stored privately, seen only by the reviewer.",
+  "verifyAddDocumentFirst": "{count, plural, =1{Please add your document photo first.} other{Please add your document photos first.}}",
+  "@verifyAddDocumentFirst": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyTakeSelfieFirst": "Please take a selfie to finish.",
+  "verifySubmitted": "Submitted. You will be notified once it has been reviewed.",
+  "verifyStepLabel": "STEP {index}",
+  "@verifyStepLabel": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "verifySubmitForReview": "Submit for review",
+  "verifyConfirmOwnership": "By submitting you confirm the documents are yours.",
+  "verifyAddToContinue": "Add your document photos and a selfie to continue.",
+  "verifyUploadAddedSemantics": "{label} added, tap to replace",
+  "@verifyUploadAddedSemantics": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyUploadAddSemantics": "Add {label}",
+  "@verifyUploadAddSemantics": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyUploadAdded": "{label} added",
+  "@verifyUploadAdded": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyTapToReplace": "Tap to replace",
+  "verifyCameraOrGallery": "Camera or gallery",
+  "helpTitle": "Help & support",
+  "helpHeroPrefix": "How can we ",
+  "helpHeroAccent": "support",
+  "helpHeroSuffix": " you today?",
+  "helpIntro": "Whether you've lost a treasure or found a memory, the answers below cover most questions.",
+  "helpSearchHint": "Search questions (e.g. 'password')",
+  "helpNoAnswers": "No answers match \"{query}\". Try another word or contact us below.",
+  "@helpNoAnswers": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "helpAnswersCount": "{count, plural, =1{1 answer} other{{count} answers}}",
+  "@helpAnswersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "helpBrowseByTopic": "Browse by topic",
+  "helpStillQuestions": "Still have questions?",
+  "helpEmailReply": "E-mail us and we reply within one working day.",
+  "helpEmailSupport": "E-mail support",
+  "helpEmailSubject": "Finder support request",
+  "helpEmailBody": "Hi Finder team,\n\n",
+  "helpCopyAddress": "Copy support address",
+  "helpAddressCopied": "{email} copied.",
+  "@helpAddressCopied": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "helpTechnicalFeedback": "TECHNICAL FEEDBACK",
+  "helpFoundGlitch": "Found a glitch?",
+  "helpGlitchBody": "Tell us what you did, what you expected and what happened instead. Screenshots help a lot.",
+  "helpReportIssue": "Report a technical issue",
+  "helpBugSubject": "Finder bug report",
+  "helpBugBody": "What I did:\n\nWhat I expected:\n\nWhat happened:\n\nDevice / platform:\n",
+  "helpNoEmailApp": "No e-mail app found. {email} was copied to your clipboard.",
+  "@helpNoEmailApp": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "helpGotIt": "Got it",
+  "helpTopicAccountSubtitle": "Profile, verification and passwords",
+  "helpFaqChangeNameQ": "How do I change my name or photo?",
+  "helpFaqChangeNameA": "Open Profile, tap \"Edit profile\", change the fields and save. The new photo shows on all your posts and messages.",
+  "helpFaqForgotPasswordQ": "I forgot my password.",
+  "helpFaqForgotPasswordA": "On the sign-in screen tap \"Forgot password?\". A reset code is sent to your e-mail; enter it together with your new password.",
+  "helpFaqVerifiedBadgeQ": "What does the verified badge mean?",
+  "helpFaqVerifiedBadgeA": "A verified member confirmed their identity with an ID document and a selfie. Start from Profile → Get verified. Review takes about a day.",
+  "helpFaqDeleteAccountQ": "How do I delete my account?",
+  "helpFaqDeleteAccountA": "Go to Privacy & safety → Request data deletion. We remove your posts, conversations and profile within 30 days.",
+  "helpTopicSafety": "Safety",
+  "helpTopicSafetySubtitle": "Meet-ups and blocking",
+  "helpFaqMeetQ": "Where should I meet to hand over an item?",
+  "helpFaqMeetA": "Choose a busy public place in daylight, such as a café, a police station or a shopping centre. Bring a friend if you can.",
+  "helpFaqBotheringQ": "Someone is bothering me.",
+  "helpFaqBotheringA": "Open the conversation, tap the menu in the top-right corner and choose \"Block\". They can no longer see your posts or message you. Report the post too if it looks fake.",
+  "helpFaqRewardQ": "Should I pay a reward before I get my item back?",
+  "helpFaqRewardA": "No. Never send money before you have the item in your hands. Rewards are voluntary and paid at the hand-over.",
+  "helpTopicPosting": "Posting items",
+  "helpTopicPostingSubtitle": "Writing reports that get matches",
+  "helpFaqGoodPostQ": "What makes a good post?",
+  "helpFaqGoodPostA": "A clear photo, a precise location, the date and time, and distinctive details (scratches, stickers, engravings). Keep serial numbers private until someone proves they own the item.",
+  "helpFaqMarkReturnedQ": "How do I mark an item as returned?",
+  "helpFaqMarkReturnedA": "Open the post or go to My posts and choose \"Mark as resolved\". Everyone who chatted with you about it gets a notification.",
+  "helpFaqEditPostQ": "Can I edit or delete a post?",
+  "helpFaqEditPostA": "Yes. From My posts tap Edit, or open the post and use the menu in the top-right corner to edit, resolve or delete it.",
+  "helpTopicMessaging": "Messaging",
+  "helpTopicMessagingSubtitle": "Contacting owners and finders",
+  "helpFaqContactOwnerQ": "How do I contact the owner of a post?",
+  "helpFaqContactOwnerA": "Open the post and tap \"Chat with owner\" (or \"I found this item\"). A conversation about that item opens in Messages.",
+  "helpFaqSendPhotosQ": "Can I send photos?",
+  "helpFaqSendPhotosA": "Yes. In a conversation tap the photo button next to the message field to send a picture as proof.",
+  "helpFaqCantMessageQ": "Why can't I message someone?",
+  "helpFaqCantMessageA": "Either one of you blocked the other, or they turned off direct messages in their privacy settings.",
+  "helpComingSoon": "{feature} is coming soon.",
+  "@helpComingSoon": {
+    "placeholders": {
+      "feature": {
+        "type": "String"
+      }
+    }
+  },
+  "helpThisFeature": "This feature",
+  "voicePlay": "Play voice message",
+  "voicePause": "Pause voice message",
+  "voiceHoldHint": "Hold the microphone to record a voice message.",
+  "voiceHoldTap": "Hold to record a voice message.",
+  "voiceSlideToCancel": "Slide to cancel",
+  "voiceCancelRecording": "Cancel recording",
+  "photoAddTitle": "Add a photo",
+  "photoTakePhoto": "Take a photo",
+  "photoOpenCamera": "Open the camera",
+  "photoChooseGallery": "Choose from gallery",
+  "photoPickExisting": "Pick an existing picture",
+  "photoOpenFailed": "This picture could not be opened.",
+  "photoPrepareFailed": "Could not prepare the photo. Try again.",
+  "photoAdjustAvatar": "Adjust your photo",
+  "photoAdjustCover": "Adjust your cover",
+  "photoUse": "Use photo",
+  "photoGestureHint": "Pinch to zoom · drag to move · double-tap to zoom",
+  "photoRotate": "Rotate",
+  "photoReset": "Reset",
+  "photoRemoveCover": "Remove cover photo",
+  "photoAddCover": "Add a cover photo",
+  "photoChangeCover": "Change cover photo",
+  "photoChangeProfile": "Change profile photo",
+  "photoAddProfile": "Add profile photo",
+  "photoProfileTitle": "Profile photo",
+  "photoCoverTitle": "Cover photo",
+  "photoUploadFailed": "Photo upload failed. {detail}",
+  "@photoUploadFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "photoFileEmpty": "The selected file is empty.",
+  "photoTooLarge": "Please choose an image under 8 MB.",
+  "photoNoFileId": "The server returned no file id.",
+  "photoNoUrl": "The server returned no image URL.",
+  "photoCameraDenied": "Camera access was denied. Allow it in your phone settings or choose a photo from the gallery.",
+  "photoAccessDenied": "Photo access was denied. Allow it in your phone settings and try again.",
+  "photoCameraOpenFailed": "Could not open the camera.",
+  "photoPickerOpenFailed": "Could not open the photo picker.",
+  "pushMessagesChannelDesc": "New chat messages",
+  "pushUpdatesChannel": "Updates",
+  "pushUpdatesChannelDesc": "Post and account updates",
+  "navPost": "Post",
+  "navTab": "{label} tab",
+  "@navTab": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryAllItems": "All Items",
+  "categoryAll": "All",
+  "categoryNearby": "Nearby",
+  "categoryRecent": "Recent",
+  "categoryWithReward": "With Reward",
+  "categoryElectronics": "Electronics",
+  "categoryWatchesJewelry": "Watches & Jewelry",
+  "categoryWalletsBags": "Wallets & Bags",
+  "categoryKeys": "Keys",
+  "categoryPets": "Pets",
+  "categoryClothing": "Clothing",
+  "categoryDocuments": "Documents",
+  "categoryOther": "Other",
+  "categoryWallets": "Wallets",
+  "categoryBags": "Bags",
+  "categoryWallet": "Wallet",
+  "categoryJewelry": "Jewelry",
+  "categoryOthers": "Others",
+  "categoryVisibilityPublic": "Public",
+  "categoryVisibilityFriendsOnly": "Friends Only",
+  "categoryVisibilityPrivate": "Private",
+  "filterTitle": "Filters",
+  "filterSubtitle": "Narrow down what you are looking for",
+  "filterReset": "Reset",
+  "filterApply": "Apply filters",
+  "filterType": "Type",
+  "filterLocationHint": "Enter city or area",
+  "filterDateRange": "Date range",
+  "filterFrom": "From",
+  "filterTo": "To",
+  "filterSelectDate": "Select date",
+  "filterRewardOffered": "Reward offered",
+  "filterRewardSubtitle": "Only posts that offer a reward",
+  "filterVerifiedOnly": "Verified users only",
+  "filterVerifiedSubtitle": "Posted by identity-verified members",
+  "filterSortBy": "Sort by",
+  "filterMostRecent": "Most Recent",
+  "filterNearest": "Nearest to Me",
+  "filterAnyTime": "Any time",
+  "filterLast24h": "Last 24h",
+  "filterLastWeek": "Last Week",
+  "filterLastMonth": "Last Month",
+  "filterDate": "{day} {month}, {year}",
+  "@filterDate": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "searchSubtitle": "Find lost and found items near you",
+  "searchHint": "Search items, places…",
+  "searchClear": "Clear search",
+  "searchResultsCount": "{count, plural, =1{1 result} other{{count} results}}",
+  "@searchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchClearFilters": "Clear filters",
+  "searchResetFilters": "Reset filters",
+  "searchNoResultsTitle": "No matching items found",
+  "searchNoResultsSubtitle": "Try a different keyword or adjust your filters.",
+  "homeReportLost": "Report lost",
+  "homeReportLostSubtitle": "Ask the community",
+  "homeReportFound": "Report found",
+  "homeReportFoundSubtitle": "Return it home",
+  "homeLoadingPosts": "Loading posts...",
+  "homeNoLostItems": "No lost items",
+  "homeNoFoundItems": "No found items",
+  "homeNoPostsYet": "No posts yet",
+  "homeCreateFirstPost": "Create the first post to get started.",
+  "homeTrySwitchingAll": "Try switching to All Items.",
+  "homeOpenProfile": "Open profile",
+  "homeContactOwner": "Contact Owner",
+  "homeContactFinder": "Contact Finder",
+  "homeGoodMorning": "Good morning",
+  "homeGoodAfternoon": "Good afternoon",
+  "homeGoodEvening": "Good evening",
+  "homeGuest": "Guest",
+  "homeNotificationsUnread": "Notifications, {count} unread",
+  "@homeNotificationsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapPickLocation": "Pick a location",
+  "mapSearchHint": "Search a place or address",
+  "mapSearching": "Searching…",
+  "mapMoveToPlacePin": "Move the map to place the pin",
+  "mapUseMyLocation": "Use my current location",
+  "mapFindingAddress": "Finding the address…",
+  "mapUseThisLocation": "Use this location",
+  "mapAttribution": "Map data © OpenStreetMap contributors",
+  "mapErrGpsOff": "Turn on location services (GPS) to use your current location.",
+  "mapErrBlocked": "Location access is blocked. Allow it in your phone settings to use your current location.",
+  "mapErrDenied": "Location permission was not granted.",
+  "mapErrNoFix": "Could not get a GPS fix. Move somewhere with a clearer view of the sky and try again.",
+  "shareKindTitle": "{kind}: {title}",
+  "@shareKindTitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "shareFindMe": "Find me on Finder · member id {id}",
+  "@shareFindMe": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "shareProfileSubject": "{name} on Finder",
+  "@shareProfileSubject": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "postItemDetailsTitle": "Item Details",
+  "postItemDetails": "Item details",
+  "postNoDescription": "No description provided yet.",
+  "postReward": "REWARD",
+  "postRewardAmount": "REWARD {amount}",
+  "@postRewardAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "postIFoundThis": "I found this item",
+  "postThisIsMine": "This is mine",
+  "postReturnedOwnerNote": "Marked as returned. It no longer shows on Home, but stays in Search so people can see the outcome.",
+  "postRemoveFromSaved": "Remove from saved",
+  "postSaveItem": "Save item",
+  "postMoreActions": "More actions",
+  "postLinkCopied": "Link copied.",
+  "postDetailsCopied": "Item details copied to clipboard.",
+  "postSavedToList": "Saved to your list.",
+  "postRemovedFromSaved": "Removed from saved items.",
+  "postManageSheetTitle": "Manage post",
+  "postMoreSheetTitle": "More",
+  "postShareSubtitle": "Send the photo and a link to anyone",
+  "postCopyLink": "Copy link",
+  "postEditPost": "Edit post",
+  "postReopenPost": "Reopen post",
+  "postDeletePost": "Delete post",
+  "postReportPost": "Report post",
+  "postBlockThisMember": "Block this member",
+  "postBlockMember": "Block member",
+  "postActiveAgain": "Post is active again.",
+  "postDeleteTitle": "Delete post?",
+  "postDeleteBody": "\"{title}\" will be removed for everyone. This cannot be undone.",
+  "@postDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "postDeleteBodyConfirm": "Are you sure you want to delete \"{title}\"? This cannot be undone.",
+  "@postDeleteBodyConfirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "postDeleted": "Post deleted.",
+  "postReportReasonSpam": "Spam or scam",
+  "postReportReasonInappropriate": "Inappropriate content",
+  "postReportReasonMisleading": "Wrong or misleading information",
+  "postReportReasonOther": "Something else",
+  "postReportSheetTitle": "Report this post",
+  "postReportSheetSubtitle": "Tell us what is wrong. Reports are reviewed by the team.",
+  "postReported": "Thanks, the post has been reported.",
+  "postThisMember": "this member",
+  "postBlockTitle": "Block {name}?",
+  "@postBlockTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "postBlockBody": "You will no longer see each other's posts or messages. You can undo this in Privacy & safety.",
+  "postBlocked": "{name} has been blocked.",
+  "@postBlocked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "postCategory": "Category",
+  "postLostOn": "Lost on",
+  "postFoundOn": "Found on",
+  "postOpenInMaps": "Open in Maps",
+  "postCouldNotOpenMaps": "Could not open a maps app.",
+  "postNotProvided": "Not provided",
+  "postPostedByOwner": "POSTED BY THE OWNER",
+  "postPostedByFinder": "POSTED BY THE FINDER",
+  "postLoadingProfile": "Loading profile…",
+  "postProfileNotAvailable": "Profile not available",
+  "postVerifiedMember": "Verified member",
+  "postMemberSince": "Member since {date}",
+  "@postMemberSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "postPostsCount": "{count, plural, =1{1 post} other{{count} posts}}",
+  "@postPostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "postMonthYear": "{month} {year}",
+  "@postMonthYear": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "postPhone": "Phone",
+  "postCouldNotOpenDialer": "Could not open the phone dialer.",
+  "postChatWithOwner": "Chat with owner",
+  "postChatWithFinder": "Chat with finder",
+  "postCall": "Call",
+  "postPhoneNotShared": "Phone number not shared. In-app chat is the safest way to coordinate.",
+  "postOwnerActions": "OWNER ACTIONS",
+  "postSafety": "SAFETY",
+  "postPossibleMatches": "Possible matches",
+  "postMatchesEyebrowLost": "Found items that look like yours",
+  "postMatchesEyebrowFound": "Lost items that look like this one",
+  "postNoMatchesLost": "No matches yet. We keep comparing new found posts with this one and notify you the moment something looks alike.",
+  "postNoMatchesFound": "No matches yet. We keep comparing new lost posts with this one and notify you the moment something looks alike.",
+  "postSimilarItems": "Similar items",
+  "postSimilarEyebrowLost": "Found items in this category",
+  "postSimilarEyebrowFound": "Lost items in this category",
+  "postViewAll": "View all",
+  "postLoadingSimilar": "Loading similar items...",
+  "postNoSimilarTitle": "No similar items yet",
+  "postNoSimilarSubtitle": "Check back later for matches nearby.",
+  "postMatchBannerTitleLost": "Could this be the item you found?",
+  "postMatchBannerTitleFound": "Could this be your item?",
+  "postMatchBannerBodyLost": "Someone reported losing something that looks like the item you found. Compare the details and message them.",
+  "postMatchBannerBodyFound": "Someone reported finding something that looks like what you lost. Compare the details and message them.",
+  "postMessageOwner": "Message the owner",
+  "postMessageFinder": "Message the finder",
+  "postItemSemantics": "{status} item, {title}",
+  "@postItemSemantics": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "postLocationNotSet": "Location not set",
+  "postNewPost": "New post",
+  "postHeaderLost": "Tell the community what you lost.",
+  "postHeaderFound": "Help return what you found.",
+  "postReadyToPost": "Ready to post",
+  "postDetailsAdded": "{count} of 5 details added",
+  "@postDetailsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "postPhotos": "Photos",
+  "postPhoto": "Photo",
+  "postStep": "Step {number}",
+  "@postStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "postPhotosHint": "Clear photos help others identify the item.",
+  "postCamera": "Camera",
+  "postGallery": "Gallery",
+  "postRemovePhoto": "Remove photo",
+  "postUploadingPhoto": "Uploading photo",
+  "postAddPhotoFrom": "Add photo from {source}",
+  "@postAddPhotoFrom": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "postItemName": "Item name",
+  "postItemNameHint": "e.g. Blue backpack",
+  "postItemNameHintEdit": "e.g. Black wallet",
+  "postChooseCategory": "Choose a category",
+  "postChooseCategoryTitle": "Choose category",
+  "postDescription": "Description",
+  "postDescriptionHint": "e.g. Last seen near the fountain at Central Park. It has a small scratch on the front…",
+  "postDescriptionHelper": "{count}/500 · at least 10 characters",
+  "@postDescriptionHelper": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "postDescriptionHintEdit": "Describe the item in detail…",
+  "postDescriptionHelperEdit": "At least 10 characters",
+  "postRewardOptional": "Reward (optional)",
+  "postRewardHint": "e.g. $100",
+  "postRewardHintEdit": "e.g. 50",
+  "postRewardNote": "A reward is shown as an amber tag on your post.",
+  "postLocationTime": "Location & time",
+  "postNoLocationSelected": "No location selected",
+  "postLocateMe": "Locate me",
+  "postOpenMap": "Open map",
+  "postMovePin": "Move pin",
+  "postPickOnMap": "Pick on map",
+  "postMovePinOnMap": "Move pin on map",
+  "postTypeAddress": "Type an address instead",
+  "postDate": "Date",
+  "postTime": "Time",
+  "postDateTime": "Date / time",
+  "postTapToPickDate": "Tap to pick date",
+  "postLocationHint": "Where was it lost or found?",
+  "postHowPeopleReachYou": "How people reach you",
+  "postInAppChat": "In-app chat",
+  "postInAppChatNote": "Always on. Members contact you through Finder messages.",
+  "postOn": "ON",
+  "postShowPhone": "Show my phone number",
+  "postShowPhoneNote": "Shown on your profile to signed-in members",
+  "postPhoneNumber": "Phone number",
+  "postPhoneHint": "e.g. +1 234 567 8900",
+  "postPhoneHelper": "Saved to your profile and shared with signed-in members.",
+  "postPostNow": "Post now",
+  "postSaveDraft": "Save draft",
+  "postSaveChanges": "Save changes",
+  "postLocationSetTo": "Location set to {label}.",
+  "@postLocationSetTo": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "postEnterLocation": "Enter location",
+  "postEnterLocationHint": "City, street or area",
+  "postErrTitleRequired": "Please enter the item name before posting.",
+  "postErrDescriptionShort": "Please add at least 10 characters in the description.",
+  "postErrPhoneRequired": "Please enter a phone number or turn off phone sharing.",
+  "postErrLoginRequired": "You must be logged in to post.",
+  "postErrTitleRequiredEdit": "Please enter a title.",
+  "postErrDescriptionShortEdit": "Description must be at least 10 characters.",
+  "postLive": "Your post is live.",
+  "postUpdated": "Post updated.",
+  "postPhotoAdded": "Photo added.",
+  "postDraftSaved": "Draft saved locally.",
+  "postUploadingImage": "Uploading image…",
+  "postTapToChange": "Tap to change",
+  "postTapToPickFromGallery": "Tap to pick from gallery",
+  "postAddPhoto": "Add a photo",
+  "postChangePhoto": "Change photo",
+  "postILostSomething": "I lost something",
+  "postIFoundSomething": "I found something",
+  "postAskCommunityHelp": "Ask the community for help",
+  "postHelpReturnHome": "Help return it home",
+  "postMyPosts": "My posts",
+  "postOpenReturnedCount": "{open} open · {returned} returned",
+  "@postOpenReturnedCount": {
+    "placeholders": {
+      "open": {
+        "type": "int"
+      },
+      "returned": {
+        "type": "int"
+      }
+    }
+  },
+  "postNoOpenPosts": "No open posts",
+  "postNoReturnedYet": "No returned items yet",
+  "postCreateYourFirst": "Create your first post to get started.",
+  "postReturnedAppearHere": "Posts you mark as returned will appear here.",
+  "postMarkReturnedTitle": "Mark as returned?",
+  "postMarkReturnedBody": "Mark \"{title}\" as returned? It leaves the Home feed but stays visible in Search.",
+  "@postMarkReturnedBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "postErrLoad": "Unable to load your posts.",
+  "postErrDelete": "Unable to delete the post.",
+  "postErrResolve": "Unable to resolve the post.",
+  "postErrReopen": "Unable to reopen the post.",
+  "postErrSave": "Unable to save the post.",
+  "postSavedItems": "Saved items",
+  "postSavedSubtitle": "Keep track of items you're helping to return or find.",
+  "postSavedCount": "{count} saved · items you are helping to return or find",
+  "@postSavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "postLoadingSaved": "Loading saved items...",
+  "postNoSavedTitle": "No saved items yet",
+  "postNoSavedSubtitle": "Tap the bookmark on any post to keep it here.",
+  "repoUnableLogin": "Unable to login",
+  "repoUnableLoginGoogle": "Unable to login with Google",
+  "repoUnableLogout": "Unable to logout",
+  "repoUnableSignUp": "Unable to sign up",
+  "repoUnableSendResetCode": "Unable to send password reset code",
+  "repoUnableVerifyCode": "Unable to verify verification code",
+  "repoUnableResetPassword": "Unable to reset password",
+  "repoUnableVerifyEmail": "Unable to verify email address",
+  "repoUnableResendCode": "Unable to resend verification code",
+  "repoUnableLoadNotifications": "Unable to load notifications.",
+  "repoUnableUpdateNotification": "Unable to update the notification.",
+  "repoUnableUpdateNotifications": "Unable to update notifications.",
+  "repoUnableLoadProfile": "Unable to load your profile.",
+  "repoUnableUpdateProfile": "Unable to update your profile.",
+  "repoUnableLoadPrivacy": "Unable to load privacy settings.",
+  "repoUnableUpdatePrivacy": "Unable to update privacy settings.",
+  "repoUnableLoadNotifSettings": "Unable to load notification settings.",
+  "repoUnableUpdateNotifSettings": "Unable to update notification settings.",
+  "repoUnableLoadBlocked": "Unable to load blocked users.",
+  "repoUnableBlock": "Unable to block this user.",
+  "repoUnableUnblock": "Unable to unblock this user.",
+  "repoUnableSubmitVerification": "Unable to submit your verification.",
+  "repoUnableLoadVerification": "Unable to load verification status.",
+  "repoUnableDeleteAccount": "Unable to delete your account.",
+  "repoUnableLoadSaved": "Unable to load saved items.",
+  "repoUnableUpdateSaved": "Unable to update saved items.",
+  "repoLoginToSave": "Please log in to save items.",
+  "repoLoginToManageNotifications": "Please log in to manage notifications.",
+  "repoActionBlockUsers": "block users",
+  "repoActionCheckVerification": "check verification",
+  "repoActionDeleteAccount": "delete your account",
+  "repoActionSubmitVerification": "submit verification",
+  "repoActionUpdateBlocked": "update blocked users",
+  "repoActionUpdateNotifSettings": "update notification settings",
+  "repoActionUpdatePrivacy": "update privacy settings",
+  "repoActionUpdateProfile": "update your profile",
+  "repoActionViewBlocked": "view blocked users",
+  "repoActionViewNotifSettings": "view notification settings",
+  "repoActionViewPrivacy": "view privacy settings",
+  "repoActionViewProfile": "view your profile",
+  "repoPleaseLogInTo": "Please log in to {action}.",
+  "@repoPleaseLogInTo": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "serverAccountDeleted": "Account deleted.",
+  "serverAccountIsAlreadyVerified": "Account is already verified.",
+  "serverCouldNotApproveTheRequest": "Could not approve the request.",
+  "serverCouldNotDeleteTheAccount": "Could not delete the account.",
+  "serverCouldNotDeleteThePost": "Could not delete the post.",
+  "serverCouldNotRegisterThisDevice": "Could not register this device.",
+  "serverCouldNotRejectTheRequest": "Could not reject the request.",
+  "serverCouldNotResolveTheReport": "Could not resolve the report.",
+  "serverCouldNotStoreTheImage": "Could not store the image.",
+  "serverCouldNotUpdateTheAccount": "Could not update the account.",
+  "serverCouldNotUpdateThePost": "Could not update the post.",
+  "serverDatabaseErrorOccurredDuringLogin": "Database error occurred during login.",
+  "serverDatabaseErrorOccurredDuringRegistration": "Database error occurred during registration.",
+  "serverDatabaseErrorOccurred": "Database error occurred.",
+  "serverDatabaseError": "Database error.",
+  "serverEmailAndCodeAreRequired": "Email and code are required.",
+  "serverEmailIsAlreadyRegistered": "Email is already registered.",
+  "serverEmailVerifiedSuccessfully": "Email verified successfully.",
+  "serverErrorBlockingUser": "Error blocking user.",
+  "serverErrorCreatingPost": "Error creating post.",
+  "serverErrorDeletingAccount": "Error deleting account.",
+  "serverErrorDeletingMessage": "Error deleting message.",
+  "serverErrorDeletingPost": "Error deleting post.",
+  "serverErrorFetchingBlockedUsers": "Error fetching blocked users.",
+  "serverErrorFetchingProfile": "Error fetching profile.",
+  "serverErrorFetchingUserProfile": "Error fetching user profile.",
+  "serverErrorInitiatingConversation": "Error initiating conversation.",
+  "serverErrorLoadingConversations": "Error loading conversations.",
+  "serverErrorLoadingMatches": "Error loading matches.",
+  "serverErrorLoadingMessages": "Error loading messages.",
+  "serverErrorLoadingNotificationSettings": "Error loading notification settings.",
+  "serverErrorLoadingNotifications": "Error loading notifications.",
+  "serverErrorLoadingPost": "Error loading post.",
+  "serverErrorLoadingPosts": "Error loading posts.",
+  "serverErrorLoadingPrivacySettings": "Error loading privacy settings.",
+  "serverErrorLoadingReports": "Error loading reports.",
+  "serverErrorLoadingSavedItems": "Error loading saved items.",
+  "serverErrorLoadingSimilarPosts": "Error loading similar posts.",
+  "serverErrorLoadingStatistics": "Error loading statistics.",
+  "serverErrorLoadingTheFile": "Error loading the file.",
+  "serverErrorLoadingTheRequest": "Error loading the request.",
+  "serverErrorLoadingTheUser": "Error loading the user.",
+  "serverErrorLoadingUsers": "Error loading users.",
+  "serverErrorLoadingVerificationRequests": "Error loading verification requests.",
+  "serverErrorLoadingVerificationStatus": "Error loading verification status.",
+  "serverErrorRemovingSavedPost": "Error removing saved post.",
+  "serverErrorSavingPost": "Error saving post.",
+  "serverErrorSearchingUsers": "Error searching users.",
+  "serverErrorSendingMessage": "Error sending message.",
+  "serverErrorSubmittingReport": "Error submitting report.",
+  "serverErrorSubmittingVerification": "Error submitting verification.",
+  "serverErrorUnblockingUser": "Error unblocking user.",
+  "serverErrorUpdatingChat": "Error updating chat.",
+  "serverErrorUpdatingNotificationSettings": "Error updating notification settings.",
+  "serverErrorUpdatingNotification": "Error updating notification.",
+  "serverErrorUpdatingNotifications": "Error updating notifications.",
+  "serverErrorUpdatingPost": "Error updating post.",
+  "serverErrorUpdatingPrivacySettings": "Error updating privacy settings.",
+  "serverErrorUpdatingProfile": "Error updating profile.",
+  "serverFileNoLongerExists": "File no longer exists.",
+  "serverFinderAdministratorsCannotBeBlocked": "Finder administrators cannot be blocked.",
+  "serverGoogleAuthenticationFailed": "Google authentication failed.",
+  "serverIfThatAddressIsRegisteredACode": "If that address is registered, a code is on its way.",
+  "serverIncorrectEmailOrPassword": "Incorrect email or password.",
+  "serverIncorrectPassword": "Incorrect password.",
+  "serverInvalidOrExpiredToken": "Invalid or expired token.",
+  "serverInvalidToken": "Invalid token.",
+  "serverInvalidVerificationCode": "Invalid verification code.",
+  "serverLocationSearchIsUnavailableRightNowTry": "Location search is unavailable right now. Try again in a moment.",
+  "serverMessageCannotBeEmpty": "Message cannot be empty.",
+  "serverMessageNotFound": "Message not found.",
+  "serverNoImageReceived": "No image received.",
+  "serverNoVerificationRequest": "No verification request.",
+  "serverNotAuthenticated": "Not authenticated.",
+  "serverNotAuthorized": "Not authorized.",
+  "serverNotFound": "Not found.",
+  "serverPasswordHasBeenResetSuccessfully": "Password has been reset successfully.",
+  "serverPasswordIsRequired": "Password is required.",
+  "serverPleaseChooseAnImageUnder8Mb": "Please choose an image under 8 MB.",
+  "serverPostDeletedSuccessfully": "Post deleted successfully.",
+  "serverPostDeleted": "Post deleted.",
+  "serverPostNotFound": "Post not found.",
+  "serverPostRemovedFromSavedList": "Post removed from saved list.",
+  "serverPostSavedSuccessfully": "Post saved successfully.",
+  "serverRemoveTheAdminRoleBeforeDeletingThis": "Remove the admin role before deleting this account.",
+  "serverRemoveTheAdminRoleBeforeSuspendingThis": "Remove the admin role before suspending this account.",
+  "serverReportNotFound": "Report not found.",
+  "serverReportSubmittedSuccessfully": "Report submitted successfully.",
+  "serverRequestNotFound": "Request not found.",
+  "serverThatFileDoesNotLookLikeAn": "That file does not look like an image we can read.",
+  "serverTheMessageYouAreReplyingToIs": "The message you are replying to is not in this chat.",
+  "serverThisAccountHasBeenSuspendedContactSupport": "This account has been suspended. Contact support if you think this is a mistake.",
+  "serverThisUserDoesNotAcceptDirectMessages": "This user does not accept direct messages.",
+  "serverTooManyLocationLookupsPleaseSlowDown": "Too many location lookups. Please slow down.",
+  "serverUserBlockedSuccessfully": "User blocked successfully.",
+  "serverUserNotFound": "User not found.",
+  "serverUserUnblockedSuccessfully": "User unblocked successfully.",
+  "serverVerificationCodeHasExpiredPleaseRequestA": "Verification code has expired. Please request a new one.",
+  "serverVerificationCodeIsValid": "Verification code is valid.",
+  "serverVerificationCodeResentSuccessfully": "Verification code resent successfully.",
+  "serverVerificationCodeSentSuccessfully": "Verification code sent successfully.",
+  "serverYouAlreadyHaveAVerificationRequestUnder": "You already have a verification request under review.",
+  "serverYouAlreadyReportedThisPost": "You already reported this post.",
+  "serverYouAreNotAParticipantInThis": "You are not a participant in this chat.",
+  "serverYouAreNotAParticipant": "You are not a participant.",
+  "serverYouCanOnlyDeleteYourOwnMessages": "You can only delete your own messages.",
+  "serverYouCannotBlockYourself": "You cannot block yourself.",
+  "serverYouCannotDeleteYourOwnAccountHere": "You cannot delete your own account here.",
+  "serverYouCannotMessageThisUser": "You cannot message this user.",
+  "serverYouCannotMessageYourself": "You cannot message yourself.",
+  "serverYouCannotRemoveYourOwnAdminRole": "You cannot remove your own admin role.",
+  "serverYouCannotSuspendYourOwnAccount": "You cannot suspend your own account.",
+  "serverYouDoNotOwnThisPost": "You do not own this post.",
+  "serverYourAccountAndDataHaveBeenDeleted": "Your account and data have been deleted.",
+  "serverYourIdentityIsAlreadyVerified": "Your identity is already verified.",
+  "serverThisRequestWasAlreadyHandled": "This request was already handled.",
+  "serverRequestNotValid": "The request was not valid.",
+  "serverSessionExpired": "Your session has expired. Please sign in again.",
+  "serverNotAllowed": "You are not allowed to do that.",
+  "serverProblem": "The server ran into a problem. Please try again.",
+  "serverRequestFailed": "Request failed ({status}).",
+  "@serverRequestFailed": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "serverTimeout": "The server took too long to respond. Check your connection and try again.",
+  "serverOffline": "You seem to be offline. Check your connection and try again."
+}

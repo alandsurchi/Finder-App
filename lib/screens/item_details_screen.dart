@@ -25,6 +25,8 @@ import 'package:finder/providers/post_provider.dart';
 import 'package:finder/screens/edit_post_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:finder/screens/location_picker_screen.dart';
+import 'package:finder/core/constants/app_categories.dart';
+import 'package:finder/l10n/l10n.dart';
 
 class ItemDetailsScreen extends ConsumerWidget {
   const ItemDetailsScreen({super.key});
@@ -40,10 +42,11 @@ class ItemDetailsScreen extends ConsumerWidget {
         ? const AsyncValue<ItemModel>.loading()
         : ref.watch(postByIdProvider(argItem.id));
     final item = fresh.value ?? argItem;
+    final l10n = context.l10n;
 
-    final title = item.title.isEmpty ? 'Item Details' : item.title;
+    final title = item.title.isEmpty ? l10n.postItemDetailsTitle : item.title;
     final description = item.description.isEmpty
-        ? 'No description provided yet.'
+        ? l10n.postNoDescription
         : item.description;
 
     final t = AppColorTokens.of(context);
@@ -78,7 +81,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                       children: [
                         StatusBadge.signal(kind, withIcon: true),
                         if (item.hasReward)
-                          StatusBadge.reward('REWARD \$${item.reward}'),
+                          StatusBadge.reward(l10n.postRewardAmount('\$${item.reward}')),
                         if (item.isResolved) StatusBadge.resolved(),
                         if (item.isVerified) StatusBadge.verified(small: false),
                         if (item.ownerIsAdmin) adminBadge(small: false),
@@ -110,7 +113,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                         const SizedBox(width: BeaconSpace.xs),
                         Flexible(
                           child: Text(
-                            item.location.isEmpty ? 'Location not specified' : item.location,
+                            item.location.isEmpty ? l10n.commonLocationNotSpecified : item.location,
                             style: text.bodyMedium,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -137,7 +140,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: BeaconSpace.xxl),
                         child: AppButton(
-                          label: item.isLost ? 'I found this item' : 'This is mine',
+                          label: item.isLost ? l10n.postIFoundThis : l10n.postThisIsMine,
                           icon: item.isLost
                               ? Icons.volunteer_activism_outlined
                               : Icons.front_hand_outlined,
@@ -160,7 +163,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                               const SizedBox(width: BeaconSpace.md),
                               Expanded(
                                 child: Text(
-                                  'Marked as returned. It no longer shows on Home, but stays in Search so people can see the outcome.',
+                                  l10n.postReturnedOwnerNote,
                                   style: text.bodyMedium,
                                 ),
                               ),
@@ -222,7 +225,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     UserModel? owner,
   ) {
     final name = owner?.displayName ??
-        ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User');
+        ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : context.l10n.commonFinderUser);
     return openChatWith(
       context,
       ref,
@@ -244,6 +247,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final topPad = MediaQuery.paddingOf(context).top;
+    final l10n = context.l10n;
     final saved = ref.watch(savedItemsProvider.select(
         (s) => (s.value ?? const []).any((i) => i.id == item.id)));
 
@@ -279,7 +283,7 @@ class ItemDetailsScreen extends ConsumerWidget {
       leading: Center(
         child: AppIconButton(
           icon: Icons.arrow_back_rounded,
-          tooltip: 'Back',
+          tooltip: l10n.commonBack,
           variant: AppIconButtonVariant.glass,
           onPressed: () => Navigator.pop(context),
         ),
@@ -288,7 +292,7 @@ class ItemDetailsScreen extends ConsumerWidget {
         if (!isOwner)
           AppIconButton(
             icon: saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-            tooltip: saved ? 'Remove from saved' : 'Save item',
+            tooltip: saved ? l10n.postRemoveFromSaved : l10n.postSaveItem,
             variant: AppIconButtonVariant.glass,
             selected: saved,
             onPressed: () => _toggleSaved(context, ref, item),
@@ -297,7 +301,7 @@ class ItemDetailsScreen extends ConsumerWidget {
         Builder(
           builder: (btnCtx) => AppIconButton(
             icon: Icons.ios_share_rounded,
-            tooltip: 'Share',
+            tooltip: l10n.commonShare,
             variant: AppIconButtonVariant.glass,
             onPressed: () => _share(btnCtx, ref, item),
           ),
@@ -305,7 +309,7 @@ class ItemDetailsScreen extends ConsumerWidget {
         const SizedBox(width: BeaconSpace.sm),
         AppIconButton(
           icon: Icons.more_vert_rounded,
-          tooltip: 'More actions',
+          tooltip: l10n.postMoreActions,
           variant: AppIconButtonVariant.glass,
           onPressed: () => _showMoreSheet(context, ref, item, isOwner),
         ),
@@ -324,7 +328,7 @@ class ItemDetailsScreen extends ConsumerWidget {
               duration: BeaconMotion.scaled(context, BeaconMotion.state),
               opacity: collapsed ? 1 : 0,
               child: Text(
-                item.title.isEmpty ? 'Item details' : item.title,
+                item.title.isEmpty ? l10n.postItemDetails : item.title,
                 style: text.titleMedium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -372,7 +376,8 @@ class ItemDetailsScreen extends ConsumerWidget {
     await Clipboard.setData(ClipboardData(text: text));
     if (!context.mounted) return;
     ActionFeedback.showInfo(
-        context, item.shareUrl.isNotEmpty ? 'Link copied.' : 'Item details copied to clipboard.');
+        context,
+        item.shareUrl.isNotEmpty ? context.l10n.postLinkCopied : context.l10n.postDetailsCopied);
   }
 
   Future<void> _toggleSaved(BuildContext context, WidgetRef ref, ItemModel item) async {
@@ -381,7 +386,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     result.fold(
       onSuccess: (saved) => ActionFeedback.showSuccess(
         context,
-        saved ? 'Saved to your list.' : 'Removed from saved items.',
+        saved ? context.l10n.postSavedToList : context.l10n.postRemovedFromSaved,
       ),
       onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
@@ -389,18 +394,19 @@ class ItemDetailsScreen extends ConsumerWidget {
 
   // ── More sheet ─────────────────────────────────────────────────────────────
   void _showMoreSheet(BuildContext context, WidgetRef ref, ItemModel item, bool isOwner) {
+    final l10n = context.l10n;
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
-        title: isOwner ? 'Manage post' : 'More',
+        title: isOwner ? l10n.postManageSheetTitle : l10n.postMoreSheetTitle,
         scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SheetOption(
               icon: Icons.ios_share_rounded,
-              label: 'Share',
-              subtitle: 'Send the photo and a link to anyone',
+              label: l10n.commonShare,
+              subtitle: l10n.postShareSubtitle,
               onTap: () {
                 Navigator.pop(sheetCtx);
                 _share(context, ref, item);
@@ -408,7 +414,7 @@ class ItemDetailsScreen extends ConsumerWidget {
             ),
             SheetOption(
               icon: Icons.link_rounded,
-              label: 'Copy link',
+              label: l10n.postCopyLink,
               onTap: () {
                 Navigator.pop(sheetCtx);
                 _copyLink(context, ref, item);
@@ -418,7 +424,7 @@ class ItemDetailsScreen extends ConsumerWidget {
               if (!item.isResolved)
                 SheetOption(
                   icon: Icons.edit_outlined,
-                  label: 'Edit post',
+                  label: l10n.postEditPost,
                   onTap: () async {
                     Navigator.pop(sheetCtx);
                     await Navigator.push(
@@ -432,7 +438,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                 icon: item.isResolved
                     ? Icons.replay_rounded
                     : Icons.assignment_turned_in_outlined,
-                label: item.isResolved ? 'Reopen post' : 'Mark as returned',
+                label: item.isResolved ? l10n.postReopenPost : l10n.commonMarkAsReturned,
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   item.isResolved
@@ -442,7 +448,7 @@ class ItemDetailsScreen extends ConsumerWidget {
               ),
               SheetOption(
                 icon: Icons.delete_outline_rounded,
-                label: 'Delete post',
+                label: l10n.postDeletePost,
                 destructive: true,
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -452,7 +458,7 @@ class ItemDetailsScreen extends ConsumerWidget {
             ] else ...[
               SheetOption(
                 icon: Icons.flag_outlined,
-                label: 'Report post',
+                label: l10n.postReportPost,
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   _report(context, ref, item);
@@ -461,7 +467,7 @@ class ItemDetailsScreen extends ConsumerWidget {
               if (!item.ownerIsAdmin)
                 SheetOption(
                   icon: Icons.block_rounded,
-                  label: 'Block this member',
+                  label: l10n.postBlockThisMember,
                   destructive: true,
                   onTap: () {
                     Navigator.pop(sheetCtx);
@@ -483,7 +489,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     result.fold(
       onSuccess: (_) {
         ref.invalidate(postByIdProvider(item.id));
-        ActionFeedback.showSuccess(context, 'Marked as returned.');
+        ActionFeedback.showSuccess(context, context.l10n.commonMarkedAsReturned);
       },
       onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
@@ -495,7 +501,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     result.fold(
       onSuccess: (_) {
         ref.invalidate(postByIdProvider(item.id));
-        ActionFeedback.showSuccess(context, 'Post is active again.');
+        ActionFeedback.showSuccess(context, context.l10n.postActiveAgain);
       },
       onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
@@ -503,13 +509,14 @@ class ItemDetailsScreen extends ConsumerWidget {
 
   void _confirmDelete(BuildContext context, WidgetRef ref, ItemModel item) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete post?'),
-        content: Text('"${item.title}" will be removed for everyone. This cannot be undone.'),
+        title: Text(l10n.postDeleteTitle),
+        content: Text(l10n.postDeleteBody(item.title)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: t.error,
@@ -521,13 +528,13 @@ class ItemDetailsScreen extends ConsumerWidget {
               if (!context.mounted) return;
               result.fold(
                 onSuccess: (_) {
-                  ActionFeedback.showSuccess(context, 'Post deleted.');
+                  ActionFeedback.showSuccess(context, l10n.postDeleted);
                   Navigator.pop(context);
                 },
                 onFailure: (f) => ActionFeedback.showError(context, f.message),
               );
             },
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -535,6 +542,8 @@ class ItemDetailsScreen extends ConsumerWidget {
   }
 
   Future<void> _report(BuildContext context, WidgetRef ref, ItemModel item) async {
+    final l10n = context.l10n;
+    // The reason sent to the API stays English; only the label is translated.
     const reasons = [
       'Spam or scam',
       'Inappropriate content',
@@ -544,8 +553,8 @@ class ItemDetailsScreen extends ConsumerWidget {
     final reason = await AppBottomSheet.show<String>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
-        title: 'Report this post',
-        subtitle: 'Tell us what is wrong. Reports are reviewed by the team.',
+        title: l10n.postReportSheetTitle,
+        subtitle: l10n.postReportSheetSubtitle,
         scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -553,7 +562,7 @@ class ItemDetailsScreen extends ConsumerWidget {
             for (final r in reasons)
               SheetOption(
                 icon: Icons.flag_outlined,
-                label: r,
+                label: _reportReasonLabel(l10n, r),
                 onTap: () => Navigator.pop(sheetCtx, r),
               ),
             const SizedBox(height: BeaconSpace.lg),
@@ -565,24 +574,37 @@ class ItemDetailsScreen extends ConsumerWidget {
     try {
       await ref.read(postServiceProvider).reportPost(item.id, reason);
       if (!context.mounted) return;
-      ActionFeedback.showSuccess(context, 'Thanks, the post has been reported.');
+      ActionFeedback.showSuccess(context, l10n.postReported);
     } catch (e) {
       if (!context.mounted) return;
       ActionFeedback.showError(context, describeError(e));
     }
   }
 
+  static String _reportReasonLabel(AppLocalizations l10n, String reason) {
+    switch (reason) {
+      case 'Spam or scam':
+        return l10n.postReportReasonSpam;
+      case 'Inappropriate content':
+        return l10n.postReportReasonInappropriate;
+      case 'Wrong or misleading information':
+        return l10n.postReportReasonMisleading;
+      default:
+        return l10n.postReportReasonOther;
+    }
+  }
+
   void _confirmBlock(BuildContext context, WidgetRef ref, ItemModel item) {
     final t = AppColorTokens.of(context);
-    final name = (item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'this member';
+    final l10n = context.l10n;
+    final name = (item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : l10n.postThisMember;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Block $name?'),
-        content: const Text(
-            'You will no longer see each other\'s posts or messages. You can undo this in Privacy & safety.'),
+        title: Text(l10n.postBlockTitle(name)),
+        content: Text(l10n.postBlockBody),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: t.error,
@@ -598,13 +620,13 @@ class ItemDetailsScreen extends ConsumerWidget {
               if (!context.mounted) return;
               result.fold(
                 onSuccess: (_) {
-                  ActionFeedback.showSuccess(context, '$name has been blocked.');
+                  ActionFeedback.showSuccess(context, l10n.postBlocked(name));
                   Navigator.pop(context);
                 },
                 onFailure: (f) => ActionFeedback.showError(context, f.message),
               );
             },
-            child: const Text('Block'),
+            child: Text(l10n.commonBlock),
           ),
         ],
       ),
@@ -613,6 +635,7 @@ class ItemDetailsScreen extends ConsumerWidget {
 
   // ── Detail rows card ────────────────────────────────────────────────────────
   Widget _buildDetailsCard(ItemModel item, BuildContext context, AppColorTokens t) {
+    final l10n = context.l10n;
     return SurfaceCard(
       padding: const EdgeInsets.all(BeaconSpace.sm),
       child: Column(
@@ -620,19 +643,19 @@ class ItemDetailsScreen extends ConsumerWidget {
           _detailRow(
             context,
             icon: categoryIcon(item.category),
-            label: 'Category',
-            value: item.category.isEmpty ? null : item.category,
+            label: l10n.postCategory,
+            value: item.category.isEmpty ? null : AppCategories.label(l10n, item.category),
           ),
           _detailRow(
             context,
             icon: Icons.calendar_today_outlined,
-            label: item.isLost ? 'Lost on' : 'Found on',
+            label: item.isLost ? l10n.postLostOn : l10n.postFoundOn,
             value: item.lostOn,
           ),
           _detailRow(
             context,
             icon: Icons.place_outlined,
-            label: 'Location',
+            label: l10n.commonLocation,
             value: item.location.isEmpty ? null : item.location,
           ),
           const SizedBox(height: BeaconSpace.sm),
@@ -640,7 +663,7 @@ class ItemDetailsScreen extends ConsumerWidget {
             latitude: item.latitude,
             longitude: item.longitude,
             height: 160,
-            label: item.location.isEmpty ? 'Location not specified' : item.location,
+            label: item.location.isEmpty ? l10n.commonLocationNotSpecified : item.location,
             onTap: item.hasCoordinates
                 ? () => LocationPickerScreen.view(context, item.place!,
                     title: item.title)
@@ -649,7 +672,7 @@ class ItemDetailsScreen extends ConsumerWidget {
           if (item.hasCoordinates) ...[
             const SizedBox(height: BeaconSpace.sm),
             AppButton.ghost(
-              label: 'Open in Maps',
+              label: l10n.postOpenInMaps,
               icon: Icons.directions_outlined,
               size: AppButtonSize.medium,
               onPressed: () => _openInMaps(context, item),
@@ -666,7 +689,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     );
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      ActionFeedback.showError(context, 'Could not open a maps app.');
+      ActionFeedback.showError(context, context.l10n.postCouldNotOpenMaps);
     }
   }
 
@@ -679,7 +702,7 @@ class ItemDetailsScreen extends ConsumerWidget {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final displayValue =
-        (value == null || value.trim().isEmpty) ? 'Not provided' : value;
+        (value == null || value.trim().isEmpty) ? context.l10n.postNotProvided : value;
     return Padding(
       padding: const EdgeInsets.symmetric(
           horizontal: BeaconSpace.sm, vertical: BeaconSpace.sm),
@@ -721,18 +744,19 @@ class ItemDetailsScreen extends ConsumerWidget {
     bool isOwner,
   ) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final profile = ownerProfileAsync.value;
 
     final ownerName = isOwner
-        ? 'You'
+        ? l10n.commonYou
         : (profile?.displayName ??
-            ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User'));
+            ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : l10n.commonFinderUser));
     final avatarUrl = profile?.avatarUrl.isNotEmpty == true
         ? profile!.avatarUrl
         : item.ownerAvatarUrl;
     final verified = item.isVerified || (profile?.identityVerified ?? false);
     final phone = profile?.phone ?? '';
-    final memberSince = profile == null ? null : _monthYear(profile.createdAt.toDate());
+    final memberSince = profile == null ? null : _monthYear(l10n, profile.createdAt.toDate());
     final postsCount = profile?.postsCount;
 
     return SurfaceCard(
@@ -743,7 +767,7 @@ class ItemDetailsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            item.isLost ? 'POSTED BY THE OWNER' : 'POSTED BY THE FINDER',
+            item.isLost ? l10n.postPostedByOwner : l10n.postPostedByFinder,
             style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
           ),
           const SizedBox(height: BeaconSpace.md),
@@ -754,8 +778,8 @@ class ItemDetailsScreen extends ConsumerWidget {
                 children: [
                   AppAvatar(url: avatarUrl, name: ownerName, size: 56),
                   if (verified)
-                    Positioned(
-                      right: -2,
+                    PositionedDirectional(
+                      end: -2,
                       bottom: -2,
                       child: Container(
                         width: 20,
@@ -783,16 +807,15 @@ class ItemDetailsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     if (ownerProfileAsync.isLoading && profile == null)
-                      Text('Loading profile…', style: text.bodySmall)
+                      Text(l10n.postLoadingProfile, style: text.bodySmall)
                     else if (profile == null)
-                      Text('Profile not available', style: text.bodySmall)
+                      Text(l10n.postProfileNotAvailable, style: text.bodySmall)
                     else
                       Text(
                         [
-                          if (verified) 'Verified member',
-                          if (memberSince != null) 'Member since $memberSince',
-                          if (postsCount != null)
-                            '$postsCount post${postsCount == 1 ? '' : 's'}',
+                          if (verified) l10n.postVerifiedMember,
+                          if (memberSince != null) l10n.postMemberSince(memberSince),
+                          if (postsCount != null) l10n.postPostsCount(postsCount),
                         ].join(' · '),
                         style: text.bodySmall,
                       ),
@@ -808,12 +831,12 @@ class ItemDetailsScreen extends ConsumerWidget {
               _contactRow(
                 context,
                 icon: Icons.phone_outlined,
-                label: 'Phone',
+                label: l10n.postPhone,
                 value: phone,
-                onTap: () => _launch(context, 'tel:$phone', 'Could not open the phone dialer.'),
+                onTap: () => _launch(context, 'tel:$phone', l10n.postCouldNotOpenDialer),
               ),
             AppButton(
-              label: item.isLost ? 'Chat with owner' : 'Chat with finder',
+              label: item.isLost ? l10n.postChatWithOwner : l10n.postChatWithFinder,
               icon: Icons.chat_bubble_outline_rounded,
               size: AppButtonSize.medium,
               onPressed: () => _startChat(context, ref, item, profile),
@@ -821,15 +844,15 @@ class ItemDetailsScreen extends ConsumerWidget {
             if (phone.isNotEmpty) ...[
               const SizedBox(height: BeaconSpace.md),
               AppButton.secondary(
-                label: 'Call',
+                label: l10n.postCall,
                 icon: Icons.phone_outlined,
                 size: AppButtonSize.medium,
-                onPressed: () => _launch(context, 'tel:$phone', 'Could not open the phone dialer.'),
+                onPressed: () => _launch(context, 'tel:$phone', l10n.postCouldNotOpenDialer),
               ),
             ] else ...[
               const SizedBox(height: BeaconSpace.sm),
               Text(
-                'Phone number not shared. In-app chat is the safest way to coordinate.',
+                l10n.postPhoneNotShared,
                 style: text.bodySmall,
               ),
             ],
@@ -839,13 +862,8 @@ class ItemDetailsScreen extends ConsumerWidget {
     );
   }
 
-  static String _monthYear(DateTime d) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[d.month - 1]} ${d.year}';
-  }
+  static String _monthYear(AppLocalizations l10n, DateTime d) =>
+      l10n.postMonthYear(l10n.commonMonthShort('${d.month}'), d.year);
 
   Future<void> _launch(BuildContext context, String url, String failure) async {
     final uri = Uri.parse(url);
@@ -906,11 +924,12 @@ class ItemDetailsScreen extends ConsumerWidget {
     AppColorTokens t,
   ) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isOwner ? 'OWNER ACTIONS' : 'SAFETY',
+          isOwner ? l10n.postOwnerActions : l10n.postSafety,
           style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
         ),
         const SizedBox(height: BeaconSpace.sm),
@@ -920,19 +939,19 @@ class ItemDetailsScreen extends ConsumerWidget {
           children: [
             if (!isOwner) ...[
               AppButton.ghost(
-                label: 'Report post',
+                label: l10n.postReportPost,
                 icon: Icons.flag_outlined,
                 onPressed: () => _report(context, ref, item),
               ),
               AppButton.ghost(
-                label: 'Block member',
+                label: l10n.postBlockMember,
                 icon: Icons.block_rounded,
                 onPressed: () => _confirmBlock(context, ref, item),
               ),
             ] else ...[
               if (!item.isResolved)
                 AppButton.tonal(
-                  label: 'Edit',
+                  label: l10n.commonEdit,
                   icon: Icons.edit_outlined,
                   size: AppButtonSize.medium,
                   expand: false,
@@ -945,7 +964,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                   },
                 ),
               AppButton.tonal(
-                label: item.isResolved ? 'Reopen' : 'Mark as returned',
+                label: item.isResolved ? l10n.commonReopen : l10n.commonMarkAsReturned,
                 icon: item.isResolved
                     ? Icons.replay_rounded
                     : Icons.assignment_turned_in_outlined,
@@ -956,7 +975,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                     : _resolve(context, ref, item),
               ),
               AppButton.danger(
-                label: 'Delete post',
+                label: l10n.postDeletePost,
                 icon: Icons.delete_outline_rounded,
                 size: AppButtonSize.medium,
                 expand: false,
@@ -973,16 +992,17 @@ class ItemDetailsScreen extends ConsumerWidget {
   Widget _buildMatchesSection(BuildContext context, WidgetRef ref, ItemModel item) {
     final matches = ref.watch(postMatchesProvider(item.id));
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'Possible matches',
+          title: l10n.postPossibleMatches,
           eyebrow: item.isLost
-              ? 'Found items that look like yours'
-              : 'Lost items that look like this one',
-          actionLabel: 'Refresh',
+              ? l10n.postMatchesEyebrowLost
+              : l10n.postMatchesEyebrowFound,
+          actionLabel: l10n.commonRefresh,
           onAction: () => ref.invalidate(postMatchesProvider(item.id)),
         ),
         matches.when(
@@ -1001,7 +1021,7 @@ class ItemDetailsScreen extends ConsumerWidget {
                     const SizedBox(width: BeaconSpace.md),
                     Expanded(
                       child: Text(
-                        'No matches yet. We keep comparing new ${item.isLost ? 'found' : 'lost'} posts with this one and notify you the moment something looks alike.',
+                        item.isLost ? l10n.postNoMatchesLost : l10n.postNoMatchesFound,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: t.onSurfaceVar),
                       ),
                     ),
@@ -1031,28 +1051,29 @@ class ItemDetailsScreen extends ConsumerWidget {
 
   Widget _buildSimilarSection(BuildContext context, WidgetRef ref, ItemModel item) {
     final similarState = ref.watch(similarItemsProvider(item.id));
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'Similar items',
-          eyebrow: item.isLost ? 'Found items in this category' : 'Lost items in this category',
-          actionLabel: 'View all',
+          title: l10n.postSimilarItems,
+          eyebrow: item.isLost ? l10n.postSimilarEyebrowLost : l10n.postSimilarEyebrowFound,
+          actionLabel: l10n.postViewAll,
           onAction: () => Navigator.pushNamed(context, AppRoutes.search),
         ),
         similarState.when(
-          loading: () => const LoadingWidget(message: 'Loading similar items...'),
+          loading: () => LoadingWidget(message: l10n.postLoadingSimilar),
           error: (err, _) => ErrorStateWidget(
             message: describeError(err),
             onRetry: () => ref.invalidate(similarItemsProvider(item.id)),
           ),
           data: (items) {
             if (items.isEmpty) {
-              return const EmptyWidget(
+              return EmptyWidget(
                 icon: Icons.radar_rounded,
-                title: 'No similar items yet',
-                subtitle: 'Check back later for matches nearby.',
+                title: l10n.postNoSimilarTitle,
+                subtitle: l10n.postNoSimilarSubtitle,
               );
             }
             return SizedBox(
@@ -1085,6 +1106,7 @@ class _MatchBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(top: BeaconSpace.sm, bottom: BeaconSpace.lg),
       child: SurfaceCard(
@@ -1099,7 +1121,7 @@ class _MatchBanner extends StatelessWidget {
                 const SizedBox(width: BeaconSpace.sm),
                 Expanded(
                   child: Text(
-                    item.isLost ? 'Could this be the item you found?' : 'Could this be your item?',
+                    item.isLost ? l10n.postMatchBannerTitleLost : l10n.postMatchBannerTitleFound,
                     style: text.titleSmall,
                   ),
                 ),
@@ -1107,14 +1129,12 @@ class _MatchBanner extends StatelessWidget {
             ),
             const SizedBox(height: BeaconSpace.xs),
             Text(
-              item.isLost
-                  ? 'Someone reported losing something that looks like the item you found. Compare the details and message them.'
-                  : 'Someone reported finding something that looks like what you lost. Compare the details and message them.',
+              item.isLost ? l10n.postMatchBannerBodyLost : l10n.postMatchBannerBodyFound,
               style: text.bodySmall?.copyWith(color: t.onSurfaceVar),
             ),
             const SizedBox(height: BeaconSpace.md),
             AppButton(
-              label: item.isLost ? 'Message the owner' : 'Message the finder',
+              label: item.isLost ? l10n.postMessageOwner : l10n.postMessageFinder,
               icon: Icons.chat_bubble_outline_rounded,
               onPressed: onChat,
             ),

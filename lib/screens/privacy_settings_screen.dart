@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/sheets/user_search_sheet.dart';
@@ -23,14 +24,15 @@ class PrivacySettingsScreen extends ConsumerStatefulWidget {
 
 class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
   Future<void> _blockAnother() async {
+    final l10n = context.l10n;
     final user = await showUserSearchSheet(
       context,
-      title: 'Block a member',
-      actionLabel: 'Block',
+      title: l10n.privacyBlockMemberTitle,
+      actionLabel: l10n.commonBlock,
     );
     if (user == null || !mounted) return;
     if (user.isAdmin) {
-      ActionFeedback.showError(context, 'Finder administrators cannot be blocked.');
+      ActionFeedback.showError(context, l10n.privacyAdminCannotBlock);
       return;
     }
     final result = await ref.read(blockedUsersProvider.notifier).blockUser(
@@ -40,7 +42,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
         );
     if (!mounted) return;
     result.fold(
-      onSuccess: (_) => ActionFeedback.showSuccess(context, '${user.displayName} has been blocked.'),
+      onSuccess: (_) => ActionFeedback.showSuccess(context, l10n.blockUserDone(user.displayName)),
       onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
   }
@@ -49,7 +51,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
     final result = await ref.read(blockedUsersProvider.notifier).unblockUser(id);
     if (!mounted) return;
     result.fold(
-      onSuccess: (_) => ActionFeedback.showInfo(context, '$name can contact you again.'),
+      onSuccess: (_) => ActionFeedback.showInfo(context, context.l10n.blockUnblocked(name)),
       onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
   }
@@ -60,24 +62,25 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
     final ctrl = TextEditingController();
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete your account?'),
+        title: Text(l10n.privacyDeleteAccountTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Your posts, conversations, saved items and profile are removed immediately. This cannot be undone.',
+              l10n.privacyDeleteAccountBody,
               style: text.bodyMedium,
             ),
             const SizedBox(height: BeaconSpace.lg),
             AppTextField(
               controller: ctrl,
-              label: usesGoogle ? 'Type DELETE to confirm' : 'Your password',
-              hint: usesGoogle ? 'DELETE' : 'Password',
+              label: usesGoogle ? l10n.privacyTypeDeleteLabel : l10n.privacyPasswordLabel,
+              hint: usesGoogle ? l10n.privacyTypeDeleteHint : l10n.privacyPasswordHint,
               prefixIcon: usesGoogle ? Icons.warning_amber_rounded : Icons.lock_outline_rounded,
               obscureText: !usesGoogle,
               autofocus: true,
@@ -87,11 +90,11 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: t.error, foregroundColor: t.onError),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete account'),
+            child: Text(l10n.privacyDeleteAccount),
           ),
         ],
       ),
@@ -100,7 +103,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
     ctrl.dispose();
     if (confirmed != true || !mounted) return;
     if (entered.isEmpty) {
-      ActionFeedback.showError(context, usesGoogle ? 'Type DELETE to confirm.' : 'Please enter your password.');
+      ActionFeedback.showError(context, usesGoogle ? l10n.privacyTypeDeleteError : l10n.privacyEnterPassword);
       return;
     }
 
@@ -111,7 +114,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
     if (!mounted) return;
     result.fold(
       onSuccess: (_) async {
-        ActionFeedback.showInfo(context, 'Your account has been deleted.');
+        ActionFeedback.showInfo(context, l10n.privacyAccountDeleted);
         await ref.read(authControllerProvider.notifier).logout();
       },
       onFailure: (f) => ActionFeedback.showError(context, f.message),
@@ -122,6 +125,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final settingsState = ref.watch(privacySettingsProvider);
     final blockedState = ref.watch(blockedUsersProvider);
     final blockedCount = blockedState.value?.length ?? 0;
@@ -143,10 +147,10 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const AppPageHeader(title: 'Privacy & safety'),
+            AppPageHeader(title: l10n.privacyTitle),
             Expanded(
               child: settingsState.when(
-                loading: () => const LoadingWidget(message: 'Loading settings...'),
+                loading: () => LoadingWidget(message: l10n.privacyLoadingSettings),
                 error: (err, _) => ErrorStateWidget(
                   message: describeError(err),
                   onRetry: () => ref.read(privacySettingsProvider.notifier).loadSettings(),
@@ -165,10 +169,10 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Your data, your control', style: text.headlineMedium),
+                            Text(l10n.privacyHeadline, style: text.headlineMedium),
                             const SizedBox(height: BeaconSpace.sm),
                             Text(
-                              'Decide what other members can see and who can reach you. Changes apply immediately.',
+                              l10n.privacyIntro,
                               style: text.bodyMedium,
                             ),
                           ],
@@ -180,36 +184,33 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                       StaggeredEntrance(
                         index: 1,
                         child: SettingsGroup(
-                          title: 'Visibility',
+                          title: l10n.privacyVisibility,
                           children: [
                             ToggleTile(
                               icon: Icons.visibility_outlined,
-                              title: 'Show my profile',
-                              subtitle:
-                                  'Off shows only your name and photo on posts; job, phone and location stay hidden.',
+                              title: l10n.privacyShowProfile,
+                              subtitle: l10n.privacyShowProfileSubtitle,
                               value: settings.showProfile,
                               onChanged: (v) => update((s) => s.copyWith(showProfile: v)),
                             ),
                             ToggleTile(
                               icon: Icons.chat_bubble_outline_rounded,
-                              title: 'Allow direct messages',
-                              subtitle:
-                                  'Let members start a conversation with you. Existing chats stay open.',
+                              title: l10n.privacyAllowMessages,
+                              subtitle: l10n.privacyAllowMessagesSubtitle,
                               value: settings.allowMessages,
                               onChanged: (v) => update((s) => s.copyWith(allowMessages: v)),
                             ),
                             ToggleTile(
                               icon: Icons.place_outlined,
-                              title: 'Show my city',
-                              subtitle: 'Shares the address from your profile with other members.',
+                              title: l10n.privacyShowCity,
+                              subtitle: l10n.privacyShowCitySubtitle,
                               value: settings.showLocation,
                               onChanged: (v) => update((s) => s.copyWith(showLocation: v)),
                             ),
                             ToggleTile(
                               icon: Icons.phone_outlined,
-                              title: 'Hide my phone number',
-                              subtitle:
-                                  'When on, members can only reach you through in-app chat.',
+                              title: l10n.privacyHidePhone,
+                              subtitle: l10n.privacyHidePhoneSubtitle,
                               value: settings.hidePhone,
                               onChanged: (v) => update((s) => s.copyWith(hidePhone: v)),
                             ),
@@ -223,10 +224,10 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(
-                                  left: BeaconSpace.xs, bottom: BeaconSpace.sm),
+                              padding: const EdgeInsetsDirectional.only(
+                                  start: BeaconSpace.xs, bottom: BeaconSpace.sm),
                               child: Text(
-                                'BLOCKED MEMBERS',
+                                l10n.privacyBlockedMembersLabel,
                                 style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
                               ),
                             ),
@@ -245,17 +246,17 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text('Blocked members', style: text.titleMedium),
+                                              Text(l10n.privacyBlockedMembers, style: text.titleMedium),
                                               const SizedBox(height: BeaconSpace.xs),
                                               Text(
-                                                "Blocked members can't see your posts or message you, and you won't see theirs.",
+                                                l10n.privacyBlockedMembersBody,
                                                 style: text.bodySmall,
                                               ),
                                             ],
                                           ),
                                         ),
                                         const SizedBox(width: BeaconSpace.md),
-                                        StatusBadge.neutral('$blockedCount total'),
+                                        StatusBadge.neutral(l10n.privacyBlockedTotal(blockedCount)),
                                       ],
                                     ),
                                   ),
@@ -263,9 +264,9 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                                   Divider(color: t.outlineVariant, height: 1),
 
                                   blockedState.when(
-                                    loading: () => const Padding(
-                                      padding: EdgeInsets.all(BeaconSpace.lg),
-                                      child: LoadingWidget(message: 'Loading blocked members...'),
+                                    loading: () => Padding(
+                                      padding: const EdgeInsets.all(BeaconSpace.lg),
+                                      child: LoadingWidget(message: l10n.privacyLoadingBlocked),
                                     ),
                                     error: (err, _) => Padding(
                                       padding: const EdgeInsets.all(BeaconSpace.lg),
@@ -277,10 +278,10 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                                     ),
                                     data: (users) {
                                       if (users.isEmpty) {
-                                        return const EmptyWidget(
+                                        return EmptyWidget(
                                           icon: Icons.block_rounded,
-                                          title: 'No blocked members',
-                                          subtitle: 'Members you block will appear here.',
+                                          title: l10n.privacyNoBlocked,
+                                          subtitle: l10n.privacyNoBlockedSubtitle,
                                         );
                                       }
                                       return Column(
@@ -306,7 +307,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                                                       child: Text(user.name, style: text.titleSmall),
                                                     ),
                                                     AppButton.ghost(
-                                                      label: 'Unblock',
+                                                      label: l10n.commonUnblock,
                                                       size: AppButtonSize.small,
                                                       onPressed: () => _unblock(user.id, user.name),
                                                     ),
@@ -326,7 +327,7 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                                   Padding(
                                     padding: const EdgeInsets.all(BeaconSpace.sm),
                                     child: AppButton.ghost(
-                                      label: 'Block another member',
+                                      label: l10n.privacyBlockAnother,
                                       icon: Icons.add_rounded,
                                       onPressed: _blockAnother,
                                     ),
@@ -353,9 +354,9 @@ class _PrivacySettingsScreenState extends ConsumerState<PrivacySettingsScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Delete account',
+                                    Text(l10n.privacyDeleteAccount,
                                         style: text.titleMedium?.copyWith(color: t.error)),
-                                    Text('Permanently remove your account, posts and conversations.',
+                                    Text(l10n.privacyDeleteAccountSubtitle,
                                         style: text.bodySmall),
                                   ],
                                 ),

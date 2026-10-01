@@ -1,3 +1,4 @@
+import '../../l10n/l10n.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failure.dart';
 import '../../core/network/api_client.dart';
@@ -27,7 +28,7 @@ class SavedItemsRepositoryImpl implements SavedItemsRepository {
       return Result.success(items);
     } catch (e) {
       return Result.failure(
-        failureFrom(e, fallback: 'Unable to load saved items.'),
+        failureFrom(e, fallback: L10n.current.repoUnableLoadSaved),
       );
     }
   }
@@ -36,8 +37,8 @@ class SavedItemsRepositoryImpl implements SavedItemsRepository {
   Future<Result<void>> setSaved(String postId, bool saved) async {
     if (!_apiClient.isAuthenticated) {
       return Result.failure(
-        const Failure(
-          message: 'Please log in to save items.',
+        Failure(
+          message: L10n.current.repoLoginToSave,
           type: FailureType.auth,
         ),
       );
@@ -52,7 +53,7 @@ class SavedItemsRepositoryImpl implements SavedItemsRepository {
       return Result.success(null);
     } catch (e) {
       return Result.failure(
-        failureFrom(e, fallback: 'Unable to update saved items.'),
+        failureFrom(e, fallback: L10n.current.repoUnableUpdateSaved),
       );
     }
   }

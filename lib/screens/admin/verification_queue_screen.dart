@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/admin/admin_service.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/screens/admin/verification_review_screen.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
@@ -27,6 +28,7 @@ class _VerificationQueueScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final queue = ref.watch(adminVerificationQueueProvider(_status));
@@ -35,14 +37,18 @@ class _VerificationQueueScreenState
       body: SafeArea(
         child: Column(
           children: [
-            const AppPageHeader(
-              title: 'Review queue',
-              subtitle: 'Identity verification requests',
+            AppPageHeader(
+              title: l10n.adminQueueTitle,
+              subtitle: l10n.adminQueueSubtitle,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
               child: SegmentedPills(
-                options: const ['Pending', 'Approved', 'Rejected'],
+                options: [
+                  l10n.adminFilterPending,
+                  l10n.adminFilterApproved,
+                  l10n.adminFilterRejected,
+                ],
                 selectedIndex: _tab,
                 onChanged: (i) => setState(() => _tab = i),
               ),
@@ -60,9 +66,9 @@ class _VerificationQueueScreenState
                   if (items.isEmpty) {
                     return EmptyWidget(
                       icon: Icons.verified_user_outlined,
-                      title: _tab == 0 ? 'Nothing to review' : 'No requests here',
+                      title: _tab == 0 ? l10n.adminNothingToReview : l10n.adminNoRequestsHere,
                       subtitle: _tab == 0
-                          ? 'New verification requests will show up here.'
+                          ? l10n.adminNewRequestsShowHere
                           : null,
                     );
                   }
@@ -97,7 +103,7 @@ class _VerificationQueueScreenState
                                         overflow: TextOverflow.ellipsis),
                                     const SizedBox(height: BeaconSpace.xs),
                                     Text(
-                                      '${r.docLabel} · ${relativeTime(r.createdAtMs)}',
+                                      '${r.docLabel} · ${relativeTime(r.createdAtMs, l10n: l10n)}',
                                       style: text.labelSmall
                                           ?.copyWith(color: t.onSurfaceMuted),
                                     ),
@@ -124,12 +130,12 @@ class _VerificationQueueScreenState
   Widget _badge(AdminVerificationRequest r) => switch (r.status) {
         'approved' => StatusBadge.verified(),
         'rejected' => StatusBadge.custom(
-            label: 'REJECTED',
+            label: context.l10n.adminBadgeRejected,
             color: AppColorTokens.of(context).error,
             icon: Icons.close_rounded,
             small: true,
           ),
-        _ => StatusBadge.neutral('PENDING', small: true),
+        _ => StatusBadge.neutral(context.l10n.adminBadgePending, small: true),
       };
 
   Future<void> _open(AdminVerificationRequest r) async {

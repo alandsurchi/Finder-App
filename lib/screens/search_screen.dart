@@ -10,6 +10,7 @@ import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/models/item_model.dart';
+import 'package:finder/l10n/l10n.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/providers/post_provider.dart';
@@ -60,6 +61,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final postsAsync = ref.watch(postsStreamProvider);
     final allItems = postsAsync.value?.map((item) => _SearchEntry(
       id: item.id,
@@ -87,13 +89,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const StaggeredEntrance(
+              StaggeredEntrance(
                 child: AppPageHeader(
-                  title: 'Search',
-                  subtitle: 'Find lost and found items near you',
+                  title: l10n.commonSearch,
+                  subtitle: l10n.searchSubtitle,
                   showBack: false,
                   large: true,
-                  padding: EdgeInsets.fromLTRB(
+                  padding: const EdgeInsets.fromLTRB(
                       BeaconSpace.page, BeaconSpace.md, BeaconSpace.page, BeaconSpace.lg),
                 ),
               ),
@@ -103,7 +105,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
                   child: SearchField(
                     controller: _searchController,
-                    hint: 'Search items, places…',
+                    hint: l10n.searchHint,
                     onChanged: _onQueryChanged,
                     onFilterTap: _openFilterBottomSheet,
                     filterActive: _hasActiveFilters,
@@ -118,12 +120,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   child: Row(
                     children: [
                       Text(
-                        '${filteredItems.length} result${filteredItems.length == 1 ? '' : 's'}',
+                        l10n.searchResultsCount(filteredItems.length),
                         style: text.labelLarge?.copyWith(color: t.onSurfaceVar),
                       ),
                       const SizedBox(width: BeaconSpace.sm),
                       AppChoiceChip(
-                        label: 'Returned',
+                        label: l10n.commonReturned,
                         icon: Icons.assignment_turned_in_outlined,
                         selected: _showReturned,
                         onTap: () =>
@@ -132,7 +134,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       const Spacer(),
                       if (_hasActiveFilters)
                         AppButton.ghost(
-                          label: 'Clear filters',
+                          label: l10n.searchClearFilters,
                           size: AppButtonSize.small,
                           icon: Icons.close_rounded,
                           onPressed: () => setState(
@@ -179,11 +181,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildNoResultState() {
+    final l10n = context.l10n;
     return EmptyWidget(
       icon: Icons.search_off_rounded,
-      title: 'No matching items found',
-      subtitle: 'Try a different keyword or adjust your filters.',
-      actionLabel: _hasActiveFilters ? 'Reset filters' : null,
+      title: l10n.searchNoResultsTitle,
+      subtitle: l10n.searchNoResultsSubtitle,
+      actionLabel: _hasActiveFilters ? l10n.searchResetFilters : null,
       onAction: _hasActiveFilters
           ? () => setState(() => _activeFilters = SearchFilterData.initial())
           : null,
@@ -199,7 +202,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       heroTag: HeroTags.item(HeroTags.search, entry.id),
       subtitle: (item.isVerified || item.ownerIsAdmin)
           ? NameWithMarks(
-              name: (item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User',
+              name: (item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : context.l10n.commonFinderUser,
               verified: item.isVerified,
               admin: item.ownerIsAdmin,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(color: t.primary),

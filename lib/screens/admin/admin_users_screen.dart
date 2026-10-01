@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/admin/admin_console_service.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
@@ -53,6 +54,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final users = ref.watch(adminUsersProvider(_key));
     final me = ref.watch(authStateProvider).userId ?? '';
 
@@ -60,19 +62,24 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const AppPageHeader(title: 'Users', subtitle: 'Accounts on Finder'),
+            AppPageHeader(title: l10n.adminUsersTitle, subtitle: l10n.adminUsersSubtitle),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
               child: Column(
                 children: [
                   SearchField(
                     controller: _search,
-                    hint: 'Name, nickname or e-mail',
+                    hint: l10n.adminUsersSearchHint,
                     onChanged: _onQuery,
                   ),
                   const SizedBox(height: BeaconSpace.md),
                   SegmentedPills(
-                    options: const ['All', 'Verified', 'Admins', 'Suspended'],
+                    options: [
+                      l10n.adminFilterAll,
+                      l10n.adminVerifiedLabel,
+                      l10n.adminFilterAdmins,
+                      l10n.adminSuspendedLabel,
+                    ],
                     selectedIndex: _tab,
                     onChanged: (i) => setState(() => _tab = i),
                   ),
@@ -89,9 +96,9 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                 ),
                 data: (items) {
                   if (items.isEmpty) {
-                    return const EmptyWidget(
+                    return EmptyWidget(
                       icon: Icons.person_search_outlined,
-                      title: 'No accounts match',
+                      title: l10n.adminNoAccountsMatch,
                     );
                   }
                   return RefreshIndicator(
@@ -118,6 +125,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
   }
 
   void _showActions(AdminUser u, {required bool isMe}) {
+    final l10n = context.l10n;
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
@@ -129,63 +137,63 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
           children: [
             SheetOption(
               icon: u.identityVerified ? Icons.remove_circle_outline : Icons.verified_rounded,
-              label: u.identityVerified ? 'Remove verified badge' : 'Mark as verified',
+              label: u.identityVerified ? l10n.adminRemoveVerifiedBadge : l10n.adminMarkAsVerified,
               subtitle: u.identityVerified
-                  ? 'The tick disappears from their profile and posts'
-                  : 'Grants the tick without a document review',
+                  ? l10n.adminRemoveBadgeSubtitle
+                  : l10n.adminGrantBadgeSubtitle,
               onTap: () => _run(sheetCtx, () => _svc.setVerified(u.uid, !u.identityVerified),
-                  u.identityVerified ? 'Verified badge removed.' : 'Marked as verified.'),
+                  u.identityVerified ? l10n.adminVerifiedBadgeRemoved : l10n.adminMarkedAsVerified),
             ),
             if (!isMe)
               SheetOption(
                 icon: u.isAdmin ? Icons.shield_outlined : Icons.shield_rounded,
-                label: u.isAdmin ? 'Remove admin role' : 'Make administrator',
+                label: u.isAdmin ? l10n.adminRemoveAdminRole : l10n.adminMakeAdministrator,
                 subtitle: u.isAdmin
-                    ? 'They lose access to this console'
-                    : 'Full access to users, posts and reports',
+                    ? l10n.adminLoseConsoleAccess
+                    : l10n.adminFullAccess,
                 onTap: () => _confirmThen(
                   sheetCtx,
-                  title: u.isAdmin ? 'Remove admin role?' : 'Make ${u.name} an administrator?',
+                  title: u.isAdmin ? l10n.adminRemoveAdminRoleTitle : l10n.adminMakeAdminTitle(u.name),
                   body: u.isAdmin
-                      ? '${u.name} will no longer be able to moderate Finder.'
-                      : 'Administrators can suspend or delete any account and remove any post.',
-                  confirmLabel: u.isAdmin ? 'Remove role' : 'Make admin',
+                      ? l10n.adminRemoveAdminBody(u.name)
+                      : l10n.adminMakeAdminBody,
+                  confirmLabel: u.isAdmin ? l10n.adminRemoveRole : l10n.adminMakeAdmin,
                   action: () => _svc.setAdmin(u.uid, !u.isAdmin),
-                  success: u.isAdmin ? 'Admin role removed.' : '${u.name} is now an admin.',
+                  success: u.isAdmin ? l10n.adminRoleRemoved : l10n.adminNowAdmin(u.name),
                 ),
               ),
             if (!isMe && !u.isAdmin)
               SheetOption(
                 icon: u.isBanned ? Icons.lock_open_rounded : Icons.block_rounded,
-                label: u.isBanned ? 'Lift suspension' : 'Suspend account',
+                label: u.isBanned ? l10n.adminLiftSuspension : l10n.adminSuspendAccount,
                 subtitle: u.isBanned
-                    ? 'They can sign in again'
-                    : 'They are signed out and cannot sign in',
+                    ? l10n.adminCanSignInAgain
+                    : l10n.adminSignedOutCannotSignIn,
                 destructive: !u.isBanned,
                 onTap: () => _confirmThen(
                   sheetCtx,
-                  title: u.isBanned ? 'Lift the suspension?' : 'Suspend ${u.name}?',
+                  title: u.isBanned ? l10n.adminLiftSuspensionTitle : l10n.adminSuspendTitle(u.name),
                   body: u.isBanned
-                      ? 'The account works normally again.'
-                      : 'Their posts stay visible. They lose access until you lift the suspension.',
-                  confirmLabel: u.isBanned ? 'Lift' : 'Suspend',
+                      ? l10n.adminLiftBody
+                      : l10n.adminSuspendBody,
+                  confirmLabel: u.isBanned ? l10n.adminLift : l10n.adminSuspend,
                   action: () => _svc.setBanned(u.uid, !u.isBanned),
-                  success: u.isBanned ? 'Suspension lifted.' : 'Account suspended.',
+                  success: u.isBanned ? l10n.adminSuspensionLifted : l10n.adminAccountSuspended,
                 ),
               ),
             if (!isMe && !u.isAdmin)
               SheetOption(
                 icon: Icons.delete_forever_outlined,
-                label: 'Delete account',
-                subtitle: 'Removes the account, its posts and chats. Cannot be undone.',
+                label: l10n.adminDeleteAccount,
+                subtitle: l10n.adminDeleteAccountSubtitle,
                 destructive: true,
                 onTap: () => _confirmThen(
                   sheetCtx,
-                  title: 'Delete ${u.name}?',
-                  body: 'Everything they posted and every chat they were in is erased permanently.',
-                  confirmLabel: 'Delete',
+                  title: l10n.adminDeleteTitle(u.name),
+                  body: l10n.adminDeleteBody,
+                  confirmLabel: l10n.commonDelete,
                   action: () => _svc.deleteUser(u.uid),
-                  success: 'Account deleted.',
+                  success: l10n.adminAccountDeleted,
                 ),
               ),
             const SizedBox(height: BeaconSpace.lg),
@@ -224,7 +232,9 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
         title: Text(title),
         content: Text(body),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(ctx.l10n.commonCancel)),
           TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(confirmLabel)),
         ],
       ),
@@ -249,8 +259,14 @@ class _UserRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final meta = [
+      l10n.adminPostsCount(user.postsCount),
+      if (user.reportsAgainst > 0) l10n.adminReportsCount(user.reportsAgainst),
+      l10n.adminJoined(relativeTime(user.createdAtMs, l10n: l10n)),
+    ].join(' · ');
     return SurfaceCard(
       onTap: onTap,
       tone: user.isBanned ? SurfaceTone.error : SurfaceTone.base,
@@ -263,7 +279,7 @@ class _UserRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 NameWithMarks(
-                  name: isMe ? '${user.name} (you)' : user.name,
+                  name: isMe ? l10n.adminYouSuffix(user.name) : user.name,
                   verified: user.identityVerified,
                   admin: user.isAdmin,
                   style: text.titleMedium,
@@ -271,9 +287,7 @@ class _UserRow extends StatelessWidget {
                 Text(user.email, style: text.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: BeaconSpace.xs),
                 Text(
-                  '${user.postsCount} post${user.postsCount == 1 ? '' : 's'}'
-                  '${user.reportsAgainst > 0 ? ' · ${user.reportsAgainst} report${user.reportsAgainst == 1 ? '' : 's'}' : ''}'
-                  ' · joined ${relativeTime(user.createdAtMs)}',
+                  meta,
                   style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
                 ),
               ],
@@ -281,7 +295,7 @@ class _UserRow extends StatelessWidget {
           ),
           const SizedBox(width: BeaconSpace.sm),
           if (user.isBanned)
-            StatusBadge.custom(label: 'SUSPENDED', color: t.error, small: true)
+            StatusBadge.custom(label: l10n.adminBadgeSuspended, color: t.error, small: true)
           else if (user.isAdmin)
             adminBadge()
           else if (user.identityVerified)

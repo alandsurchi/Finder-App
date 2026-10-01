@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import '../core/errors/exceptions.dart';
 import '../core/network/api_client.dart';
 import '../core/utils/image_mime.dart';
+import '../l10n/l10n.dart';
 
 /// Where a picked image comes from.
 enum ImageSourceKind { gallery, camera }
@@ -123,10 +124,10 @@ class ImageUploadService {
 
   Future<String> _uploadPrivate(Uint8List bytes, {required String slot}) async {
     if (bytes.isEmpty) {
-      throw const ValidationException('The selected file is empty.');
+      throw ValidationException(L10n.current.photoFileEmpty);
     }
     if (bytes.lengthInBytes > maxBytes) {
-      throw const ValidationException('Please choose an image under 8 MB.');
+      throw ValidationException(L10n.current.photoTooLarge);
     }
     final kind = sniffImage(bytes);
     final res = await _apiClient.uploadFile(
@@ -138,17 +139,17 @@ class ImageUploadService {
     );
     final id = (res as Map)['fileId']?.toString();
     if (id == null || id.isEmpty) {
-      throw const UnknownException('The server returned no file id.');
+      throw UnknownException(L10n.current.photoNoFileId);
     }
     return id;
   }
 
   Future<String> _upload(Uint8List bytes, {required String folder}) async {
     if (bytes.isEmpty) {
-      throw const ValidationException('The selected file is empty.');
+      throw ValidationException(L10n.current.photoFileEmpty);
     }
     if (bytes.lengthInBytes > maxBytes) {
-      throw const ValidationException('Please choose an image under 8 MB.');
+      throw ValidationException(L10n.current.photoTooLarge);
     }
     // Label the upload from its bytes; the picker's own type is unreliable.
     final kind = sniffImage(bytes);
@@ -161,21 +162,22 @@ class ImageUploadService {
     );
     final url = (res as Map)['url']?.toString();
     if (url == null || url.isEmpty) {
-      throw const UnknownException('The server returned no image URL.');
+      throw UnknownException(L10n.current.photoNoUrl);
     }
     return url;
   }
 
   String _describePickerError(Object e, ImageSourceKind source) {
     final text = e.toString().toLowerCase();
+    final l10n = L10n.current;
     if (text.contains('camera_access_denied') || text.contains('camera')) {
-      return 'Camera access was denied. Allow it in your phone settings or choose a photo from the gallery.';
+      return l10n.photoCameraDenied;
     }
     if (text.contains('photo_access_denied') || text.contains('permission')) {
-      return 'Photo access was denied. Allow it in your phone settings and try again.';
+      return l10n.photoAccessDenied;
     }
     return source == ImageSourceKind.camera
-        ? 'Could not open the camera.'
-        : 'Could not open the photo picker.';
+        ? l10n.photoCameraOpenFailed
+        : l10n.photoPickerOpenFailed;
   }
 }

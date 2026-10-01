@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../models/item_model.dart';
 import '../../models/user_model.dart';
+import '../../l10n/l10n.dart';
 
 final shareServiceProvider = Provider<ShareService>((ref) => ShareService());
 
@@ -23,9 +24,12 @@ class ShareService {
   }
 
   String postText(ItemModel item) {
-    final kind = item.isResolved ? 'Returned' : (item.isLost ? 'Lost' : 'Found');
+    final l10n = L10n.current;
+    final kind = item.isResolved
+        ? l10n.commonReturned
+        : (item.isLost ? l10n.commonLost : l10n.commonFound);
     final lines = <String>[
-      '$kind: ${item.title}',
+      l10n.shareKindTitle(kind, item.title),
       if (item.location.trim().isNotEmpty) item.location.trim(),
       if (item.description.trim().isNotEmpty) _excerpt(item.description, 140),
       if (item.shareUrl.isNotEmpty) item.shareUrl,
@@ -44,7 +48,9 @@ class ShareService {
     try {
       final params = ShareParams(
         text: text,
-        subject: '${item.isLost ? 'Lost' : 'Found'}: ${item.title}',
+        subject: L10n.current.shareKindTitle(
+            item.isLost ? L10n.current.commonLost : L10n.current.commonFound,
+            item.title),
         files: photo == null ? null : [photo],
         sharePositionOrigin: origin,
       );
@@ -61,12 +67,12 @@ class ShareService {
       profile.displayName,
       if (profile.nickName.trim().isNotEmpty) '@${profile.nickName.trim()}',
       if (profile.job.trim().isNotEmpty) profile.job.trim(),
-      'Find me on Finder · member id ${profile.uid}',
+      L10n.current.shareFindMe(profile.uid),
     ];
     try {
       await SharePlus.instance.share(ShareParams(
         text: lines.join('\n'),
-        subject: '${profile.displayName} on Finder',
+        subject: L10n.current.shareProfileSubject(profile.displayName),
         sharePositionOrigin: _origin(context),
       ));
       return true;

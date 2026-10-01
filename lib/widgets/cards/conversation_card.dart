@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/chat/presentation/open_chat.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/routes.dart';
@@ -18,6 +19,7 @@ class ConversationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final unread = convo.unreadCount > 0;
 
     return SurfaceCard(
@@ -77,7 +79,7 @@ class ConversationCard extends StatelessWidget {
                     ),
                     const SizedBox(width: BeaconSpace.sm),
                     Text(
-                      relativeTime(convo.lastUpdatedAt.millisecondsSinceEpoch),
+                      relativeTime(convo.lastUpdatedAt.millisecondsSinceEpoch, l10n: l10n),
                       style: text.bodySmall?.copyWith(
                         color: unread ? t.primary : t.onSurfaceMuted,
                       ),
@@ -107,7 +109,7 @@ class ConversationCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        convo.message.isEmpty ? 'No messages yet' : convo.message,
+                        convo.message.isEmpty ? l10n.msgNoMessagesYet : convo.message,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: text.bodyMedium?.copyWith(

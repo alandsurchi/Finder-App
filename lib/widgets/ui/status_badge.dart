@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/models/item_model.dart';
+import 'package:finder/l10n/l10n.dart';
 
 enum SignalKind { lost, found }
 
@@ -12,6 +13,8 @@ extension SignalKindX on SignalKind {
   Color container(AppColorTokens t) =>
       this == SignalKind.lost ? t.lostContainer : t.foundContainer;
   String get label => this == SignalKind.lost ? 'LOST' : 'FOUND';
+  String localizedLabel(AppLocalizations l10n) =>
+      (this == SignalKind.lost ? l10n.commonLost : l10n.commonFound).toUpperCase();
   IconData get icon => this == SignalKind.lost
       ? Icons.search_rounded
       : Icons.check_circle_outline_rounded;
@@ -22,6 +25,8 @@ extension SignalKindX on SignalKind {
 
 enum BadgeStyle { filled, soft, glass }
 
+enum _BadgeText { lost, found, returned, verified }
+
 /// One source of truth for LOST / FOUND / REWARD / RESOLVED pills.
 class StatusBadge extends StatelessWidget {
   final String label;
@@ -30,6 +35,8 @@ class StatusBadge extends StatelessWidget {
   final Color Function(AppColorTokens t) _fg;
   final BadgeStyle style;
   final bool small;
+  /// Fixed labels are resolved in build so they follow the app language.
+  final _BadgeText? _text;
 
   const StatusBadge._({
     super.key,
@@ -39,8 +46,10 @@ class StatusBadge extends StatelessWidget {
     this.icon,
     this.style = BadgeStyle.filled,
     this.small = false,
+    _BadgeText? text,
   })  : _bg = bg,
-        _fg = fg;
+        _fg = fg,
+        _text = text;
 
   factory StatusBadge.signal(
     SignalKind kind, {
@@ -52,6 +61,7 @@ class StatusBadge extends StatelessWidget {
     return StatusBadge._(
       key: key,
       label: kind.label,
+      text: kind == SignalKind.lost ? _BadgeText.lost : _BadgeText.found,
       icon: withIcon ? kind.icon : null,
       style: style,
       small: small,
@@ -91,6 +101,7 @@ class StatusBadge extends StatelessWidget {
     return StatusBadge._(
       key: key,
       label: 'RETURNED',
+      text: _BadgeText.returned,
       icon: Icons.assignment_turned_in_rounded,
       small: small,
       style: BadgeStyle.soft,
@@ -103,6 +114,7 @@ class StatusBadge extends StatelessWidget {
     return StatusBadge._(
       key: key,
       label: 'VERIFIED',
+      text: _BadgeText.verified,
       icon: Icons.verified_rounded,
       small: small,
       style: BadgeStyle.soft,
@@ -172,7 +184,13 @@ class StatusBadge extends StatelessWidget {
             const SizedBox(width: BeaconSpace.xs),
           ],
           Text(
-            label,
+            switch (_text) {
+              _BadgeText.lost => context.l10n.commonLost.toUpperCase(),
+              _BadgeText.found => context.l10n.commonFound.toUpperCase(),
+              _BadgeText.returned => context.l10n.commonReturned.toUpperCase(),
+              _BadgeText.verified => context.l10n.adminVerifiedLabel.toUpperCase(),
+              null => label,
+            },
             style: (small ? text.labelSmall : text.labelMedium)?.copyWith(
               color: isGlass ? bg : fg,
               letterSpacing: 0.8,

@@ -1,3 +1,4 @@
+import '../../l10n/l10n.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failure.dart';
 import '../../core/utils/result.dart';
@@ -24,7 +25,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to login'));
+      return Result.failure(Failure(message: L10n.current.repoUnableLogin));
     }
   }
 
@@ -36,7 +37,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to login with Google'));
+      return Result.failure(Failure(message: L10n.current.repoUnableLoginGoogle));
     }
   }
 
@@ -48,7 +49,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to logout'));
+      return Result.failure(Failure(message: L10n.current.repoUnableLogout));
     }
   }
 
@@ -70,7 +71,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to sign up'));
+      return Result.failure(Failure(message: L10n.current.repoUnableSignUp));
     }
   }
 
@@ -82,7 +83,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to send password reset code'));
+      return Result.failure(Failure(message: L10n.current.repoUnableSendResetCode));
     }
   }
 
@@ -94,7 +95,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to verify verification code'));
+      return Result.failure(Failure(message: L10n.current.repoUnableVerifyCode));
     }
   }
 
@@ -114,7 +115,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to reset password'));
+      return Result.failure(Failure(message: L10n.current.repoUnableResetPassword));
     }
   }
 
@@ -126,7 +127,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to verify email address'));
+      return Result.failure(Failure(message: L10n.current.repoUnableVerifyEmail));
     }
   }
 
@@ -138,7 +139,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(e.toFailure());
     } catch (e) {
-      return Result.failure(Failure(message: 'Unable to resend verification code'));
+      return Result.failure(Failure(message: L10n.current.repoUnableResendCode));
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/home_tab_provider.dart';
 
@@ -26,6 +27,9 @@ import 'routes.dart';
 import 'screens/email_verification_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'l10n/kurdish_localizations.dart';
+import 'l10n/l10n.dart';
+import 'l10n/locale_controller.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'widgets/common/action_feedback.dart';
@@ -43,8 +47,14 @@ Future<void> main() async {
   final apiClient = ApiClient();
   await apiClient.init();
 
+  // The saved language must be known before the first frame so the app
+  // never flashes English at an Arabic or Kurdish user.
+  final savedLocale = await LocaleController.restore();
   final container = ProviderContainer(
-    overrides: [apiClientProvider.overrideWithValue(apiClient)],
+    overrides: [
+      apiClientProvider.overrideWithValue(apiClient),
+      localeControllerProvider.overrideWith(() => LocaleController(savedLocale)),
+    ],
   );
   apiClient.onUnauthorized =
       () => container.read(authStateProvider.notifier).sessionExpired();
@@ -89,6 +99,7 @@ class FinderApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeControllerProvider);
+    final chosenLocale = ref.watch(localeControllerProvider);
     final authState = ref.watch(authStateProvider);
 
     ref.listen<AuthState>(authStateProvider, (previous, next) {
@@ -123,13 +134,32 @@ class FinderApp extends ConsumerWidget {
       }
     });
 
+    // Resolve now (not in the callback) so the first frame already uses the
+    // right fonts when the phone itself is set to Arabic or Kurdish.
+    final arabic = AppTheme.usesArabicScript(
+        resolveLocale(chosenLocale, WidgetsBinding.instance.platformDispatcher.locales));
     return MaterialApp(
       title: 'Finder',
       debugShowCheckedModeBanner: false,
       navigatorKey: rootNavigatorKey,
       themeMode: mode,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: AppTheme.light(arabicScript: arabic),
+      darkTheme: AppTheme.dark(arabicScript: arabic),
+      locale: chosenLocale,
+      supportedLocales: kSupportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        ...KurdishLocalizations.delegates,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      localeListResolutionCallback: (device, supported) {
+        final resolved = resolveLocale(chosenLocale, device);
+        L10n.use(resolved);
+        return resolved;
+      },
+      onGenerateTitle: (context) => context.l10n.appName,
       onGenerateRoute: AppRouter.onGenerateRoute,
       home: _AuthGate(state: authState),
     );

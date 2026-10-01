@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 
@@ -59,7 +60,7 @@ class AppBottomSheet extends StatelessWidget {
 
     final header = (title != null)
         ? Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: const EdgeInsetsDirectional.fromSTEB(
               BeaconSpace.page,
               0,
               BeaconSpace.sm,
@@ -81,7 +82,7 @@ class AppBottomSheet extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Close',
+                  tooltip: context.l10n.commonClose,
                   onPressed: () => Navigator.of(context).maybePop(),
                   icon: const Icon(Icons.close_rounded),
                 ),

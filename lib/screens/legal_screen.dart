@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:finder/core/config/app_config.dart';
 import 'package:finder/core/constants/legal_text.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,8 +14,8 @@ class LegalScreen extends StatelessWidget {
   final LegalDocKind kind;
   const LegalScreen({super.key, required this.kind});
 
-  LegalDocument get _doc =>
-      kind == LegalDocKind.privacy ? privacyPolicy : termsOfService;
+  LegalDocument _doc(AppLocalizations l10n) =>
+      kind == LegalDocKind.privacy ? privacyPolicy(l10n) : termsOfService(l10n);
 
   String get _url => kind == LegalDocKind.privacy
       ? AppConfig.privacyPolicyUrl
@@ -22,9 +23,10 @@ class LegalScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
-    final doc = _doc;
+    final doc = _doc(l10n);
 
     return Scaffold(
       body: SafeArea(
@@ -36,12 +38,12 @@ class LegalScreen extends StatelessWidget {
               actions: [
                 AppIconButton(
                   icon: Icons.open_in_new_rounded,
-                  tooltip: 'Open web version',
+                  tooltip: l10n.legalOpenWebVersion,
                   onPressed: () async {
                     final ok = await launchUrl(Uri.parse(_url),
                         mode: LaunchMode.externalApplication);
                     if (!ok && context.mounted) {
-                      ActionFeedback.showInfo(context, 'Could not open $_url');
+                      ActionFeedback.showInfo(context, l10n.legalCouldNotOpen(_url));
                     }
                   },
                 ),

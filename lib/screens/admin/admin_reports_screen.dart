@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/admin/admin_console_service.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/providers/post_provider.dart';
 import 'package:finder/routes.dart';
@@ -33,6 +34,7 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final reports = ref.watch(adminReportsProvider(_statuses[_tab]));
@@ -41,11 +43,11 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const AppPageHeader(title: 'Reports', subtitle: 'Posts flagged by members'),
+            AppPageHeader(title: l10n.adminReportsTitle, subtitle: l10n.adminReportsSubtitle),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
               child: SegmentedPills(
-                options: const ['Open', 'Handled'],
+                options: [l10n.adminFilterOpen, l10n.adminFilterHandled],
                 selectedIndex: _tab,
                 onChanged: (i) => setState(() => _tab = i),
               ),
@@ -59,7 +61,7 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
                   if (items.isEmpty) {
                     return EmptyWidget(
                       icon: Icons.flag_outlined,
-                      title: _tab == 0 ? 'No open reports' : 'Nothing handled yet',
+                      title: _tab == 0 ? l10n.adminNoOpenReports : l10n.adminNothingHandledYet,
                     );
                   }
                   return RefreshIndicator(
@@ -88,22 +90,28 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
                                   ),
                                   const SizedBox(width: BeaconSpace.sm),
                                   if (r.isPending)
-                                    StatusBadge.custom(label: 'OPEN', color: t.accent, small: true)
+                                    StatusBadge.custom(
+                                        label: l10n.adminBadgeOpen, color: t.accent, small: true)
                                   else
                                     StatusBadge.neutral(
-                                        (r.resolution ?? 'handled').toUpperCase(),
+                                        (r.resolution ?? l10n.adminBadgeHandled).toUpperCase(),
                                         small: true),
                                 ],
                               ),
                               const SizedBox(height: BeaconSpace.xs),
                               Text(
-                                r.reason.isEmpty ? 'No reason given' : '"${r.reason}"',
+                                r.reason.isEmpty
+                                    ? l10n.adminNoReasonGiven
+                                    : l10n.adminQuotedReason(r.reason),
                                 style: text.bodyMedium,
                               ),
                               const SizedBox(height: BeaconSpace.xs),
                               Text(
-                                'Reported by ${r.reporterName} · ${relativeTime(r.createdAtMs)}'
-                                '${r.postOwnerName.isNotEmpty ? ' · post by ${r.postOwnerName}' : ''}',
+                                l10n.adminReportedBy(
+                                        r.reporterName, relativeTime(r.createdAtMs, l10n: l10n)) +
+                                    (r.postOwnerName.isNotEmpty
+                                        ? l10n.adminPostBySuffix(r.postOwnerName)
+                                        : ''),
                                 style: text.labelSmall?.copyWith(color: t.onSurfaceMuted),
                               ),
                             ],
@@ -122,11 +130,12 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
   }
 
   void _showActions(AdminReport r) {
+    final l10n = context.l10n;
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
         title: r.postTitle,
-        subtitle: r.reason.isEmpty ? null : '"${r.reason}"',
+        subtitle: r.reason.isEmpty ? null : l10n.adminQuotedReason(r.reason),
         scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -134,7 +143,7 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
             if (r.postId.isNotEmpty)
               SheetOption(
                 icon: Icons.open_in_new_rounded,
-                label: 'Open the post',
+                label: l10n.adminOpenThePost,
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   try {
@@ -148,14 +157,14 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
               ),
             SheetOption(
               icon: Icons.check_circle_outline_rounded,
-              label: 'Dismiss the report',
-              subtitle: 'The post stays up',
+              label: l10n.adminDismissReport,
+              subtitle: l10n.adminPostStaysUp,
               onTap: () => _resolve(sheetCtx, r, removePost: false),
             ),
             SheetOption(
               icon: Icons.delete_outline_rounded,
-              label: 'Remove the post',
-              subtitle: 'Settles every report on it; the owner is notified',
+              label: l10n.adminRemoveThePost,
+              subtitle: l10n.adminRemovePostSettles,
               destructive: true,
               onTap: () => _resolve(sheetCtx, r, removePost: true),
             ),
@@ -168,15 +177,18 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
 
   Future<void> _resolve(BuildContext sheetCtx, AdminReport r, {required bool removePost}) async {
     Navigator.pop(sheetCtx);
+    final l10n = context.l10n;
     if (removePost) {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Remove this post?'),
-          content: Text('"${r.postTitle}" and its chats are deleted. This cannot be undone.'),
+          title: Text(l10n.adminRemovePostTitle),
+          content: Text(l10n.adminRemovePostConfirmBody(r.postTitle)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Remove')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonRemove)),
           ],
         ),
       );
@@ -185,7 +197,8 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
     try {
       await ref.read(adminConsoleServiceProvider).resolveReport(r.id, removePost: removePost);
       if (!mounted) return;
-      ActionFeedback.showSuccess(context, removePost ? 'Post removed.' : 'Report dismissed.');
+      ActionFeedback.showSuccess(
+          context, removePost ? l10n.adminPostRemoved : l10n.adminReportDismissed);
       _refresh();
     } catch (e) {
       if (mounted) ActionFeedback.showError(context, describeError(e));

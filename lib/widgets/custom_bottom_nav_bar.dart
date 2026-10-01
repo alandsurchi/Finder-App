@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
+import 'package:finder/l10n/l10n.dart';
 
 /// Beacon notch navigation.
 ///
@@ -46,12 +47,18 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
   late Animation<double> _position;
 
   static const _items = [
-    _NavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
-    _NavItem(Icons.search_rounded, Icons.search_rounded, 'Search'),
-    _NavItem(Icons.add_rounded, Icons.add_rounded, 'Post'),
-    _NavItem(Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Messages'),
-    _NavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+    _NavItem(Icons.home_outlined, Icons.home_rounded, _homeLabel),
+    _NavItem(Icons.search_rounded, Icons.search_rounded, _searchLabel),
+    _NavItem(Icons.add_rounded, Icons.add_rounded, _postLabel),
+    _NavItem(Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, _messagesLabel),
+    _NavItem(Icons.person_outline_rounded, Icons.person_rounded, _profileLabel),
   ];
+
+  static String _homeLabel(AppLocalizations l) => l.commonHome;
+  static String _searchLabel(AppLocalizations l) => l.commonSearch;
+  static String _postLabel(AppLocalizations l) => l.navPost;
+  static String _messagesLabel(AppLocalizations l) => l.commonMessages;
+  static String _profileLabel(AppLocalizations l) => l.commonProfile;
 
   @override
   void initState() {
@@ -97,6 +104,9 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
     final itemWidth = width / _items.length;
     final barHeight = CustomBottomNavBar.barHeight + bottomInset;
     final total = CustomBottomNavBar.lift + barHeight;
+    // The Row lays tabs out from the end in RTL; the notch is painted from
+    // the left, so mirror its position to keep it under the selected tab.
+    final rtl = context.isRtl;
 
     return SizedBox(
       height: total,
@@ -117,7 +127,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                   painter: _BarPainter(
                     path: _NavShape.path(
                       Size(width, barHeight),
-                      position: position,
+                      position: rtl ? (_items.length - 1 - position) : position,
                       itemWidth: itemWidth,
                     ),
                     fill: t.isDark
@@ -160,7 +170,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
 class _NavItem {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
+  final String Function(AppLocalizations l10n) label;
   const _NavItem(this.icon, this.activeIcon, this.label);
 }
 
@@ -194,11 +204,12 @@ class _Destination extends StatelessWidget {
     final active = k > 0.5;
     final iconColor = Color.lerp(t.onSurfaceVar, t.onPrimary, k)!;
     final labelColor = Color.lerp(t.onSurfaceVar, t.primary, k)!;
+    final label = item.label(context.l10n);
 
     return Semantics(
       button: true,
       selected: selected,
-      label: '${item.label} tab',
+      label: context.l10n.navTab(label),
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
@@ -219,7 +230,7 @@ class _Destination extends StatelessWidget {
             Positioned(
               bottom: bottomInset + 10,
               child: Text(
-                item.label,
+                label,
                 style: text.labelSmall!.copyWith(
                   color: labelColor,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w500,

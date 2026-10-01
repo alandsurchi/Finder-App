@@ -1,3 +1,5 @@
+import 'package:finder/l10n/l10n.dart';
+
 class Validators {
   static bool isNotEmpty(String? value) {
     return value != null && value.trim().isNotEmpty;
@@ -15,8 +17,8 @@ class Validators {
     return regex.hasMatch(email);
   }
 
-  static const String passwordRule =
-      'Use at least 8 characters with a letter and a number.';
+  /// User-facing wording of [isStrongPassword], in the current language.
+  static String get passwordRule => L10n.current.authPasswordRule;
 
   /// Mirrors the server rule: 8 to 128 characters, at least one letter and one digit.
   static bool isStrongPassword(String? value) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/features/admin/admin_console_service.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/screens/admin/admin_posts_screen.dart';
 import 'package:finder/screens/admin/admin_reports_screen.dart';
@@ -17,6 +18,7 @@ class AdminConsoleScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final stats = ref.watch(adminStatsProvider);
@@ -31,11 +33,11 @@ class AdminConsoleScreen extends ConsumerWidget {
         child: Column(
           children: [
             AppPageHeader(
-              title: 'Admin console',
-              subtitle: 'Users, posts, reports and verification',
+              title: l10n.adminConsoleTitle,
+              subtitle: l10n.adminConsoleSubtitle,
               actions: [
                 Padding(
-                  padding: const EdgeInsets.only(right: BeaconSpace.sm),
+                  padding: const EdgeInsetsDirectional.only(end: BeaconSpace.sm),
                   child: adminBadge(small: false),
                 ),
               ],
@@ -56,36 +58,36 @@ class AdminConsoleScreen extends ConsumerWidget {
                       data: (s) => _StatsGrid(stats: s),
                     ),
                     const SizedBox(height: BeaconSpace.xl),
-                    Text('Moderation', style: text.titleMedium),
+                    Text(l10n.adminModeration, style: text.titleMedium),
                     const SizedBox(height: BeaconSpace.md),
                     SettingsGroup(
                       children: [
                         SettingsTile(
                           icon: Icons.people_alt_outlined,
-                          title: 'Users',
-                          subtitle: 'Search, verify, suspend, promote or delete accounts',
+                          title: l10n.adminUsersTitle,
+                          subtitle: l10n.adminUsersTileSubtitle,
                           trailing: _count(stats.value?.users, t),
                           onTap: () => open(const AdminUsersScreen()),
                         ),
                         SettingsTile(
                           icon: Icons.inventory_2_outlined,
-                          title: 'Posts',
-                          subtitle: 'Every lost and found post, open or returned',
+                          title: l10n.commonPosts,
+                          subtitle: l10n.adminPostsTileSubtitle,
                           trailing: _count(stats.value?.posts, t),
                           onTap: () => open(const AdminPostsScreen()),
                         ),
                         SettingsTile(
                           icon: Icons.flag_outlined,
-                          title: 'Reports',
-                          subtitle: 'Posts flagged by members',
+                          title: l10n.adminReportsTitle,
+                          subtitle: l10n.adminReportsSubtitle,
                           trailing: _count(stats.value?.pendingReports, t,
                               highlight: true),
                           onTap: () => open(const AdminReportsScreen()),
                         ),
                         SettingsTile(
                           icon: Icons.verified_user_outlined,
-                          title: 'Identity verification',
-                          subtitle: 'Review documents and selfies',
+                          title: l10n.adminVerificationTitle,
+                          subtitle: l10n.adminVerificationTileSubtitle,
                           trailing: _count(stats.value?.pendingVerifications, t,
                               highlight: true),
                           onTap: () => open(const VerificationQueueScreen()),
@@ -117,16 +119,17 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final cells = [
-      ('Members', stats.users, Icons.people_alt_outlined, t.primary),
-      ('Verified', stats.verifiedUsers, Icons.verified_rounded, t.primary),
-      ('Open posts', stats.openPosts, Icons.inventory_2_outlined, t.lost),
-      ('Returned', stats.returnedPosts, Icons.assignment_turned_in_rounded, t.found),
-      ('Reports', stats.pendingReports, Icons.flag_outlined, t.accent),
-      ('To verify', stats.pendingVerifications, Icons.verified_user_outlined, t.accent),
-      ('Suspended', stats.bannedUsers, Icons.block_rounded, t.error),
-      ('Messages 24h', stats.messagesToday, Icons.chat_bubble_outline_rounded, t.primary),
+      (l10n.adminStatMembers, stats.users, Icons.people_alt_outlined, t.primary),
+      (l10n.adminVerifiedLabel, stats.verifiedUsers, Icons.verified_rounded, t.primary),
+      (l10n.adminStatOpenPosts, stats.openPosts, Icons.inventory_2_outlined, t.lost),
+      (l10n.commonReturned, stats.returnedPosts, Icons.assignment_turned_in_rounded, t.found),
+      (l10n.adminReportsTitle, stats.pendingReports, Icons.flag_outlined, t.accent),
+      (l10n.adminStatToVerify, stats.pendingVerifications, Icons.verified_user_outlined, t.accent),
+      (l10n.adminSuspendedLabel, stats.bannedUsers, Icons.block_rounded, t.error),
+      (l10n.adminStatMessages24h, stats.messagesToday, Icons.chat_bubble_outline_rounded, t.primary),
     ];
     return GridView.count(
       crossAxisCount: 2,

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/di/app_providers.dart';
 import '../../core/network/api_client.dart';
+import '../../l10n/l10n.dart';
 
 /// One identity-verification request as the admin queue sees it.
 class AdminVerificationRequest {
@@ -37,7 +38,7 @@ class AdminVerificationRequest {
     return AdminVerificationRequest(
       id: m['id']?.toString() ?? '',
       userId: m['userId']?.toString() ?? '',
-      userName: m['userName']?.toString() ?? 'Finder User',
+      userName: m['userName']?.toString() ?? L10n.current.commonFinderUser,
       email: m['email']?.toString() ?? '',
       avatarUrl: m['avatarUrl']?.toString() ?? '',
       docType: m['docType']?.toString() ?? '',
@@ -52,11 +53,12 @@ class AdminVerificationRequest {
   /// API path of one of the stored images (needs the session token).
   String filePath(String slot) => '/admin/verification/$id/file/$slot';
 
+  /// Display name of [docType] in the current language.
   String get docLabel => switch (docType) {
-        'id_card' => 'Identity card',
-        'drivers_license' => "Driver's license",
-        'passport' => 'Passport',
-        _ => 'Document',
+        'id_card' => L10n.current.adminDocIdCard,
+        'drivers_license' => L10n.current.adminDocDriversLicense,
+        'passport' => L10n.current.adminDocPassport,
+        _ => L10n.current.adminDocDocument,
       };
 }
 

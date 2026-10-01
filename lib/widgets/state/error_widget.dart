@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/widgets/ui/app_button.dart';
@@ -7,17 +8,20 @@ import 'package:finder/widgets/ui/app_button.dart';
 class ErrorStateWidget extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
-  final String title;
+
+  /// Defaults to the localized "Something went wrong".
+  final String? title;
 
   const ErrorStateWidget({
     super.key,
     required this.message,
     this.onRetry,
-    this.title = 'Something went wrong',
+    this.title,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     return Center(
@@ -39,7 +43,8 @@ class ErrorStateWidget extends StatelessWidget {
                 child: Icon(Icons.error_outline_rounded, size: 30, color: t.error),
               ),
               const SizedBox(height: BeaconSpace.lg),
-              Text(title, textAlign: TextAlign.center, style: text.titleLarge),
+              Text(title ?? l10n.stateErrorTitle,
+                  textAlign: TextAlign.center, style: text.titleLarge),
               const SizedBox(height: BeaconSpace.sm),
               Text(
                 message,
@@ -51,7 +56,7 @@ class ErrorStateWidget extends StatelessWidget {
               if (onRetry != null) ...[
                 const SizedBox(height: BeaconSpace.xxl),
                 AppButton.tonal(
-                  label: 'Try again',
+                  label: l10n.commonTryAgain,
                   icon: Icons.refresh_rounded,
                   onPressed: onRetry,
                   expand: false,

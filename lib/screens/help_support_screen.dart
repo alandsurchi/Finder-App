@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,43 +21,29 @@ class _Topic {
   const _Topic(this.icon, this.title, this.subtitle, this.faqs);
 }
 
-const _topics = <_Topic>[
-  _Topic(Icons.person_outline_rounded, 'Account',
-      'Profile, verification and passwords', [
-    _Faq('How do I change my name or photo?',
-        'Open Profile, tap "Edit profile", change the fields and save. The new photo shows on all your posts and messages.'),
-    _Faq('I forgot my password.',
-        'On the sign-in screen tap "Forgot password?". A reset code is sent to your e-mail; enter it together with your new password.'),
-    _Faq('What does the verified badge mean?',
-        'A verified member confirmed their identity with an ID document and a selfie. Start from Profile → Get verified. Review takes about a day.'),
-    _Faq('How do I delete my account?',
-        'Go to Privacy & safety → Request data deletion. We remove your posts, conversations and profile within 30 days.'),
-  ]),
-  _Topic(Icons.shield_outlined, 'Safety', 'Meet-ups and blocking', [
-    _Faq('Where should I meet to hand over an item?',
-        'Choose a busy public place in daylight, such as a café, a police station or a shopping centre. Bring a friend if you can.'),
-    _Faq('Someone is bothering me.',
-        'Open the conversation, tap the menu in the top-right corner and choose "Block". They can no longer see your posts or message you. Report the post too if it looks fake.'),
-    _Faq('Should I pay a reward before I get my item back?',
-        'No. Never send money before you have the item in your hands. Rewards are voluntary and paid at the hand-over.'),
-  ]),
-  _Topic(Icons.camera_alt_outlined, 'Posting items', 'Writing reports that get matches', [
-    _Faq('What makes a good post?',
-        'A clear photo, a precise location, the date and time, and distinctive details (scratches, stickers, engravings). Keep serial numbers private until someone proves they own the item.'),
-    _Faq('How do I mark an item as returned?',
-        'Open the post or go to My posts and choose "Mark as resolved". Everyone who chatted with you about it gets a notification.'),
-    _Faq('Can I edit or delete a post?',
-        'Yes. From My posts tap Edit, or open the post and use the menu in the top-right corner to edit, resolve or delete it.'),
-  ]),
-  _Topic(Icons.forum_outlined, 'Messaging', 'Contacting owners and finders', [
-    _Faq('How do I contact the owner of a post?',
-        'Open the post and tap "Chat with owner" (or "I found this item"). A conversation about that item opens in Messages.'),
-    _Faq('Can I send photos?',
-        'Yes. In a conversation tap the photo button next to the message field to send a picture as proof.'),
-    _Faq('Why can\'t I message someone?',
-        'Either one of you blocked the other, or they turned off direct messages in their privacy settings.'),
-  ]),
-];
+List<_Topic> _topics(AppLocalizations l10n) => [
+      _Topic(Icons.person_outline_rounded, l10n.profileAccount, l10n.helpTopicAccountSubtitle, [
+        _Faq(l10n.helpFaqChangeNameQ, l10n.helpFaqChangeNameA),
+        _Faq(l10n.helpFaqForgotPasswordQ, l10n.helpFaqForgotPasswordA),
+        _Faq(l10n.helpFaqVerifiedBadgeQ, l10n.helpFaqVerifiedBadgeA),
+        _Faq(l10n.helpFaqDeleteAccountQ, l10n.helpFaqDeleteAccountA),
+      ]),
+      _Topic(Icons.shield_outlined, l10n.helpTopicSafety, l10n.helpTopicSafetySubtitle, [
+        _Faq(l10n.helpFaqMeetQ, l10n.helpFaqMeetA),
+        _Faq(l10n.helpFaqBotheringQ, l10n.helpFaqBotheringA),
+        _Faq(l10n.helpFaqRewardQ, l10n.helpFaqRewardA),
+      ]),
+      _Topic(Icons.camera_alt_outlined, l10n.helpTopicPosting, l10n.helpTopicPostingSubtitle, [
+        _Faq(l10n.helpFaqGoodPostQ, l10n.helpFaqGoodPostA),
+        _Faq(l10n.helpFaqMarkReturnedQ, l10n.helpFaqMarkReturnedA),
+        _Faq(l10n.helpFaqEditPostQ, l10n.helpFaqEditPostA),
+      ]),
+      _Topic(Icons.forum_outlined, l10n.helpTopicMessaging, l10n.helpTopicMessagingSubtitle, [
+        _Faq(l10n.helpFaqContactOwnerQ, l10n.helpFaqContactOwnerA),
+        _Faq(l10n.helpFaqSendPhotosQ, l10n.helpFaqSendPhotosA),
+        _Faq(l10n.helpFaqCantMessageQ, l10n.helpFaqCantMessageA),
+      ]),
+    ];
 
 class HelpSupportScreen extends StatefulWidget {
   const HelpSupportScreen({super.key});
@@ -75,11 +62,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     super.dispose();
   }
 
-  List<_Faq> get _matches {
+  List<_Faq> _matchesIn(List<_Topic> topics) {
     final q = _query.trim().toLowerCase();
     if (q.length < 2) return const [];
     return [
-      for (final t in _topics)
+      for (final t in topics)
         for (final f in t.faqs)
           if (f.question.toLowerCase().contains(q) || f.answer.toLowerCase().contains(q)) f,
     ];
@@ -89,7 +76,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
-    final matches = _matches;
+    final l10n = context.l10n;
+    final topics = _topics(l10n);
+    final matches = _matchesIn(topics);
     final searching = _query.trim().length >= 2;
 
     return Scaffold(
@@ -98,7 +87,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              const AppPageHeader(title: 'Help & support'),
+              AppPageHeader(title: l10n.helpTitle),
               Expanded(
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
@@ -115,9 +104,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                           text: TextSpan(
                             style: text.headlineLarge,
                             children: [
-                              const TextSpan(text: 'How can we '),
-                              TextSpan(text: 'support', style: TextStyle(color: t.primary)),
-                              const TextSpan(text: ' you today?'),
+                              TextSpan(text: l10n.helpHeroPrefix),
+                              TextSpan(text: l10n.helpHeroAccent, style: TextStyle(color: t.primary)),
+                              TextSpan(text: l10n.helpHeroSuffix),
                             ],
                           ),
                         ),
@@ -126,7 +115,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       StaggeredEntrance(
                         index: 1,
                         child: Text(
-                          "Whether you've lost a treasure or found a memory, the answers below cover most questions.",
+                          l10n.helpIntro,
                           style: text.bodyMedium,
                         ),
                       ),
@@ -137,7 +126,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         index: 2,
                         child: SearchField(
                           controller: _searchCtrl,
-                          hint: "Search questions (e.g. 'password')",
+                          hint: l10n.helpSearchHint,
                           onChanged: (v) => setState(() => _query = v),
                         ),
                       ),
@@ -151,12 +140,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                               ? SurfaceCard(
                                   tone: SurfaceTone.low,
                                   child: Text(
-                                    'No answers match "${_query.trim()}". Try another word or contact us below.',
+                                    l10n.helpNoAnswers(_query.trim()),
                                     style: text.bodyMedium,
                                   ),
                                 )
                               : SettingsGroup(
-                                  title: '${matches.length} answer${matches.length == 1 ? '' : 's'}',
+                                  title: l10n.helpAnswersCount(matches.length),
                                   children: [
                                     for (final f in matches)
                                       SettingsTile(
@@ -171,9 +160,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                         StaggeredEntrance(
                           index: 3,
                           child: SettingsGroup(
-                            title: 'Browse by topic',
+                            title: l10n.helpBrowseByTopic,
                             children: [
-                              for (final topic in _topics)
+                              for (final topic in topics)
                                 SettingsTile(
                                   icon: topic.icon,
                                   title: topic.title,
@@ -197,11 +186,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('Still have questions?',
+                                      Text(l10n.helpStillQuestions,
                                           style: text.titleLarge?.copyWith(color: t.onPrimary)),
                                       const SizedBox(height: BeaconSpace.xs),
                                       Text(
-                                        'E-mail us and we reply within one working day.',
+                                        l10n.helpEmailReply,
                                         style: text.bodyMedium?.copyWith(
                                           color: t.onPrimary.withValues(alpha: 0.8),
                                         ),
@@ -222,11 +211,11 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       StaggeredEntrance(
                         index: 5,
                         child: AppButton(
-                          label: 'E-mail support',
+                          label: l10n.helpEmailSupport,
                           icon: Icons.mail_outline_rounded,
                           onPressed: () => _email(
-                            subject: 'Finder support request',
-                            body: 'Hi Finder team,\n\n',
+                            subject: l10n.helpEmailSubject,
+                            body: l10n.helpEmailBody,
                           ),
                         ),
                       ),
@@ -234,12 +223,12 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       StaggeredEntrance(
                         index: 5,
                         child: AppButton.secondary(
-                          label: 'Copy support address',
+                          label: l10n.helpCopyAddress,
                           icon: Icons.copy_rounded,
                           onPressed: () async {
                             await Clipboard.setData(const ClipboardData(text: _kSupportEmail));
                             if (!context.mounted) return;
-                            ActionFeedback.showInfo(context, '$_kSupportEmail copied.');
+                            ActionFeedback.showInfo(context, l10n.helpAddressCopied(_kSupportEmail));
                           },
                         ),
                       ),
@@ -256,25 +245,25 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                 children: [
                                   Icon(Icons.bug_report_outlined, color: t.accent, size: 18),
                                   const SizedBox(width: BeaconSpace.sm),
-                                  Text('TECHNICAL FEEDBACK',
+                                  Text(l10n.helpTechnicalFeedback,
                                       style: text.labelSmall?.copyWith(color: t.accent)),
                                 ],
                               ),
                               const SizedBox(height: BeaconSpace.md),
-                              Text('Found a glitch?', style: text.titleLarge),
+                              Text(l10n.helpFoundGlitch, style: text.titleLarge),
                               const SizedBox(height: BeaconSpace.sm),
                               Text(
-                                'Tell us what you did, what you expected and what happened instead. Screenshots help a lot.',
+                                l10n.helpGlitchBody,
                                 style: text.bodyMedium,
                               ),
                               const SizedBox(height: BeaconSpace.md),
                               AppButton.ghost(
-                                label: 'Report a technical issue',
+                                label: l10n.helpReportIssue,
                                 icon: Icons.arrow_forward_rounded,
                                 iconTrailing: true,
                                 onPressed: () => _email(
-                                  subject: 'Finder bug report',
-                                  body: 'What I did:\n\nWhat I expected:\n\nWhat happened:\n\nDevice / platform:\n',
+                                  subject: l10n.helpBugSubject,
+                                  body: l10n.helpBugBody,
                                 ),
                               ),
                             ],
@@ -307,10 +296,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     if (!ok && mounted) {
       await Clipboard.setData(const ClipboardData(text: _kSupportEmail));
       if (!mounted) return;
-      ActionFeedback.showInfo(
-        context,
-        'No e-mail app found. $_kSupportEmail was copied to your clipboard.',
-      );
+      ActionFeedback.showInfo(context, context.l10n.helpNoEmailApp(_kSupportEmail));
     }
   }
 
@@ -351,7 +337,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             Text(faq.answer, style: text.bodyLarge),
             const SizedBox(height: BeaconSpace.xl),
             AppButton.tonal(
-              label: 'Got it',
+              label: context.l10n.helpGotIt,
               onPressed: () => Navigator.pop(sheetCtx),
             ),
             const SizedBox(height: BeaconSpace.lg),

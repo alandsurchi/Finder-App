@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/features/chat/presentation/open_chat.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/widgets/cards/conversation_card.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
@@ -35,8 +36,8 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   Future<void> _newChat() async {
     final user = await showUserSearchSheet(
       context,
-      title: 'New conversation',
-      actionLabel: 'Message',
+      title: context.l10n.msgNewConversation,
+      actionLabel: context.l10n.chatMessage,
     );
     if (user == null || !mounted) return;
     await openChatWith(
@@ -53,6 +54,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final conversationsState = ref.watch(conversationsStreamProvider);
     final unread = conversationsState.value
             ?.where((c) => c.unreadCount > 0)
@@ -66,7 +68,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
         child: FloatingActionButton.extended(
           onPressed: _newChat,
           icon: const Icon(Icons.edit_outlined),
-          label: const Text('New chat'),
+          label: Text(l10n.msgNewChat),
         ),
       ),
       body: BeaconBackdrop(
@@ -79,10 +81,10 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
             children: [
               StaggeredEntrance(
                 child: AppPageHeader(
-                  title: 'Messages',
+                  title: l10n.commonMessages,
                   subtitle: unread > 0
-                      ? '$unread unread conversation${unread == 1 ? '' : 's'}'
-                      : 'Chat safely with owners and finders',
+                      ? l10n.msgUnreadConversations(unread)
+                      : l10n.msgSubtitle,
                   showBack: false,
                   large: true,
                   padding: const EdgeInsets.fromLTRB(
@@ -96,7 +98,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
                   child: SearchField(
                     controller: _searchCtrl,
-                    hint: 'Search conversations…',
+                    hint: l10n.msgSearchHint,
                     onChanged: _onSearch,
                   ),
                 ),
@@ -107,8 +109,8 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
               Expanded(
                 child: conversationsState.when(
                   skipError: true,
-                  loading: () => const LoadingWidget(
-                    message: 'Loading conversations...',
+                  loading: () => LoadingWidget(
+                    message: l10n.msgLoading,
                     variant: LoadingVariant.rows,
                   ),
                   error: (err, _) => ErrorStateWidget(
@@ -129,12 +131,12 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                       return EmptyWidget(
                         icon: Icons.forum_outlined,
                         title: _query.isEmpty
-                            ? 'No conversations yet'
-                            : 'No conversations found',
+                            ? l10n.msgNoConversations
+                            : l10n.msgNoConversationsFound,
                         subtitle: _query.isEmpty
-                            ? 'Contact an owner or finder from any post, or start a new chat.'
-                            : 'Try another name or keyword.',
-                        actionLabel: _query.isEmpty ? 'New chat' : null,
+                            ? l10n.msgEmptySubtitle
+                            : l10n.msgTryAnother,
+                        actionLabel: _query.isEmpty ? l10n.msgNewChat : null,
                         onAction: _query.isEmpty ? _newChat : null,
                       );
                     }

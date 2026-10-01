@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/di/app_providers.dart';
 import '../../core/network/api_client.dart';
+import '../../l10n/l10n.dart';
 import '../../models/item_model.dart';
 
 /// Overview numbers for the console home.
@@ -60,7 +61,7 @@ class AdminUser {
 
   factory AdminUser.fromApi(Map<String, dynamic> m) => AdminUser(
         uid: m['uid']?.toString() ?? '',
-        name: m['name']?.toString() ?? 'Finder User',
+        name: m['name']?.toString() ?? L10n.current.commonFinderUser,
         email: m['email']?.toString() ?? '',
         avatarUrl: m['avatarUrl']?.toString() ?? '',
         authProvider: m['authProvider']?.toString() ?? 'email',
@@ -108,7 +109,7 @@ class AdminReport {
         postOwnerId: m['postOwnerId']?.toString() ?? '',
         postOwnerName: m['postOwnerName']?.toString() ?? '',
         reporterId: m['reporterId']?.toString() ?? '',
-        reporterName: m['reporterName']?.toString() ?? 'Finder User',
+        reporterName: m['reporterName']?.toString() ?? L10n.current.commonFinderUser,
         reporterEmail: m['reporterEmail']?.toString() ?? '',
         reason: m['reason']?.toString() ?? '',
         status: m['status']?.toString() ?? 'pending',

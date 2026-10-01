@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'map_placeholder.dart';
 
 /// OpenStreetMap tiles with the Beacon dark-mode treatment. Shared by the
@@ -25,7 +26,7 @@ class FinderTileLayer extends StatelessWidget {
 class MapAttribution extends StatelessWidget {
   const MapAttribution({super.key});
 
-  static const String text = 'Map data © OpenStreetMap contributors';
+  static String get text => L10n.current.mapAttribution;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +39,7 @@ class MapAttribution extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        text,
+        context.l10n.mapAttribution,
         style: TextStyle(fontSize: 9, color: t.onSurfaceVar),
       ),
     );
@@ -152,7 +153,8 @@ class MapPreview extends StatelessWidget {
                   ],
                 ),
                 const Align(
-                    alignment: Alignment.bottomRight, child: MapAttribution()),
+                    alignment: AlignmentDirectional.bottomEnd,
+                    child: MapAttribution()),
               ],
             ),
             if (label != null && label!.isNotEmpty)
@@ -161,7 +163,7 @@ class MapPreview extends StatelessWidget {
                 right: BeaconSpace.sm,
                 top: BeaconSpace.sm,
                 child: Align(
-                  alignment: Alignment.topLeft,
+                  alignment: AlignmentDirectional.topStart,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: BeaconSpace.md, vertical: BeaconSpace.xs),
@@ -196,7 +198,7 @@ class MapPreview extends StatelessWidget {
                     onTap: onTap,
                     child: Semantics(
                       button: true,
-                      label: 'Open map',
+                      label: context.l10n.postOpenMap,
                       child: const SizedBox.expand(),
                     ),
                   ),

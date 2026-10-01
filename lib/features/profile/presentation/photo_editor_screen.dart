@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../widgets/ui/ui.dart';
 
 enum PhotoEditorMode { avatar, cover }
@@ -60,7 +61,7 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
       if (!mounted) return;
       setState(() => _image = frame.image);
     } catch (e) {
-      if (mounted) setState(() => _error = 'This picture could not be opened.');
+      if (mounted) setState(() => _error = context.l10n.photoOpenFailed);
     }
   }
 
@@ -158,7 +159,7 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
       if (mounted) {
         setState(() => _exporting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not prepare the photo. Try again.')),
+          SnackBar(content: Text(context.l10n.photoPrepareFailed)),
         );
       }
     }
@@ -168,6 +169,7 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final width = MediaQuery.sizeOf(context).width;
     final frameW = _isAvatar ? math.min(width - 48, 340.0) : width - 32;
     final frame = Size(frameW, frameW / _aspect);
@@ -178,19 +180,19 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(BeaconSpace.sm, BeaconSpace.sm, BeaconSpace.md, 0),
+              padding: const EdgeInsetsDirectional.fromSTEB(BeaconSpace.sm, BeaconSpace.sm, BeaconSpace.md, 0),
               child: Row(
                 children: [
                   AppIconButton(
                     icon: Icons.close_rounded,
-                    tooltip: 'Cancel',
+                    tooltip: l10n.commonCancel,
                     variant: AppIconButtonVariant.ghost,
                     color: Colors.white,
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
                     child: Text(
-                      _isAvatar ? 'Adjust your photo' : 'Adjust your cover',
+                      _isAvatar ? l10n.photoAdjustAvatar : l10n.photoAdjustCover,
                       style: text.titleMedium?.copyWith(color: Colors.white),
                       textAlign: TextAlign.center,
                     ),
@@ -200,7 +202,7 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
                     child: _exporting
                         ? const SizedBox(
                             width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text('Use photo',
+                        : Text(l10n.photoUse,
                             style: text.labelLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)),
                   ),
                 ],
@@ -245,16 +247,16 @@ class _PhotoEditorScreenState extends State<PhotoEditorScreen> {
               child: Column(
                 children: [
                   Text(
-                    'Pinch to zoom · drag to move · double-tap to zoom',
+                    l10n.photoGestureHint,
                     style: text.labelSmall?.copyWith(color: Colors.white60),
                   ),
                   const SizedBox(height: BeaconSpace.md),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _Tool(icon: Icons.rotate_90_degrees_cw_rounded, label: 'Rotate', onTap: _image == null ? null : () => _rotate(frame)),
+                      _Tool(icon: Icons.rotate_90_degrees_cw_rounded, label: l10n.photoRotate, onTap: _image == null ? null : () => _rotate(frame)),
                       const SizedBox(width: BeaconSpace.xl),
-                      _Tool(icon: Icons.zoom_out_map_rounded, label: 'Reset', onTap: _image == null ? null : _reset),
+                      _Tool(icon: Icons.zoom_out_map_rounded, label: l10n.photoReset, onTap: _image == null ? null : _reset),
                     ],
                   ),
                 ],

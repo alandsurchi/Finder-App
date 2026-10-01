@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/utils/relative_time.dart';
+import '../../../l10n/l10n.dart';
 import '../../../widgets/ui/ui.dart';
 import '../domain/message.dart';
 
@@ -9,21 +11,15 @@ class DaySeparator extends StatelessWidget {
   final DateTime day;
   const DaySeparator({super.key, required this.day});
 
-  static String label(DateTime day, {DateTime? now}) {
+  static String label(DateTime day, AppLocalizations l10n, {DateTime? now}) {
     final ref = now ?? DateTime.now();
     final today = DateTime(ref.year, ref.month, ref.day);
     final d = DateTime(day.year, day.month, day.day);
     final diff = today.difference(d).inDays;
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    if (diff < 7) {
-      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      return days[d.weekday - 1];
-    }
-    return d.year == today.year
-        ? '${d.day} ${months[d.month - 1]}'
-        : '${d.day} ${months[d.month - 1]} ${d.year}';
+    if (diff == 0) return l10n.commonToday;
+    if (diff == 1) return l10n.commonYesterday;
+    if (diff < 7) return l10n.commonWeekdayShort('${d.weekday}');
+    return shortDate(d, reference: today, l10n: l10n);
   }
 
   @override
@@ -38,7 +34,7 @@ class DaySeparator extends StatelessWidget {
           color: t.surfaceHigh,
           borderRadius: BeaconRadius.rPill,
         ),
-        child: Text(label(day), style: text.labelSmall?.copyWith(color: t.onSurfaceVar)),
+        child: Text(label(day, context.l10n), style: text.labelSmall?.copyWith(color: t.onSurfaceVar)),
       ),
     );
   }
@@ -76,7 +72,7 @@ class ReplyQuote extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(color: bg, borderRadius: BeaconRadius.rMd),
-          padding: const EdgeInsets.fromLTRB(0, 0, BeaconSpace.sm, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(0, 0, BeaconSpace.sm, 0),
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,7 +81,7 @@ class ReplyQuote extends StatelessWidget {
                   width: 3,
                   decoration: BoxDecoration(
                     color: bar,
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(BeaconRadius.md)),
+                    borderRadius: const BorderRadiusDirectional.horizontal(start: Radius.circular(BeaconRadius.md)),
                   ),
                 ),
                 const SizedBox(width: BeaconSpace.sm),
@@ -134,7 +130,7 @@ class ReplyQuote extends StatelessWidget {
                 if (onClose != null)
                   AppIconButton(
                     icon: Icons.close_rounded,
-                    tooltip: 'Cancel reply',
+                    tooltip: context.l10n.chatCancelReply,
                     size: 32,
                     iconSize: 16,
                     variant: AppIconButtonVariant.ghost,
@@ -181,7 +177,9 @@ class _SwipeToReplyState extends State<SwipeToReply> with SingleTickerProviderSt
 
   void _update(DragUpdateDetails d) {
     if (!widget.enabled) return;
-    final next = (_dx + d.delta.dx).clamp(0.0, SwipeToReply.maxDrag);
+    // Drag "inwards": to the right in LTR, to the left in RTL.
+    final dir = context.isRtl ? -1.0 : 1.0;
+    final next = (_dx + d.delta.dx * dir).clamp(0.0, SwipeToReply.maxDrag);
     final armed = next >= SwipeToReply.trigger;
     if (armed && !_armed) HapticFeedback.selectionClick();
     setState(() {
@@ -212,17 +210,18 @@ class _SwipeToReplyState extends State<SwipeToReply> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final reveal = (_dx / SwipeToReply.trigger).clamp(0.0, 1.0);
+    final dir = context.isRtl ? -1.0 : 1.0;
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onHorizontalDragUpdate: _update,
       onHorizontalDragEnd: _end,
       onHorizontalDragCancel: () => _end(DragEndDetails()),
       child: Stack(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         children: [
           if (_dx > 0)
-            Positioned(
-              left: 0,
+            PositionedDirectional(
+              start: 0,
               child: Opacity(
                 opacity: reveal,
                 child: Transform.scale(
@@ -239,7 +238,7 @@ class _SwipeToReplyState extends State<SwipeToReply> with SingleTickerProviderSt
                 ),
               ),
             ),
-          Transform.translate(offset: Offset(_dx, 0), child: widget.child),
+          Transform.translate(offset: Offset(_dx * dir, 0), child: widget.child),
         ],
       ),
     );
@@ -265,14 +264,14 @@ class ScrollToLatestPill extends StatelessWidget {
         borderRadius: BeaconRadius.rPill,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(BeaconSpace.md, BeaconSpace.sm, BeaconSpace.lg, BeaconSpace.sm),
+          padding: const EdgeInsetsDirectional.fromSTEB(BeaconSpace.md, BeaconSpace.sm, BeaconSpace.lg, BeaconSpace.sm),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.keyboard_double_arrow_down_rounded, size: 18, color: t.primary),
               const SizedBox(width: BeaconSpace.xs),
               Text(
-                newCount > 0 ? '$newCount new' : 'Latest',
+                newCount > 0 ? context.l10n.chatNewCount(newCount) : context.l10n.chatLatest,
                 style: text.labelMedium?.copyWith(color: t.primary),
               ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/widgets/ui/beacon_pulse.dart';
 import 'package:finder/widgets/ui/skeleton.dart';
@@ -32,7 +33,7 @@ class LoadingWidget extends StatelessWidget {
         return Center(
           child: Semantics(
             liveRegion: true,
-            label: message ?? 'Loading',
+            label: message ?? context.l10n.stateLoading,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

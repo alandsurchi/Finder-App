@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'status_badge.dart';
@@ -28,6 +29,7 @@ class IdentityMarks extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isEmpty) return const SizedBox.shrink();
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     // Administrators are trusted by definition: tick plus the staff shield.
     final showTick = verified || admin;
     return Row(
@@ -36,14 +38,14 @@ class IdentityMarks extends StatelessWidget {
         if (showTick) ...[
           const SizedBox(width: BeaconSpace.xs),
           Tooltip(
-            message: 'Verified identity',
+            message: l10n.verifyVerifiedIdentity,
             child: Icon(Icons.verified_rounded, color: t.primary, size: size),
           ),
         ],
         if (admin) ...[
           const SizedBox(width: BeaconSpace.xs),
           Tooltip(
-            message: 'Finder administrator',
+            message: l10n.profileFinderAdmin,
             child: Icon(Icons.shield_rounded, color: kAdminColor, size: size),
           ),
         ],
@@ -85,7 +87,7 @@ class NameWithMarks extends StatelessWidget {
 
 /// The ADMIN pill for profiles and cards.
 StatusBadge adminBadge({bool small = true}) => StatusBadge.custom(
-      label: 'ADMIN',
+      label: L10n.current.profileAdminBadge,
       color: kAdminColor,
       onColor: Colors.white,
       icon: Icons.shield_rounded,

@@ -1,4 +1,5 @@
 import '../core/utils/timestamp.dart';
+import '../l10n/l10n.dart';
 
 class ConversationModel {
   final String chatId;
@@ -49,7 +50,7 @@ class ConversationModel {
     final namesMap = Map<String, dynamic>.from(map['participantNames'] ?? {});
     final avatarsMap = Map<String, dynamic>.from(map['participantAvatars'] ?? {});
 
-    final resolvedName = namesMap[otherUserId]?.toString() ?? 'Finder User';
+    final resolvedName = namesMap[otherUserId]?.toString() ?? L10n.current.commonFinderUser;
     final resolvedAvatar = avatarsMap[otherUserId]?.toString() ?? '';
     final verifiedMap = Map<String, dynamic>.from(map['participantVerified'] ?? {});
     final adminMap = Map<String, dynamic>.from(map['participantAdmin'] ?? {});

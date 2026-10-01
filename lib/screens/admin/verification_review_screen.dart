@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/admin/admin_service.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
@@ -24,6 +25,7 @@ class _VerificationReviewScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
 
@@ -50,16 +52,19 @@ class _VerificationReviewScreenState
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${r.docLabel} · submitted ${relativeTime(r.createdAtMs)}',
+                                Text(
+                                    l10n.adminSubmitted(
+                                        r.docLabel, relativeTime(r.createdAtMs, l10n: l10n)),
                                     style: text.bodyMedium),
                                 if (r.reviewedAtMs != null)
                                   Text(
-                                    '${r.status} ${relativeTime(r.reviewedAtMs)}',
+                                    l10n.adminReviewedStatus(
+                                        r.status, relativeTime(r.reviewedAtMs, l10n: l10n)),
                                     style: text.bodySmall,
                                   ),
                                 if (r.rejectionReason != null &&
                                     r.rejectionReason!.isNotEmpty)
-                                  Text('Reason: ${r.rejectionReason}',
+                                  Text(l10n.adminReasonPrefix(r.rejectionReason!),
                                       style: text.bodySmall?.copyWith(color: t.error)),
                               ],
                             ),
@@ -68,18 +73,18 @@ class _VerificationReviewScreenState
                       ),
                     ),
                     const SizedBox(height: BeaconSpace.xl),
-                    const SectionHeader(title: 'Document', eyebrow: 'Step 1'),
-                    _photo('front', r.hasBack ? 'Front of ID' : 'Photo page'),
+                    SectionHeader(title: l10n.adminDocumentSection, eyebrow: l10n.adminStep1),
+                    _photo('front', r.hasBack ? l10n.adminFrontOfId : l10n.adminPhotoPage),
                     if (r.hasBack) ...[
                       const SizedBox(height: BeaconSpace.md),
-                      _photo('back', 'Back of ID'),
+                      _photo('back', l10n.adminBackOfId),
                     ],
                     const SizedBox(height: BeaconSpace.xl),
-                    const SectionHeader(title: 'Live selfie', eyebrow: 'Step 2'),
-                    _photo('selfie', 'Selfie taken with the front camera'),
+                    SectionHeader(title: l10n.adminLiveSelfie, eyebrow: l10n.adminStep2),
+                    _photo('selfie', l10n.adminSelfieCaption),
                     const SizedBox(height: BeaconSpace.lg),
                     Text(
-                      'Compare the face on the document with the selfie, check the name matches the account, and that the document is not expired or edited.',
+                      l10n.adminReviewGuidance,
                       style: text.bodySmall,
                     ),
                   ],
@@ -109,7 +114,7 @@ class _VerificationReviewScreenState
           ),
         ),
         const SizedBox(height: BeaconSpace.xs),
-        Text('$caption · tap to zoom', style: text.bodySmall),
+        Text(context.l10n.adminTapToZoom(caption), style: text.bodySmall),
       ],
     );
   }
@@ -129,13 +134,13 @@ class _VerificationReviewScreenState
                 ),
               ),
             ),
-            Positioned(
+            PositionedDirectional(
               top: 12,
-              right: 12,
+              end: 12,
               child: SafeArea(
                 child: AppIconButton(
                   icon: Icons.close_rounded,
-                  tooltip: 'Close',
+                  tooltip: ctx.l10n.commonClose,
                   variant: AppIconButtonVariant.filled,
                   onPressed: () => Navigator.pop(ctx),
                 ),
@@ -148,6 +153,7 @@ class _VerificationReviewScreenState
   }
 
   Widget _buildActions(AppColorTokens t) {
+    final l10n = context.l10n;
     return Container(
       decoration: BoxDecoration(
         color: t.surface,
@@ -162,7 +168,7 @@ class _VerificationReviewScreenState
             children: [
               Expanded(
                 child: AppButton.tonal(
-                  label: 'Reject',
+                  label: l10n.adminReject,
                   icon: Icons.close_rounded,
                   size: AppButtonSize.medium,
                   onPressed: _busy ? null : _reject,
@@ -171,7 +177,7 @@ class _VerificationReviewScreenState
               const SizedBox(width: BeaconSpace.md),
               Expanded(
                 child: AppButton(
-                  label: 'Approve',
+                  label: l10n.adminApprove,
                   icon: Icons.verified_rounded,
                   size: AppButtonSize.medium,
                   isLoading: _busy,
@@ -186,36 +192,40 @@ class _VerificationReviewScreenState
   }
 
   Future<void> _approve() async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Approve this identity?'),
-        content: Text('${r.userName} gets the verified badge and a notification.'),
+        title: Text(l10n.adminApproveTitle),
+        content: Text(l10n.adminApproveBody(r.userName)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Approve')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.adminApprove)),
         ],
       ),
     );
     if (ok != true) return;
-    await _run(() => ref.read(adminServiceProvider).approve(r.id), 'Identity approved.');
+    await _run(() => ref.read(adminServiceProvider).approve(r.id), l10n.adminIdentityApproved);
   }
 
   Future<void> _reject() async {
+    final l10n = context.l10n;
     final ctrl = TextEditingController();
     final reason = await AppBottomSheet.show<String>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
-        title: 'Reject request',
-        subtitle: 'The reason is sent to ${r.userName} so they can fix it.',
+        title: l10n.adminRejectRequestTitle,
+        subtitle: l10n.adminRejectReasonSubtitle(r.userName),
         actions: [
           AppButton.ghost(
-            label: 'Cancel',
+            label: l10n.commonCancel,
             size: AppButtonSize.medium,
             onPressed: () => Navigator.pop(sheetCtx),
           ),
           AppButton.danger(
-            label: 'Reject',
+            label: l10n.adminReject,
             size: AppButtonSize.medium,
             onPressed: () {
               final v = ctrl.text.trim();
@@ -226,8 +236,8 @@ class _VerificationReviewScreenState
         ],
         child: AppTextField(
           controller: ctrl,
-          label: 'Reason',
-          hint: 'e.g. The selfie is too dark to compare with the document.',
+          label: l10n.adminReasonLabel,
+          hint: l10n.adminRejectReasonHint,
           autofocus: true,
           maxLines: 3,
           textCapitalization: TextCapitalization.sentences,
@@ -235,7 +245,7 @@ class _VerificationReviewScreenState
       ),
     );
     if (reason == null || reason.isEmpty) return;
-    await _run(() => ref.read(adminServiceProvider).reject(r.id, reason), 'Request rejected.');
+    await _run(() => ref.read(adminServiceProvider).reject(r.id, reason), l10n.adminRequestRejected);
   }
 
   Future<void> _run(Future<void> Function() action, String success) async {

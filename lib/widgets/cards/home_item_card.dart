@@ -13,6 +13,7 @@ import 'package:finder/widgets/ui/app_button.dart';
 import 'package:finder/widgets/ui/item_card.dart';
 import 'package:finder/widgets/ui/status_badge.dart';
 import 'package:finder/widgets/ui/identity_marks.dart';
+import 'package:finder/l10n/l10n.dart';
 
 /// Legacy badge descriptor. LOST / FOUND / REWARD labels are rendered with
 /// the shared Beacon rule; any other label uses the supplied color.
@@ -46,7 +47,7 @@ class HomeItemCard extends ConsumerWidget {
 
   /// The tile layout shows LOST / FOUND on its spine, so those legacy badges
   /// are dropped here; everything else keeps rendering over the image.
-  List<Widget>? _badges() {
+  List<Widget>? _badges(AppLocalizations l10n) {
     if (badges.isEmpty) return null;
     return badges
         .where((b) {
@@ -55,7 +56,7 @@ class HomeItemCard extends ConsumerWidget {
         })
         .map((b) {
           if (item.reward != null && b.label == item.reward) {
-            return StatusBadge.reward('REWARD ${b.label}');
+            return StatusBadge.reward(l10n.postRewardAmount(b.label));
           }
           return StatusBadge.custom(label: b.label.toUpperCase(), color: b.color);
         })
@@ -66,6 +67,7 @@ class HomeItemCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
 
     return ItemCard(
       item: item,
@@ -79,14 +81,14 @@ class HomeItemCard extends ConsumerWidget {
           arguments: ItemDetailsArgs(item, heroTag: HeroTags.item(HeroTags.home, item.id)),
         );
       },
-      badges: _badges(),
+      badges: _badges(l10n),
       banner: bannerText,
       overlay: _SaveButton(item: item),
       // Who posted it, with the verified tick / admin mark when they have one.
       subtitle: (item.isVerified || item.ownerIsAdmin || verifiedUser != null)
           ? NameWithMarks(
               name: verifiedUser ??
-                  ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : 'Finder User'),
+                  ((item.ownerName?.isNotEmpty ?? false) ? item.ownerName! : l10n.commonFinderUser),
               verified: item.isVerified || verifiedUser != null,
               admin: item.ownerIsAdmin,
               style: text.labelSmall?.copyWith(color: t.primary),
@@ -101,7 +103,7 @@ class HomeItemCard extends ConsumerWidget {
           context,
           ref,
           peerId: item.ownerId,
-          peerName: item.ownerName?.isNotEmpty == true ? item.ownerName! : 'Finder User',
+          peerName: item.ownerName?.isNotEmpty == true ? item.ownerName! : l10n.commonFinderUser,
           peerAvatarUrl: item.ownerAvatarUrl,
           postId: item.id,
           itemName: item.title,
@@ -155,7 +157,7 @@ class _SaveButtonState extends ConsumerState<_SaveButton>
     result.fold(
       onSuccess: (saved) => ActionFeedback.showSuccess(
         context,
-        saved ? 'Saved to your list.' : 'Removed from saved items.',
+        saved ? context.l10n.postSavedToList : context.l10n.postRemovedFromSaved,
       ),
       onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
@@ -170,7 +172,7 @@ class _SaveButtonState extends ConsumerState<_SaveButton>
       scale: _ctrl,
       child: AppIconButton(
         icon: saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-        tooltip: saved ? 'Remove from saved' : 'Save item',
+        tooltip: saved ? context.l10n.postRemoveFromSaved : context.l10n.postSaveItem,
         variant: AppIconButtonVariant.glass,
         selected: saved,
         size: 40,

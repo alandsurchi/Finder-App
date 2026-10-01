@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/ui/ui.dart';
@@ -25,7 +26,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
   Future<void> _handleVerifyEmail() async {
     final code = _codeCtrl.text.trim();
     if (code.length != 6 || int.tryParse(code) == null) {
-      ActionFeedback.showError(context, 'Please enter the 6-digit verification code.');
+      ActionFeedback.showError(context, context.l10n.authVerifyEnterCode);
       return;
     }
 
@@ -39,7 +40,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
         Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (route) => false);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           final ctx = Navigator.of(context, rootNavigator: true).context;
-          ActionFeedback.showSuccess(ctx, 'Account verified. Welcome to Finder!');
+          ActionFeedback.showSuccess(ctx, ctx.l10n.authVerifiedWelcome);
         });
       },
       onFailure: (failure) => ActionFeedback.showError(context, failure.message),
@@ -55,7 +56,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     result.fold(
       onSuccess: (_) => ActionFeedback.showSuccess(
         context,
-        'A new verification code has been sent to your email.',
+        context.l10n.authVerifyCodeResent,
       ),
       onFailure: (failure) => ActionFeedback.showError(context, failure.message),
     );
@@ -69,16 +70,16 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AuthShell(
       icon: Icons.mark_email_unread_outlined,
-      title: 'Verify your email',
-      subtitle:
-          'We sent a 6-digit verification code to your registered email address. Enter it below to activate your account.',
+      title: l10n.authVerifyTitle,
+      subtitle: l10n.authVerifySubtitle,
       children: [
         AppTextField(
           controller: _codeCtrl,
-          label: 'Verification code',
-          hint: '6-digit code',
+          label: l10n.authVerificationCodeLabel,
+          hint: l10n.authVerificationCodeHint,
           prefixIcon: Icons.pin_outlined,
           keyboardType: TextInputType.number,
           maxLength: 6,
@@ -89,7 +90,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
         Padding(
           padding: const EdgeInsets.only(top: BeaconSpace.xxxl, bottom: BeaconSpace.lg),
           child: AppButton(
-            label: 'Verify account',
+            label: l10n.authVerifyAccount,
             isLoading: _isLoading,
             onPressed: _isLoading ? null : _handleVerifyEmail,
           ),
@@ -98,12 +99,12 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             AppButton.ghost(
-              label: 'Log out',
+              label: l10n.commonLogOut,
               icon: Icons.logout_rounded,
               onPressed: _isLoading ? null : _handleLogout,
             ),
             AppButton.ghost(
-              label: 'Resend code',
+              label: l10n.authResendCode,
               icon: Icons.refresh_rounded,
               onPressed: _isLoading ? null : _handleResendCode,
             ),

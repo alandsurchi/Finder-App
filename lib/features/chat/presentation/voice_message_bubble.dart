@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../widgets/ui/ui.dart';
 import '../domain/message.dart';
 import 'voice_player_controller.dart';
@@ -31,6 +32,7 @@ class VoiceMessageBubble extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final source = message.audioSource;
     final playback = ref.watch(voicePlayerProvider);
     final current = playback != null && playback.source == source ? playback : null;
@@ -54,7 +56,7 @@ class VoiceMessageBubble extends ConsumerWidget {
         children: [
           Semantics(
             button: true,
-            label: playing ? 'Pause voice message' : 'Play voice message',
+            label: playing ? l10n.voicePause : l10n.voicePlay,
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: source.isEmpty
@@ -110,13 +112,13 @@ class VoiceMessageBubble extends ConsumerWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 6),
+                  padding: const EdgeInsetsDirectional.only(start: 6),
                   child: Row(
                     children: [
                       Icon(Icons.mic_rounded, size: 12, color: muted),
                       const SizedBox(width: 4),
                       Text(
-                        uploading ? 'Sending…' : label,
+                        uploading ? l10n.commonSending : label,
                         style: text.labelSmall?.copyWith(color: muted),
                       ),
                     ],

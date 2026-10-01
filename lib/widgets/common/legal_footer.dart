@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/screens/legal_screen.dart';
 import 'package:finder/widgets/ui/ui.dart';
 
@@ -9,6 +10,7 @@ class LegalFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final link = text.bodySmall?.copyWith(
@@ -27,19 +29,19 @@ class LegalFooter extends StatelessWidget {
       TextSpan(
         style: text.bodySmall,
         children: [
-          const TextSpan(text: 'By creating an account you agree to the '),
+          TextSpan(text: l10n.authLegalAgreePrefix),
           TextSpan(
-            text: 'Terms of Service',
+            text: l10n.legalTermsTitle,
             style: link,
             recognizer: TapGestureRecognizer()..onTap = () => open(LegalDocKind.terms),
           ),
-          const TextSpan(text: ' and the '),
+          TextSpan(text: l10n.authLegalAgreeAnd),
           TextSpan(
-            text: 'Privacy Policy',
+            text: l10n.legalPrivacyTitle,
             style: link,
             recognizer: TapGestureRecognizer()..onTap = () => open(LegalDocKind.privacy),
           ),
-          const TextSpan(text: '.'),
+          TextSpan(text: l10n.authLegalAgreeSuffix),
         ],
       ),
       textAlign: TextAlign.center,

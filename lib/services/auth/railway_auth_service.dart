@@ -4,6 +4,7 @@ import '../../core/config/app_config.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/network/api_client.dart';
 import '../../features/auth/domain/auth_user.dart';
+import '../../l10n/l10n.dart';
 import 'auth_service.dart';
 
 class RailwayAuthService implements AuthService {
@@ -105,14 +106,14 @@ class RailwayAuthService implements AuthService {
 
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
-        throw const AuthException('Google sign-in was cancelled by the user.');
+        throw AuthException(L10n.current.authGoogleCancelled);
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        throw const AuthException('Failed to retrieve Google ID token.');
+        throw AuthException(L10n.current.authGoogleTokenFailed);
       }
 
       final res = await _apiClient.post('/auth/google-login', {
@@ -153,7 +154,7 @@ class RailwayAuthService implements AuthService {
   static String _describe(Object e) {
     final text = e.toString();
     if (text.startsWith('Exception: ')) return text.substring(11);
-    return 'Something went wrong. Please try again.';
+    return L10n.current.commonSomethingWentWrong;
   }
 
   @override

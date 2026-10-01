@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'app_button.dart';
@@ -56,7 +57,7 @@ class AuthShell extends StatelessWidget {
                             if (showBack)
                               AppIconButton(
                                 icon: Icons.arrow_back_rounded,
-                                tooltip: 'Back',
+                                tooltip: context.l10n.commonBack,
                                 onPressed: onBack ?? () => Navigator.maybePop(context),
                               ),
                             const Spacer(),

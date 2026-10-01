@@ -7,6 +7,7 @@ import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/features/chat/presentation/open_chat.dart';
 import 'package:finder/features/posts/presentation/item_details_args.dart';
 import 'package:finder/features/profile/presentation/blocked_users_controller.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:finder/models/user_model.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
@@ -45,10 +46,11 @@ class UserProfileScreen extends ConsumerWidget {
     }
     final profileAsync = ref.watch(userProfileProvider(userId));
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       body: profileAsync.when(
-        loading: () => const SafeArea(child: LoadingWidget(message: 'Loading profile…')),
+        loading: () => SafeArea(child: LoadingWidget(message: l10n.profileLoadingOther)),
         error: (e, _) => SafeArea(
           child: ErrorStateWidget(
             message: describeError(e),
@@ -59,13 +61,13 @@ class UserProfileScreen extends ConsumerWidget {
           if (profile == null) {
             return SafeArea(
               child: Column(
-                children: const [
-                  AppPageHeader(title: 'Profile'),
+                children: [
+                  AppPageHeader(title: l10n.commonProfile),
                   Expanded(
                     child: EmptyWidget(
                       icon: Icons.person_off_outlined,
-                      title: 'This member is not available',
-                      subtitle: 'The account may have been removed, or you cannot see each other.',
+                      title: l10n.profileUnavailableTitle,
+                      subtitle: l10n.profileUnavailableSubtitle,
                     ),
                   ),
                 ],
@@ -88,8 +90,10 @@ class _ProfileBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final posts = ref.watch(userPostsProvider(userId));
     final topPad = MediaQuery.paddingOf(context).top;
+    final firstName = profile.displayName.split(' ').first;
 
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -99,28 +103,28 @@ class _ProfileBody extends ConsumerWidget {
             clipBehavior: Clip.none,
             children: [
               ProfileCover(url: profile.coverUrl, height: 190 + topPad),
-              Positioned(
+              PositionedDirectional(
                 top: topPad + BeaconSpace.sm,
-                left: BeaconSpace.md,
+                start: BeaconSpace.md,
                 child: AppIconButton(
                   icon: Icons.arrow_back_rounded,
-                  tooltip: 'Back',
+                  tooltip: l10n.commonBack,
                   variant: AppIconButtonVariant.glass,
                   onPressed: () => Navigator.maybePop(context),
                 ),
               ),
-              Positioned(
+              PositionedDirectional(
                 top: topPad + BeaconSpace.sm,
-                right: BeaconSpace.md,
+                end: BeaconSpace.md,
                 child: AppIconButton(
                   icon: Icons.more_vert_rounded,
-                  tooltip: 'More',
+                  tooltip: l10n.profileMore,
                   variant: AppIconButtonVariant.glass,
                   onPressed: () => _showMore(context, ref),
                 ),
               ),
-              Positioned(
-                left: BeaconSpace.page,
+              PositionedDirectional(
+                start: BeaconSpace.page,
                 bottom: -52,
                 child: Container(
                   padding: const EdgeInsets.all(4),
@@ -159,11 +163,13 @@ class _ProfileBody extends ConsumerWidget {
                     if (profile.identityVerified || profile.isAdmin) StatusBadge.verified(),
                     if (profile.isAdmin) adminBadge(),
                     StatusBadge.neutral(
-                      'Member since ${relativeTime(profile.createdAt.millisecondsSinceEpoch)}'
-                          .replaceAll(' ago', ''),
+                      l10n.profileMemberSince(
+                        relativeTime(profile.createdAt.millisecondsSinceEpoch, l10n: l10n)
+                            .replaceAll(' ago', ''),
+                      ),
                       small: true,
                     ),
-                    StatusBadge.neutral('${profile.postsCount} posts', small: true),
+                    StatusBadge.neutral(l10n.profilePostsCount(profile.postsCount), small: true),
                   ],
                 ),
                 if (profile.address.isNotEmpty || (profile.job.isNotEmpty && profile.nickName.isNotEmpty)) ...[
@@ -181,7 +187,7 @@ class _ProfileBody extends ConsumerWidget {
                 ],
                 const SizedBox(height: BeaconSpace.lg),
                 AppButton(
-                  label: 'Message ${profile.displayName.split(' ').first}',
+                  label: l10n.profileMessageFirstName(firstName),
                   icon: Icons.chat_bubble_outline_rounded,
                   onPressed: () => openChatWith(
                     context,
@@ -195,8 +201,8 @@ class _ProfileBody extends ConsumerWidget {
                 ),
                 const SizedBox(height: BeaconSpace.xxl),
                 SectionHeader(
-                  title: 'Posts',
-                  eyebrow: 'Items ${profile.displayName.split(' ').first} reported',
+                  title: l10n.commonPosts,
+                  eyebrow: l10n.profileItemsReported(firstName),
                 ),
               ],
             ),
@@ -217,8 +223,8 @@ class _ProfileBody extends ConsumerWidget {
           ),
           data: (items) {
             if (items.isEmpty) {
-              return const SliverToBoxAdapter(
-                child: EmptyWidget(icon: Icons.inventory_2_outlined, title: 'No posts yet'),
+              return SliverToBoxAdapter(
+                child: EmptyWidget(icon: Icons.inventory_2_outlined, title: l10n.profileNoPosts),
               );
             }
             return SliverPadding(
@@ -250,6 +256,7 @@ class _ProfileBody extends ConsumerWidget {
   }
 
   void _showMore(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
@@ -260,7 +267,7 @@ class _ProfileBody extends ConsumerWidget {
           children: [
             SheetOption(
               icon: Icons.chat_bubble_outline_rounded,
-              label: 'Send a message',
+              label: l10n.profileSendMessage,
               onTap: () {
                 Navigator.pop(sheetCtx);
                 openChatWith(
@@ -277,19 +284,19 @@ class _ProfileBody extends ConsumerWidget {
             if (!profile.isAdmin)
               SheetOption(
                 icon: Icons.block_rounded,
-                label: 'Block ${profile.displayName}',
-                subtitle: 'Neither of you can see or message the other',
+                label: l10n.blockUserLabel(profile.displayName),
+                subtitle: l10n.blockProfileSubtitle,
                 destructive: true,
                 onTap: () async {
                   Navigator.pop(sheetCtx);
                   final ok = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: Text('Block ${profile.displayName}?'),
-                      content: const Text('Undo it any time in Privacy & safety.'),
+                      title: Text(l10n.blockUserTitle(profile.displayName)),
+                      content: Text(l10n.blockProfileConfirmBody),
                       actions: [
-                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                        TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Block')),
+                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.commonCancel)),
+                        TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonBlock)),
                       ],
                     ),
                   );
@@ -300,7 +307,7 @@ class _ProfileBody extends ConsumerWidget {
                   if (!context.mounted) return;
                   result.fold(
                     onSuccess: (_) {
-                      ActionFeedback.showSuccess(context, '${profile.displayName} has been blocked.');
+                      ActionFeedback.showSuccess(context, l10n.blockUserDone(profile.displayName));
                       Navigator.maybePop(context);
                     },
                     onFailure: (f) => ActionFeedback.showError(context, f.message),
@@ -310,8 +317,8 @@ class _ProfileBody extends ConsumerWidget {
             else
               SheetOption(
                 icon: Icons.shield_rounded,
-                label: 'Finder administrator',
-                subtitle: 'Staff accounts cannot be blocked',
+                label: l10n.profileFinderAdmin,
+                subtitle: l10n.blockStaffSubtitle,
                 onTap: () => Navigator.pop(sheetCtx),
               ),
             const SizedBox(height: BeaconSpace.lg),

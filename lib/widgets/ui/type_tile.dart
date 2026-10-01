@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'press_scale.dart';
 import 'status_badge.dart';
 
@@ -25,9 +26,10 @@ class LostFoundTypeTile extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final color = kind.color(t);
     final container = kind.container(t);
+    final l10n = context.l10n;
     final isLost = kind == SignalKind.lost;
-    final title = isLost ? 'I lost something' : 'I found something';
-    final subtitle = isLost ? 'Ask the community for help' : 'Help return it home';
+    final title = isLost ? l10n.postILostSomething : l10n.postIFoundSomething;
+    final subtitle = isLost ? l10n.postAskCommunityHelp : l10n.postHelpReturnHome;
 
     return Semantics(
       button: true,
@@ -57,7 +59,7 @@ class LostFoundTypeTile extends StatelessWidget {
                         _iconDisc(t, color, selected),
                         const SizedBox(width: BeaconSpace.md),
                         Expanded(
-                          child: Text(kind == SignalKind.lost ? 'Lost' : 'Found',
+                          child: Text(isLost ? l10n.commonLost : l10n.commonFound,
                               style: text.titleMedium),
                         ),
                         if (selected) Icon(Icons.check_rounded, color: color),

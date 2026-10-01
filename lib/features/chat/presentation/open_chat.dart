@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/exceptions.dart';
+import '../../../l10n/l10n.dart';
 import '../../../providers/chat_provider.dart';
 import '../../../routes.dart';
 import '../../../widgets/common/action_feedback.dart';
@@ -37,13 +38,14 @@ Future<void> openChatWith(
   bool peerVerified = false,
   bool peerAdmin = false,
 }) async {
+  final l10n = context.l10n;
   final me = ref.read(authStateProvider).userId ?? '';
   if (me.isEmpty) {
-    ActionFeedback.showInfo(context, 'Please sign in to send messages.');
+    ActionFeedback.showInfo(context, l10n.chatSignInToMessage);
     return;
   }
   if (peerId.isEmpty || peerId == me) {
-    ActionFeedback.showInfo(context, 'This is your own post.');
+    ActionFeedback.showInfo(context, l10n.chatOwnPost);
     return;
   }
 
@@ -74,7 +76,7 @@ Future<void> openChatWith(
     if (!context.mounted) return;
     ActionFeedback.showError(
       context,
-      failureFrom(e, fallback: 'Could not open the conversation.').message,
+      failureFrom(e, fallback: l10n.chatOpenFailed).message,
     );
   }
 }

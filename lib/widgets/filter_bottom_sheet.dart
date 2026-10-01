@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/core/constants/app_categories.dart';
+import 'package:finder/l10n/l10n.dart';
 
 class SearchFilterData {
   final String selectedType;
@@ -93,6 +95,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
 
     Widget section(String title, Widget child, {int index = 0}) {
       return StaggeredEntrance(
@@ -113,32 +116,32 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     }
 
     return AppBottomSheet(
-      title: 'Filters',
-      subtitle: 'Narrow down what you are looking for',
+      title: l10n.filterTitle,
+      subtitle: l10n.filterSubtitle,
       actions: [
-        AppButton.secondary(label: 'Reset', onPressed: _resetFilters),
-        AppButton(label: 'Apply filters', onPressed: _applyFilters),
+        AppButton.secondary(label: l10n.filterReset, onPressed: _resetFilters),
+        AppButton(label: l10n.filterApply, onPressed: _applyFilters),
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           section(
-            'Type',
+            l10n.filterType,
             SegmentedPills(
-              options: _types,
+              options: _types.map((v) => AppCategories.label(l10n, v)).toList(),
               selectedIndex: _types.indexOf(_selectedType).clamp(0, _types.length - 1),
               onChanged: (i) => setState(() => _selectedType = _types[i]),
             ),
           ),
           section(
-            'Category',
+            l10n.postCategory,
             Wrap(
               spacing: BeaconSpace.sm,
               runSpacing: BeaconSpace.sm,
               children: _categories.map((category) {
                 final isSelected = _selectedCategories.contains(category);
                 return AppChoiceChip(
-                  label: category,
+                  label: AppCategories.label(l10n, category),
                   icon: categoryIcon(category),
                   selected: isSelected,
                   onTap: () {
@@ -156,24 +159,24 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             index: 1,
           ),
           section(
-            'Location',
+            l10n.commonLocation,
             AppTextField(
               controller: _locationController,
-              hint: 'Enter city or area',
+              hint: l10n.filterLocationHint,
               prefixIcon: Icons.place_outlined,
               textInputAction: TextInputAction.done,
             ),
             index: 2,
           ),
           section(
-            'Date range',
+            l10n.filterDateRange,
             Row(
               children: [
                 Expanded(
                   child: AppPickerField(
-                    label: 'From',
-                    value: _dateFrom == null ? '' : _formatDate(_dateFrom!),
-                    hint: 'Select date',
+                    label: l10n.filterFrom,
+                    value: _dateFrom == null ? '' : _formatDate(l10n, _dateFrom!),
+                    hint: l10n.filterSelectDate,
                     prefixIcon: Icons.calendar_today_outlined,
                     onTap: () => _pickDate(isFrom: true),
                   ),
@@ -181,9 +184,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                 const SizedBox(width: BeaconSpace.md),
                 Expanded(
                   child: AppPickerField(
-                    label: 'To',
-                    value: _dateTo == null ? '' : _formatDate(_dateTo!),
-                    hint: 'Select date',
+                    label: l10n.filterTo,
+                    value: _dateTo == null ? '' : _formatDate(l10n, _dateTo!),
+                    hint: l10n.filterSelectDate,
                     prefixIcon: Icons.event_outlined,
                     onTap: () => _pickDate(isFrom: false),
                   ),
@@ -204,16 +207,16 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   children: [
                     ToggleTile(
                       icon: Icons.workspace_premium_outlined,
-                      title: 'Reward offered',
-                      subtitle: 'Only posts that offer a reward',
+                      title: l10n.filterRewardOffered,
+                      subtitle: l10n.filterRewardSubtitle,
                       value: _hasReward,
                       onChanged: (value) => setState(() => _hasReward = value),
                     ),
                     Divider(color: t.outlineVariant, height: 1, indent: 64),
                     ToggleTile(
                       icon: Icons.verified_outlined,
-                      title: 'Verified users only',
-                      subtitle: 'Posted by identity-verified members',
+                      title: l10n.filterVerifiedOnly,
+                      subtitle: l10n.filterVerifiedSubtitle,
                       value: _verifiedOnly,
                       onChanged: (value) => setState(() => _verifiedOnly = value),
                     ),
@@ -223,14 +226,14 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
           section(
-            'Sort by',
+            l10n.filterSortBy,
             Wrap(
               spacing: BeaconSpace.sm,
               runSpacing: BeaconSpace.sm,
               children: _sortOptions.map((option) {
                 final isSelected = _selectedSort == option;
                 return AppChoiceChip(
-                  label: option,
+                  label: AppCategories.label(l10n, option),
                   icon: option == 'Most Recent'
                       ? Icons.schedule_rounded
                       : Icons.near_me_outlined,
@@ -275,23 +278,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     });
   }
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${date.day} ${months[date.month - 1]}, ${date.year}';
-  }
+  String _formatDate(AppLocalizations l10n, DateTime date) =>
+      l10n.filterDate(date.day, l10n.commonMonthShort('${date.month}'), date.year);
 
   void _resetFilters() {
     setState(() {

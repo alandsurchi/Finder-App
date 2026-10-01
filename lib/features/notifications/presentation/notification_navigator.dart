@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/router/root_navigator.dart';
+import '../../../l10n/l10n.dart';
 import '../../../routes.dart';
 import '../../../screens/admin/verification_queue_screen.dart';
 import '../../../services/post_service.dart';
@@ -32,7 +33,7 @@ Future<void> openNotificationTarget(
       AppRoutes.chat,
       arguments: {
         ChatArgs.chatId: chatId,
-        ChatArgs.userName: v('peerName').isEmpty ? 'Finder User' : v('peerName'),
+        ChatArgs.userName: v('peerName').isEmpty ? L10n.current.commonFinderUser : v('peerName'),
         ChatArgs.itemName: v('itemName'),
         ChatArgs.peerId: v('peerId'),
         ChatArgs.peerAvatarUrl: v('peerAvatarUrl'),

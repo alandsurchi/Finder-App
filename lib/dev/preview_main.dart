@@ -14,6 +14,10 @@
 // Nothing in here is imported by lib/main.dart.
 // ═══════════════════════════════════════════════════════════════════════════════
 
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:finder/l10n/kurdish_localizations.dart';
+import 'package:finder/l10n/l10n.dart';
+import 'package:finder/l10n/locale_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -411,6 +415,7 @@ Future<void> main() async {
   final initialTheme =
       params['theme'] == 'dark' ? ThemeMode.dark : ThemeMode.light;
   final screen = params['screen'];
+  final lang = AppLanguage.fromCode(params['lang'])?.locale;
 
   runApp(
     ProviderScope(
@@ -418,6 +423,7 @@ Future<void> main() async {
         apiClientProvider.overrideWithValue(apiClient),
         authStateProvider.overrideWith((ref) => _PreviewAuth(apiClient)),
         themeControllerProvider.overrideWith(() => _PreviewTheme(initialTheme)),
+        localeControllerProvider.overrideWith(() => LocaleController(lang)),
         postsStreamProvider.overrideWith((ref) => Stream.value(samplePosts)),
         profileControllerProvider.overrideWith((ref) => _PreviewProfile(ref)),
         savedItemsProvider.overrideWith((ref) => _PreviewSaved(ref)),
@@ -449,12 +455,31 @@ class PreviewApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeControllerProvider);
+    final chosenLocale = ref.watch(localeControllerProvider);
+    // Resolve now (not in the callback) so the first frame already uses the
+    // right fonts when the phone itself is set to Arabic or Kurdish.
+    final arabic = AppTheme.usesArabicScript(
+        resolveLocale(chosenLocale, WidgetsBinding.instance.platformDispatcher.locales));
     return MaterialApp(
       title: 'Finder preview',
       debugShowCheckedModeBanner: false,
       themeMode: mode,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: AppTheme.light(arabicScript: arabic),
+      darkTheme: AppTheme.dark(arabicScript: arabic),
+      locale: chosenLocale,
+      supportedLocales: kSupportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        ...KurdishLocalizations.delegates,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      localeListResolutionCallback: (device, supported) {
+        final resolved = resolveLocale(chosenLocale, device);
+        L10n.use(resolved);
+        return resolved;
+      },
       onGenerateRoute: AppRouter.onGenerateRoute,
       home: _PreviewLauncher(screen: screen),
     );

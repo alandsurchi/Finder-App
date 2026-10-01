@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/profile/domain/verification_status.dart';
 import 'package:finder/features/profile/presentation/verification_controller.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/services/image_upload_service.dart';
@@ -22,10 +23,10 @@ extension on _DocType {
         _DocType.identityCard => 'id_card',
         _DocType.driversLicense => 'drivers_license',
       };
-  String get label => switch (this) {
-        _DocType.passport => 'Passport',
-        _DocType.identityCard => 'Identity card',
-        _DocType.driversLicense => "Driver's license",
+  String label(AppLocalizations l10n) => switch (this) {
+        _DocType.passport => l10n.verifyPassport,
+        _DocType.identityCard => l10n.verifyIdentityCard,
+        _DocType.driversLicense => l10n.verifyDriversLicense,
       };
   bool get hasBack => this != _DocType.passport;
 }
@@ -66,6 +67,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final statusState = ref.watch(verificationProvider);
     final status = statusState.value;
     final locked = status != null && (status.isPending || status.isApproved);
@@ -80,21 +82,21 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
         child: Column(
           children: [
             AppPageHeader(
-              title: 'Verify identity',
+              title: l10n.verifyTitle,
               subtitle: status == null
                   ? null
                   : status.isApproved
-                      ? 'Your identity is verified'
+                      ? l10n.verifyApprovedSubtitle
                       : status.isPending
-                          ? 'Under review'
+                          ? l10n.verifyUnderReview
                           : status.isRejected && !_resubmitting
-                              ? 'Needs new photos'
-                              : '$_completedSteps of 3 steps complete',
+                              ? l10n.verifyNeedsNewPhotos
+                              : l10n.verifyStepsComplete(_completedSteps),
             ),
             Expanded(
               child: statusState.when(
                 loading: () =>
-                    const LoadingWidget(message: 'Checking your status...'),
+                    LoadingWidget(message: l10n.verifyCheckingStatus),
                 error: (err, _) => ErrorStateWidget(
                   message: describeError(err),
                   onRetry: () => ref.read(verificationProvider.notifier).load(),
@@ -134,6 +136,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
   }
 
   Widget _buildHero(AppColorTokens t, TextTheme text, VerificationStatus s) {
+    final l10n = context.l10n;
     return Material(
       color: t.primary,
       borderRadius: BeaconRadius.rXl,
@@ -157,7 +160,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
                   Icon(Icons.shield_outlined, color: t.onPrimary, size: 14),
                   const SizedBox(width: BeaconSpace.xs + 1),
                   Text(
-                    s.isApproved ? 'Verified member' : 'Reviewed by a person',
+                    s.isApproved ? l10n.verifyVerifiedMember : l10n.verifyReviewedByPerson,
                     style: text.labelSmall?.copyWith(color: t.onPrimary),
                   ),
                 ],
@@ -165,16 +168,12 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
             ),
             const SizedBox(height: BeaconSpace.lg),
             Text(
-              s.isApproved
-                  ? 'Thanks for helping keep Finder trustworthy.'
-                  : 'Verified accounts help build a safer community for everyone.',
+              s.isApproved ? l10n.verifyThanks : l10n.verifyHeroHeadline,
               style: text.headlineSmall?.copyWith(color: t.onPrimary),
             ),
             const SizedBox(height: BeaconSpace.md),
             Text(
-              s.isApproved
-                  ? 'Your posts and messages now show the verified badge.'
-                  : 'Your photos are stored privately and only seen by the Finder team member who checks them. Review usually takes a day.',
+              s.isApproved ? l10n.verifyApprovedBody : l10n.verifyHeroBody,
               style: text.bodyMedium?.copyWith(
                 color: t.onPrimary.withValues(alpha: 0.85),
               ),
@@ -198,6 +197,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
   }
 
   Widget _buildHowItWorks(AppColorTokens t, TextTheme text) {
+    final l10n = context.l10n;
     Widget step(IconData icon, String title, String body) => Padding(
           padding: const EdgeInsets.symmetric(vertical: BeaconSpace.xs),
           child: Row(
@@ -222,14 +222,12 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('How it works', style: text.titleMedium),
+          Text(l10n.verifyHowItWorks, style: text.titleMedium),
           const SizedBox(height: BeaconSpace.sm),
-          step(Icons.badge_outlined, 'Photograph your ID',
-              'Camera or gallery. Every corner in frame, no glare.'),
-          step(Icons.face_retouching_natural_outlined, 'Take a live selfie',
-              'Front camera only, so we know it is really you.'),
-          step(Icons.how_to_reg_outlined, 'A person reviews it',
-              'They compare the face on the ID with your selfie and the name on your account. You get a notification either way.'),
+          step(Icons.badge_outlined, l10n.verifyStep1Title, l10n.verifyStep1Body),
+          step(Icons.face_retouching_natural_outlined, l10n.verifyStep2Title,
+              l10n.verifyStep2Body),
+          step(Icons.how_to_reg_outlined, l10n.verifyStep3Title, l10n.verifyStep3Body),
         ],
       ),
     );
@@ -237,6 +235,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
 
   Widget _buildStatusCard(
       AppColorTokens t, TextTheme text, VerificationStatus s) {
+    final l10n = context.l10n;
     final approved = s.isApproved;
     return SurfaceCard(
       tone: approved ? SurfaceTone.found : SurfaceTone.accent,
@@ -257,20 +256,23 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        approved ? 'Identity verified' : 'Verification pending',
+                        approved ? l10n.verifyIdentityVerified : l10n.verifyPending,
                         style: text.titleMedium,
                       ),
                     ),
                     approved
                         ? StatusBadge.verified()
-                        : StatusBadge.neutral('PENDING'),
+                        : StatusBadge.neutral(l10n.verifyPendingBadge),
                   ],
                 ),
                 const SizedBox(height: BeaconSpace.xs),
                 Text(
                   approved
-                      ? 'Verified with your ${_docLabel(s.docType)}.'
-                      : 'We received your ${_docLabel(s.docType)} ${s.createdAtMs == null ? '' : relativeTime(s.createdAtMs)}. A Finder team member is reviewing it; you will get a notification when it is done.',
+                      ? l10n.verifyVerifiedWith(_docLabel(l10n, s.docType))
+                      : l10n.verifyReceived(
+                          _docLabel(l10n, s.docType),
+                          s.createdAtMs == null ? '' : relativeTime(s.createdAtMs, l10n: l10n),
+                        ),
                   style: text.bodyMedium,
                 ),
               ],
@@ -283,6 +285,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
 
   Widget _buildRejectedCard(
       AppColorTokens t, TextTheme text, VerificationStatus s) {
+    final l10n = context.l10n;
     return SurfaceCard(
       tone: SurfaceTone.lost,
       child: Column(
@@ -300,11 +303,11 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Text('Not approved yet',
+                          child: Text(l10n.verifyNotApproved,
                               style: text.titleMedium),
                         ),
                         StatusBadge.custom(
-                          label: 'NEEDS PHOTOS',
+                          label: l10n.verifyNeedsPhotosBadge,
                           color: t.error,
                           icon: Icons.refresh_rounded,
                           small: true,
@@ -315,11 +318,11 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
                     Text(
                       s.rejectionReason?.isNotEmpty == true
                           ? s.rejectionReason!
-                          : 'The photos could not be verified.',
+                          : l10n.verifyPhotosRejected,
                       style: text.bodyMedium,
                     ),
                     if (s.reviewedAtMs != null)
-                      Text('Reviewed ${relativeTime(s.reviewedAtMs)}',
+                      Text(l10n.verifyReviewedAt(relativeTime(s.reviewedAtMs, l10n: l10n)),
                           style: text.bodySmall),
                   ],
                 ),
@@ -328,7 +331,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
           ),
           const SizedBox(height: BeaconSpace.lg),
           AppButton(
-            label: 'Submit new photos',
+            label: l10n.verifySubmitNewPhotos,
             icon: Icons.photo_camera_outlined,
             size: AppButtonSize.medium,
             onPressed: () => setState(() => _resubmitting = true),
@@ -338,14 +341,11 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
     );
   }
 
-  static String _docLabel(String? apiValue) => switch (apiValue) {
-        'id_card' => 'identity card',
-        'drivers_license' => "driver's license",
-        'passport' => 'passport',
-        _ => 'document',
-      };
+  static String _docLabel(AppLocalizations l10n, String? apiValue) =>
+      l10n.verifyDocTypeLower(apiValue ?? '');
 
   List<Widget> _buildForm(AppColorTokens t, TextTheme text) {
+    final l10n = context.l10n;
     return [
       StaggeredEntrance(
         index: 2,
@@ -353,8 +353,8 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
           stepIndex: 1,
           done: true,
           icon: Icons.description_outlined,
-          title: 'Document selection',
-          subtitle: 'Choose the ID you wish to use for verification',
+          title: l10n.verifyDocSelection,
+          subtitle: l10n.verifyDocSelectionSubtitle,
         ),
       ),
       const SizedBox(height: BeaconSpace.md),
@@ -366,7 +366,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
             children: [
               for (final d in _DocType.values)
                 SheetOption(
-                  label: d.label,
+                  label: d.label(l10n),
                   icon: switch (d) {
                     _DocType.passport => Icons.book_outlined,
                     _DocType.identityCard => Icons.badge_outlined,
@@ -388,10 +388,8 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
           stepIndex: 2,
           done: _documentDone,
           icon: Icons.camera_alt_outlined,
-          title: 'Document photos',
-          subtitle: _selectedDoc.hasBack
-              ? 'Both sides of your ID, camera or gallery'
-              : 'The photo page, camera or gallery',
+          title: l10n.verifyDocPhotos,
+          subtitle: _selectedDoc.hasBack ? l10n.verifyBothSides : l10n.verifyPhotoPage,
         ),
       ),
       const SizedBox(height: BeaconSpace.md),
@@ -401,7 +399,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
           children: [
             Expanded(
               child: _UploadBox(
-                label: _selectedDoc.hasBack ? 'Front of ID' : 'Photo page',
+                label: _selectedDoc.hasBack ? l10n.verifyFrontOfId : l10n.verifyPhotoPageLabel,
                 preview: _front?.bytes,
                 uploading: _uploading == 'front',
                 onTap: () => _uploadDocument('front'),
@@ -411,7 +409,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
               const SizedBox(width: BeaconSpace.md),
               Expanded(
                 child: _UploadBox(
-                  label: 'Back of ID',
+                  label: l10n.verifyBackOfId,
                   preview: _back?.bytes,
                   uploading: _uploading == 'back',
                   onTap: () => _uploadDocument('back'),
@@ -428,8 +426,8 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
           stepIndex: 3,
           done: _selfie != null,
           icon: Icons.face_outlined,
-          title: 'Live selfie',
-          subtitle: 'Taken now with the front camera; gallery photos are not accepted.',
+          title: l10n.verifyLiveSelfie,
+          subtitle: l10n.verifyLiveSelfieSubtitle,
         ),
       ),
       const SizedBox(height: BeaconSpace.md),
@@ -489,7 +487,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
               ),
               const SizedBox(height: BeaconSpace.xl),
               AppButton(
-                label: _selfie != null ? 'Retake selfie' : 'Take a selfie',
+                label: _selfie != null ? l10n.verifyRetakeSelfie : l10n.verifyTakeSelfie,
                 icon: Icons.camera_front_outlined,
                 expand: false,
                 size: AppButtonSize.medium,
@@ -513,7 +511,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
             const SizedBox(width: BeaconSpace.sm),
             Expanded(
               child: Text(
-                'Use a well-lit area, keep the whole document in frame and remove hats or sunglasses for the selfie.',
+                l10n.verifyTip,
                 style: text.bodySmall,
               ),
             ),
@@ -525,10 +523,11 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
 
   Future<void> _uploadDocument(String slot) async {
     if (_uploading != null) return;
+    final l10n = context.l10n;
     final source = await showImageSourceSheet(
       context,
-      title: slot == 'front' ? 'Front of your ID' : 'Back of your ID',
-      subtitle: 'Stored privately, seen only by the reviewer.',
+      title: slot == 'front' ? l10n.verifyFrontOfYourId : l10n.verifyBackOfYourId,
+      subtitle: l10n.verifyStoredPrivately,
     );
     if (source == null || !mounted) return;
     await _upload(slot, source: source);
@@ -565,7 +564,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
     } catch (e) {
       if (mounted) {
         ActionFeedback.showError(
-            context, 'Upload failed. ${describeError(e)}');
+            context, context.l10n.commonUploadFailed(describeError(e)));
       }
     } finally {
       if (mounted) setState(() => _uploading = null);
@@ -573,13 +572,14 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     if (!_documentDone) {
-      ActionFeedback.showError(context,
-          'Please add your document photo${_selectedDoc.hasBack ? 's' : ''} first.');
+      ActionFeedback.showError(
+          context, l10n.verifyAddDocumentFirst(_selectedDoc.hasBack ? 2 : 1));
       return;
     }
     if (_selfie == null) {
-      ActionFeedback.showError(context, 'Please take a selfie to finish.');
+      ActionFeedback.showError(context, l10n.verifyTakeSelfieFirst);
       return;
     }
     setState(() => _submitting = true);
@@ -597,10 +597,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
       _resubmitting = false;
     });
     result.fold(
-      onSuccess: (_) => ActionFeedback.showSuccess(
-        context,
-        'Submitted. You will be notified once it has been reviewed.',
-      ),
+      onSuccess: (_) => ActionFeedback.showSuccess(context, l10n.verifySubmitted),
       onFailure: (f) => ActionFeedback.showError(context, f.message),
     );
   }
@@ -632,7 +629,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('STEP $stepIndex',
+              Text(context.l10n.verifyStepLabel(stepIndex),
                   style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
               Text(title, style: text.titleMedium),
               const SizedBox(height: 2),
@@ -647,6 +644,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
   Widget _buildBottomBar(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final ready = _documentDone && _selfie != null;
     return Container(
       decoration: BoxDecoration(
@@ -662,7 +660,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               AppButton(
-                label: 'Submit for review',
+                label: l10n.verifySubmitForReview,
                 icon: Icons.verified_user_outlined,
                 isLoading: _submitting,
                 onPressed:
@@ -670,9 +668,7 @@ class _GetVerifiedScreenState extends ConsumerState<GetVerifiedScreen> {
               ),
               const SizedBox(height: BeaconSpace.md),
               Text(
-                ready
-                    ? 'By submitting you confirm the documents are yours.'
-                    : 'Add your document photos and a selfie to continue.',
+                ready ? l10n.verifyConfirmOwnership : l10n.verifyAddToContinue,
                 style: text.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -701,10 +697,13 @@ class _UploadBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final isUploaded = preview != null;
     return Semantics(
       button: true,
-      label: isUploaded ? '$label added, tap to replace' : 'Add $label',
+      label: isUploaded
+          ? l10n.verifyUploadAddedSemantics(label)
+          : l10n.verifyUploadAddSemantics(label),
       child: PressScale(
         enabled: !uploading,
         child: AnimatedContainer(
@@ -754,8 +753,8 @@ class _UploadBox extends StatelessWidget {
                       const SizedBox(height: BeaconSpace.sm),
                       Text(
                         uploading
-                            ? 'Uploading…'
-                            : (isUploaded ? '$label added' : label),
+                            ? l10n.commonUploading
+                            : (isUploaded ? l10n.verifyUploadAdded(label) : label),
                         style: text.titleSmall?.copyWith(
                           color: isUploaded ? t.found : t.onSurface,
                         ),
@@ -763,7 +762,7 @@ class _UploadBox extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        isUploaded ? 'Tap to replace' : 'Camera or gallery',
+                        isUploaded ? l10n.verifyTapToReplace : l10n.verifyCameraOrGallery,
                         style: text.bodySmall,
                         textAlign: TextAlign.center,
                       ),

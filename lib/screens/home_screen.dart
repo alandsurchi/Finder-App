@@ -17,6 +17,7 @@ import 'package:finder/features/profile/presentation/profile_controller.dart';
 import 'package:finder/features/notifications/presentation/notifications_controller.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/core/constants/app_categories.dart';
+import 'package:finder/l10n/l10n.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/models/item_model.dart';
@@ -121,6 +122,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     final postsStream = ref.watch(activePostsProvider);
     final filters = ref.watch(postsFilterProvider);
     final profileState = ref.watch(profileControllerProvider);
@@ -146,8 +148,8 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                     Expanded(
                       child: _ReportTile(
                         kind: SignalKind.lost,
-                        title: 'Report lost',
-                        subtitle: 'Ask the community',
+                        title: l10n.homeReportLost,
+                        subtitle: l10n.homeReportLostSubtitle,
                         onTap: () => widget.onReport?.call(true),
                       ),
                     ),
@@ -155,8 +157,8 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                     Expanded(
                       child: _ReportTile(
                         kind: SignalKind.found,
-                        title: 'Report found',
-                        subtitle: 'Return it home',
+                        title: l10n.homeReportFound,
+                        subtitle: l10n.homeReportFoundSubtitle,
                         onTap: () => widget.onReport?.call(false),
                       ),
                     ),
@@ -171,7 +173,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
                 child: SegmentedPills(
-                  options: categories.map(_categoryLabel).toList(),
+                  options: categories.map((c) => _categoryLabel(l10n, c)).toList(),
                   selectedIndex: selectedIndex,
                   onChanged: (i) => ref
                       .read(postsFilterProvider.notifier)
@@ -186,8 +188,8 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
             Expanded(
               child: postsStream.when(
                 skipError: true,
-                loading: () => const LoadingWidget(
-                  message: 'Loading posts...',
+                loading: () => LoadingWidget(
+                  message: l10n.homeLoadingPosts,
                   variant: LoadingVariant.list,
                 ),
                 error: (err, _) => ErrorStateWidget(
@@ -204,13 +206,13 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                     return EmptyWidget(
                       icon: Icons.explore_off_outlined,
                       title: filters.category == 'Lost'
-                          ? 'No lost items'
+                          ? l10n.homeNoLostItems
                           : filters.category == 'Found'
-                              ? 'No found items'
-                              : 'No posts yet',
+                              ? l10n.homeNoFoundItems
+                              : l10n.homeNoPostsYet,
                       subtitle: filters.category == 'All Items'
-                          ? 'Create the first post to get started.'
-                          : 'Try switching to All Items.',
+                          ? l10n.homeCreateFirstPost
+                          : l10n.homeTrySwitchingAll,
                     );
                   }
                   return ListView.builder(
@@ -252,7 +254,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
           Expanded(
             child: Semantics(
               button: true,
-              label: 'Open profile',
+              label: context.l10n.homeOpenProfile,
               child: InkWell(
                 borderRadius: BeaconRadius.rPill,
                 onTap: widget.onProfileTap,
@@ -294,7 +296,7 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
   Widget _buildItemCard(ItemModel item, int index) {
     final card = HomeItemCard(
       item: item,
-      buttonLabel: item.isLost ? 'Contact Owner' : 'Contact Finder',
+      buttonLabel: item.isLost ? context.l10n.homeContactOwner : context.l10n.homeContactFinder,
     );
     // Only the first screenful animates in; rows scrolled into view later
     // render plain so scrolling never pays for an opacity layer per card.
@@ -308,9 +310,10 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
 
   String _greeting() {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Good morning';
-    if (h < 18) return 'Good afternoon';
-    return 'Good evening';
+    final l10n = context.l10n;
+    if (h < 12) return l10n.homeGoodMorning;
+    if (h < 18) return l10n.homeGoodAfternoon;
+    return l10n.homeGoodEvening;
   }
 
   String _profileName(AsyncValue profileState) {
@@ -318,15 +321,15 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
       data: (profile) {
         if (profile.fullName.isNotEmpty) return profile.fullName;
         if (profile.nickName.isNotEmpty) return profile.nickName;
-        return 'Guest';
+        return context.l10n.homeGuest;
       },
-      orElse: () => 'Guest',
+      orElse: () => context.l10n.homeGuest,
     );
   }
 
-  String _categoryLabel(String category) {
-    if (category == 'All Items') return 'All';
-    return category;
+  String _categoryLabel(AppLocalizations l10n, String category) {
+    if (category == 'All Items') return l10n.categoryAll;
+    return AppCategories.label(l10n, category);
   }
 }
 
@@ -348,15 +351,15 @@ class _NotificationBell extends ConsumerWidget {
               ? Icons.notifications_active_outlined
               : Icons.notifications_none_rounded,
           tooltip: unread > 0
-              ? 'Notifications, $unread unread'
-              : 'Notifications',
+              ? context.l10n.homeNotificationsUnread(unread)
+              : context.l10n.commonNotifications,
           variant: AppIconButtonVariant.glass,
           size: 48,
           onPressed: onPressed,
         ),
         if (unread > 0)
-          Positioned(
-            right: -2,
+          PositionedDirectional(
+            end: -2,
             top: -2,
             child: IgnorePointer(
               child: Container(
@@ -433,8 +436,8 @@ class _ReportTile extends StatelessWidget {
               onTap: onTap,
               child: Stack(
                 children: [
-                  Positioned(
-                    right: -18,
+                  PositionedDirectional(
+                    end: -18,
                     bottom: -22,
                     child: Icon(kind.icon, size: 96,
                         color: on.withValues(alpha: 0.10)),

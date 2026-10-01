@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/models/item_model.dart';
+import 'package:finder/core/constants/app_categories.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'item_image.dart';
 import 'press_scale.dart';
 import 'status_badge.dart';
@@ -60,25 +62,29 @@ class ItemCard extends StatelessWidget {
 
   static const double spineWidth = 30;
 
-  List<Widget> _defaultBadges({required bool includeStatus}) => [
+  List<Widget> _defaultBadges(AppLocalizations l10n, {required bool includeStatus}) => [
         if (includeStatus) StatusBadge.fromItem(item, small: true),
         if (item.reward != null && item.reward!.isNotEmpty)
-          StatusBadge.reward(_rewardLabel(item.reward!),
+          StatusBadge.reward(_rewardLabel(l10n, item.reward!),
               small: layout != ItemCardLayout.tile),
         if (item.isResolved) StatusBadge.resolved(small: true),
       ];
 
-  static String _rewardLabel(String reward) {
+  static String _rewardLabel(AppLocalizations l10n, String reward) {
     final r = reward.trim();
-    if (r.isEmpty) return 'REWARD';
+    if (r.isEmpty) return l10n.postReward;
     if (r.toUpperCase().contains('REWARD')) return r.toUpperCase();
     final startsWithCurrency = RegExp(r'^[\$€£]').hasMatch(r);
-    return startsWithCurrency ? 'REWARD $r' : 'REWARD \$$r';
+    return l10n.postRewardAmount(startsWithCurrency ? r : '\$$r');
   }
+
+  static String _statusWord(AppLocalizations l10n, SignalKind kind) =>
+      kind == SignalKind.lost ? l10n.commonLost : l10n.commonFound;
 
   @override
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     final kind = SignalKindX.ofItem(item);
     final radius = layout == ItemCardLayout.compact
         ? BeaconRadius.rLg
@@ -105,7 +111,8 @@ class ItemCard extends StatelessWidget {
         onTap: onTap,
         child: Semantics(
           button: onTap != null,
-          label: '${kind.label.toLowerCase()} item, ${item.title}',
+          label: l10n.postItemSemantics(
+              _statusWord(l10n, kind).toLowerCase(), item.title),
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -149,7 +156,7 @@ class ItemCard extends StatelessWidget {
 
   Widget _tile(BuildContext context, AppColorTokens t, SignalKind kind) {
     final text = Theme.of(context).textTheme;
-    final overlays = badges ?? _defaultBadges(includeStatus: false);
+    final overlays = badges ?? _defaultBadges(context.l10n, includeStatus: false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -166,10 +173,10 @@ class ItemCard extends StatelessWidget {
                 heroTag: heroTag,
               ),
               if (overlays.isNotEmpty)
-                Positioned(
+                PositionedDirectional(
                   top: BeaconSpace.md,
-                  left: BeaconSpace.md,
-                  right: 56,
+                  start: BeaconSpace.md,
+                  end: 56,
                   child: Wrap(
                     spacing: BeaconSpace.sm,
                     runSpacing: BeaconSpace.sm,
@@ -177,7 +184,7 @@ class ItemCard extends StatelessWidget {
                   ),
                 ),
               if (overlay != null)
-                Positioned(top: BeaconSpace.sm, right: BeaconSpace.sm, child: overlay!),
+                PositionedDirectional(top: BeaconSpace.sm, end: BeaconSpace.sm, child: overlay!),
               if (banner != null)
                 Positioned(
                   left: 0,
@@ -278,7 +285,7 @@ class ItemCard extends StatelessWidget {
                 fallbackIcon: categoryIcon(item.category),
                 heroTag: heroTag,
               ),
-              if (overlay != null) Positioned(top: 4, right: 4, child: overlay!),
+              if (overlay != null) PositionedDirectional(top: 4, end: 4, child: overlay!),
             ],
           ),
           const SizedBox(width: BeaconSpace.md),
@@ -291,7 +298,7 @@ class ItemCard extends StatelessWidget {
                   runSpacing: BeaconSpace.xs,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    ...(badges ?? _defaultBadges(includeStatus: true)),
+                    ...(badges ?? _defaultBadges(context.l10n, includeStatus: true)),
                     Text(item.timeAgo,
                         style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
                   ],
@@ -336,9 +343,9 @@ class ItemCard extends StatelessWidget {
                 fallbackIcon: categoryIcon(item.category),
                 heroTag: heroTag,
               ),
-              Positioned(
+              PositionedDirectional(
                 top: BeaconSpace.sm,
-                left: BeaconSpace.sm,
+                start: BeaconSpace.sm,
                 child: StatusBadge.fromItem(item, small: true),
               ),
             ],
@@ -349,7 +356,7 @@ class ItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.category.toUpperCase(),
+                  AppCategories.label(context.l10n, item.category).toUpperCase(),
                   style: text.labelSmall?.copyWith(color: t.primary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -405,7 +412,7 @@ class _Spine extends StatelessWidget {
               quarterTurns: 3,
               child: Center(
                 child: Text(
-                  kind.label,
+                  ItemCard._statusWord(context.l10n, kind).toUpperCase(),
                   style: text.labelSmall?.copyWith(
                     color: kind.onColor(t),
                     letterSpacing: 2.4,
@@ -432,13 +439,14 @@ class _MetaLine extends StatelessWidget {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final style = text.bodySmall?.copyWith(color: t.onSurfaceVar);
+    final l10n = context.l10n;
     return Row(
       children: [
         Icon(Icons.place_outlined, size: 15, color: t.onSurfaceMuted),
         const SizedBox(width: BeaconSpace.xs),
         Flexible(
           child: Text(
-            location.isEmpty ? 'Location not set' : location,
+            location.isEmpty ? l10n.postLocationNotSet : location,
             style: style,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -452,7 +460,7 @@ class _MetaLine extends StatelessWidget {
           Icon(categoryIcon(category), size: 15, color: t.onSurfaceMuted),
           const SizedBox(width: BeaconSpace.xs),
           Flexible(
-            child: Text(category,
+            child: Text(AppCategories.label(l10n, category),
                 style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ],

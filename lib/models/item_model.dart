@@ -1,6 +1,7 @@
 import '../core/utils/relative_time.dart';
 import '../core/utils/timestamp.dart';
 import '../features/location/place.dart';
+import '../l10n/l10n.dart';
 
 /// A lost or found post as the app sees it.
 ///
@@ -120,7 +121,7 @@ class ItemModel {
       description: map['description'] ?? '',
       createdAt: map['createdAt'] ?? Timestamp.now(),
       location: map['location'] ?? '',
-      timeAgo: map['timeAgo'] ?? 'Just now',
+      timeAgo: map['timeAgo'] ?? L10n.current.commonJustNow,
       imagePath: map['imagePath'] ?? '',
       isLost: map['isLost'] ?? true,
       reward: map['reward'],

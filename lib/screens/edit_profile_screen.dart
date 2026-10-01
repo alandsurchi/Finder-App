@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/features/profile/presentation/profile_controller.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/models/user_model.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
@@ -74,20 +75,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         _coverUrl != p.coverUrl;
   }
 
-  List<_FieldDef> get _fields => [
-        _FieldDef('Full name', Icons.person_outline_rounded, _fullNameCtrl,
-            hint: 'Your name', capitalization: TextCapitalization.words,
+  List<_FieldDef> _fields(AppLocalizations l10n) => [
+        _FieldDef(l10n.profileFullName, Icons.person_outline_rounded, _fullNameCtrl,
+            hint: l10n.profileFullNameHint, capitalization: TextCapitalization.words,
             autofill: AutofillHints.name),
-        _FieldDef('Nickname', Icons.alternate_email_rounded, _nickNameCtrl,
-            hint: 'How friends know you', autofill: AutofillHints.nickname),
-        _FieldDef('Phone', Icons.phone_outlined, _phoneCtrl,
-            type: TextInputType.phone, hint: '+1 234 567 8900',
+        _FieldDef(l10n.profileNickname, Icons.alternate_email_rounded, _nickNameCtrl,
+            hint: l10n.profileNicknameHint, autofill: AutofillHints.nickname),
+        _FieldDef(l10n.profilePhone, Icons.phone_outlined, _phoneCtrl,
+            type: TextInputType.phone, hint: l10n.profilePhoneHint,
             autofill: AutofillHints.telephoneNumber),
-        _FieldDef('City', Icons.place_outlined, _addressCtrl,
-            hint: 'City, country', capitalization: TextCapitalization.words,
+        _FieldDef(l10n.profileCity, Icons.place_outlined, _addressCtrl,
+            hint: l10n.profileCityHint, capitalization: TextCapitalization.words,
             autofill: AutofillHints.addressCity),
-        _FieldDef('Job / occupation', Icons.work_outline_rounded, _jobCtrl,
-            hint: 'What do you do?', capitalization: TextCapitalization.sentences,
+        _FieldDef(l10n.profileJob, Icons.work_outline_rounded, _jobCtrl,
+            hint: l10n.profileJobHint, capitalization: TextCapitalization.sentences,
             autofill: AutofillHints.jobTitle),
       ];
 
@@ -95,6 +96,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    final fields = _fields(l10n);
     final profileState = ref.watch(profileControllerProvider);
 
     // Seed the form once the profile arrives (opened before it loaded).
@@ -108,11 +111,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         final leave = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Discard changes?'),
-            content: const Text('Your edits have not been saved.'),
+            title: Text(l10n.profileDiscardTitle),
+            content: Text(l10n.profileDiscardBody),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep editing')),
-              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Discard')),
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.profileKeepEditing)),
+              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(l10n.commonDiscard)),
             ],
           ),
         );
@@ -124,10 +127,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Column(
             children: [
               AppPageHeader(
-                title: 'Edit profile',
+                title: l10n.profileEdit,
                 actions: [
                   AppButton.ghost(
-                    label: 'Save',
+                    label: l10n.commonSave,
                     icon: Icons.check_rounded,
                     isLoading: _isSaving,
                     onPressed: (_isSaving || !_seeded) ? null : _saveProfile,
@@ -137,7 +140,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               Expanded(
                 child: !_seeded
                     ? profileState.when(
-                        loading: () => const LoadingWidget(message: 'Loading your profile...'),
+                        loading: () => LoadingWidget(message: l10n.profileLoading),
                         error: (err, _) => ErrorStateWidget(
                           message: describeError(err),
                           onRetry: () => ref.read(profileControllerProvider.notifier).loadProfile(),
@@ -159,19 +162,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    for (var i = 0; i < _fields.length; i++) ...[
+                                    for (var i = 0; i < fields.length; i++) ...[
                                       if (i > 0) const SizedBox(height: BeaconSpace.lg),
                                       AppTextField(
-                                        controller: _fields[i].ctrl,
-                                        label: _fields[i].label,
-                                        hint: _fields[i].hint,
-                                        prefixIcon: _fields[i].icon,
-                                        keyboardType: _fields[i].type,
-                                        textCapitalization: _fields[i].capitalization,
-                                        autofillHints: _fields[i].autofill == null
+                                        controller: fields[i].ctrl,
+                                        label: fields[i].label,
+                                        hint: fields[i].hint,
+                                        prefixIcon: fields[i].icon,
+                                        keyboardType: fields[i].type,
+                                        textCapitalization: fields[i].capitalization,
+                                        autofillHints: fields[i].autofill == null
                                             ? null
-                                            : [_fields[i].autofill!],
-                                        textInputAction: i == _fields.length - 1
+                                            : [fields[i].autofill!],
+                                        textInputAction: i == fields.length - 1
                                             ? TextInputAction.done
                                             : TextInputAction.next,
                                         onChanged: (_) => setState(() {}),
@@ -192,11 +195,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('SIGN-IN E-MAIL',
+                                        Text(l10n.profileSignInEmailLabel,
                                             style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
                                         Text(_email, style: text.titleSmall),
                                         const SizedBox(height: 2),
-                                        Text('Your e-mail is used to sign in and cannot be changed here.',
+                                        Text(l10n.profileEmailNote,
                                             style: text.bodySmall),
                                       ],
                                     ),
@@ -219,7 +222,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   padding: const EdgeInsets.fromLTRB(
                       BeaconSpace.page, BeaconSpace.sm, BeaconSpace.page, BeaconSpace.lg),
                   child: AppButton(
-                    label: 'Save changes',
+                    label: l10n.profileSaveChanges,
                     icon: Icons.check_rounded,
                     isLoading: _isSaving,
                     onPressed: _isSaving ? null : _saveProfile,
@@ -232,6 +235,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Widget _buildCoverSection(AppColorTokens t) {
     final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     return ClipRRect(
       borderRadius: BeaconRadius.rXl,
       child: Stack(
@@ -243,15 +247,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               child: InkWell(onTap: _isUploadingCover ? null : _pickCover),
             ),
           ),
-          Positioned(
-            right: BeaconSpace.sm,
+          PositionedDirectional(
+            end: BeaconSpace.sm,
             bottom: BeaconSpace.sm,
             child: Row(
               children: [
                 if (_coverUrl.isNotEmpty && !_isUploadingCover) ...[
                   AppIconButton(
                     icon: Icons.delete_outline_rounded,
-                    tooltip: 'Remove cover photo',
+                    tooltip: l10n.photoRemoveCover,
                     size: 36,
                     iconSize: 18,
                     variant: AppIconButtonVariant.glass,
@@ -269,7 +273,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       )
                     : AppIconButton(
                         icon: Icons.photo_camera_outlined,
-                        tooltip: _coverUrl.isEmpty ? 'Add a cover photo' : 'Change cover photo',
+                        tooltip: _coverUrl.isEmpty ? l10n.photoAddCover : l10n.photoChangeCover,
                         size: 36,
                         iconSize: 18,
                         variant: AppIconButtonVariant.filled,
@@ -279,11 +283,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
           ),
           if (_coverUrl.isEmpty)
-            Positioned(
-              left: BeaconSpace.lg,
+            PositionedDirectional(
+              start: BeaconSpace.lg,
               bottom: BeaconSpace.md,
               child: Text(
-                'Add a cover photo',
+                l10n.photoAddCover,
                 style: text.labelLarge?.copyWith(color: t.onPrimary),
               ),
             ),
@@ -293,6 +297,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildAvatarSection(AppColorTokens t) {
+    final l10n = context.l10n;
     final name = _fullNameCtrl.text.trim();
     return Center(
       child: Column(
@@ -301,8 +306,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             clipBehavior: Clip.none,
             children: [
               AppAvatar(url: _avatarUrl, name: name, size: 112, ring: true),
-              Positioned(
-                right: 0,
+              PositionedDirectional(
+                end: 0,
                 bottom: 0,
                 child: _isUploadingAvatar
                     ? Container(
@@ -318,7 +323,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       )
                     : AppIconButton(
                         icon: Icons.camera_alt_rounded,
-                        tooltip: 'Change profile photo',
+                        tooltip: l10n.photoChangeProfile,
                         size: 36,
                         iconSize: 18,
                         variant: AppIconButtonVariant.filled,
@@ -334,13 +339,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             children: [
               AppButton.ghost(
                 label: _isUploadingAvatar
-                    ? 'Uploading…'
-                    : (_avatarUrl.isEmpty ? 'Add profile photo' : 'Change profile photo'),
+                    ? l10n.commonUploading
+                    : (_avatarUrl.isEmpty ? l10n.photoAddProfile : l10n.photoChangeProfile),
                 onPressed: _isUploadingAvatar ? null : _pickAndUploadAvatar,
               ),
               if (_avatarUrl.isNotEmpty && !_isUploadingAvatar)
                 AppButton.ghost(
-                  label: 'Remove',
+                  label: l10n.commonRemove,
                   onPressed: () => setState(() => _avatarUrl = ''),
                 ),
             ],
@@ -377,11 +382,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final url = await _pickEditUpload(
         mode: PhotoEditorMode.avatar,
         folder: 'avatars',
-        title: 'Profile photo',
+        title: context.l10n.photoProfileTitle,
       );
       if (url != null && mounted) setState(() => _avatarUrl = url);
     } catch (e) {
-      if (mounted) ActionFeedback.showError(context, 'Upload failed. ${describeError(e)}');
+      if (mounted) ActionFeedback.showError(context, context.l10n.commonUploadFailed(describeError(e)));
     } finally {
       if (mounted) setState(() => _isUploadingAvatar = false);
     }
@@ -394,11 +399,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final url = await _pickEditUpload(
         mode: PhotoEditorMode.cover,
         folder: 'covers',
-        title: 'Cover photo',
+        title: context.l10n.photoCoverTitle,
       );
       if (url != null && mounted) setState(() => _coverUrl = url);
     } catch (e) {
-      if (mounted) ActionFeedback.showError(context, 'Upload failed. ${describeError(e)}');
+      if (mounted) ActionFeedback.showError(context, context.l10n.commonUploadFailed(describeError(e)));
     } finally {
       if (mounted) setState(() => _isUploadingCover = false);
     }
@@ -408,7 +413,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final current = ref.read(profileControllerProvider).value;
     if (current == null) return;
     if (_fullNameCtrl.text.trim().isEmpty) {
-      ActionFeedback.showError(context, 'Please enter your name.');
+      ActionFeedback.showError(context, context.l10n.profileEnterName);
       return;
     }
     setState(() => _isSaving = true);
@@ -431,7 +436,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         Navigator.pop(context);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           final ctx = Navigator.of(context, rootNavigator: true).context;
-          ActionFeedback.showSuccess(ctx, 'Profile updated.');
+          ActionFeedback.showSuccess(ctx, ctx.l10n.profileUpdated);
         });
       },
       onFailure: (f) => ActionFeedback.showError(context, f.message),

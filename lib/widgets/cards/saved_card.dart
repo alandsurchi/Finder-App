@@ -5,6 +5,7 @@ import 'package:finder/models/item_model.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/widgets/ui/app_button.dart';
 import 'package:finder/widgets/ui/item_card.dart';
+import 'package:finder/l10n/l10n.dart';
 
 /// Saved-items card. Tapping opens the item; the bookmark toggles saving.
 class SavedCard extends StatelessWidget {
@@ -32,7 +33,7 @@ class SavedCard extends StatelessWidget {
       ),
       overlay: AppIconButton(
         icon: isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-        tooltip: isSaved ? 'Remove from saved' : 'Save item',
+        tooltip: isSaved ? context.l10n.postRemoveFromSaved : context.l10n.postSaveItem,
         variant: AppIconButtonVariant.glass,
         selected: isSaved,
         size: 40,

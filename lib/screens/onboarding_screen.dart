@@ -1,28 +1,29 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/features/settings/presentation/language_sheet.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import '../routes.dart';
 
+/// One onboarding slide; the copy is resolved from [AppLocalizations] in build.
 class _OnboardingPage {
-  final String title;
-  final String description;
+  final String Function(AppLocalizations) title;
+  final String Function(AppLocalizations) description;
   const _OnboardingPage({required this.title, required this.description});
 }
 
-const _pages = [
+final _pages = [
   _OnboardingPage(
-    title: 'Lost Something?',
-    description:
-        'Report your missing essentials in seconds. Finder connects found items with their owners instantly.',
+    title: (l) => l.onboardLostTitle,
+    description: (l) => l.onboardLostDescription,
   ),
   _OnboardingPage(
-    title: 'Found Something?',
-    description:
-        'Post found items and help return them to their rightful owners. Every good deed counts.',
+    title: (l) => l.onboardFoundTitle,
+    description: (l) => l.onboardFoundDescription,
   ),
   _OnboardingPage(
-    title: 'Connect &\nCommunicate',
-    description:
-        'Chat, share details, and return items safely. Build trust within the community.',
+    title: (l) => l.onboardConnectTitle,
+    description: (l) => l.onboardConnectDescription,
   ),
 ];
 
@@ -60,6 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final isLast = _currentPage == _pages.length - 1;
@@ -77,15 +79,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   // ── Top bar: brand + skip
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
                         BeaconSpace.page, BeaconSpace.sm, BeaconSpace.sm, 0),
                     child: Row(
                       children: [
                         const BeaconMark(size: 32),
                         const SizedBox(width: BeaconSpace.sm),
-                        Text('Finder', style: text.titleLarge),
+                        Text(l10n.appName, style: text.titleLarge),
                         const Spacer(),
-                        AppButton.ghost(label: 'Skip', onPressed: _skip),
+                        Consumer(
+                          builder: (context, ref, _) => AppIconButton(
+                            icon: Icons.translate_rounded,
+                            tooltip: context.l10n.languageTitle,
+                            variant: AppIconButtonVariant.ghost,
+                            onPressed: () => showLanguageSheet(context, ref),
+                          ),
+                        ),
+                        AppButton.ghost(label: l10n.commonSkip, onPressed: _skip),
                       ],
                     ),
                   ),
@@ -113,7 +123,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Column(
                       children: [
                         AppButton(
-                          label: isLast ? 'Get Started' : 'Next',
+                          label: isLast ? l10n.onboardGetStarted : l10n.commonNext,
                           icon: Icons.arrow_forward_rounded,
                           iconTrailing: true,
                           variant: isLast
@@ -130,7 +140,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ignoring: isLast,
                               child: Center(
                                 child: AppButton.ghost(
-                                  label: 'Skip for now',
+                                  label: l10n.onboardSkipForNow,
                                   onPressed: _skip,
                                 ),
                               ),
@@ -150,6 +160,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildSlide(BuildContext context, int index, AppColorTokens t) {
+    final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -173,13 +184,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: BeaconSpace.xxxl),
                 Text(
-                  _pages[index].title,
+                  _pages[index].title(l10n),
                   textAlign: TextAlign.center,
                   style: text.headlineLarge,
                 ),
                 const SizedBox(height: BeaconSpace.md),
                 Text(
-                  _pages[index].description,
+                  _pages[index].description(l10n),
                   textAlign: TextAlign.center,
                   style: text.bodyLarge?.copyWith(color: t.onSurfaceVar),
                 ),
@@ -309,8 +320,8 @@ class _FoundIllustration extends StatelessWidget {
               painter: _DotGridPainter(color: t.outline),
             ),
           ),
-          Positioned(
-            right: 16,
+          PositionedDirectional(
+            end: 16,
             bottom: 12,
             child: Icon(
               Icons.key_rounded,
@@ -318,8 +329,8 @@ class _FoundIllustration extends StatelessWidget {
               size: 120,
             ),
           ),
-          Positioned(
-            left: 24,
+          PositionedDirectional(
+            start: 24,
             bottom: 28,
             child: Container(
               width: 76,
@@ -338,8 +349,8 @@ class _FoundIllustration extends StatelessWidget {
               child: Icon(Icons.handshake_outlined, color: t.onFound, size: 36),
             ),
           ),
-          Positioned(
-            right: 28,
+          PositionedDirectional(
+            end: 28,
             top: 48,
             child: SurfaceCard(
               padding: const EdgeInsets.all(BeaconSpace.md),
@@ -355,10 +366,10 @@ class _FoundIllustration extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            left: 28,
+          PositionedDirectional(
+            start: 28,
             top: 32,
-            child: StatusBadge.reward('REWARD \$50', small: true),
+            child: StatusBadge.reward(context.l10n.onboardRewardSample, small: true),
           ),
         ],
       ),
@@ -416,7 +427,7 @@ class _ConnectIllustration extends StatelessWidget {
                 Icon(Icons.verified_rounded, color: t.primary, size: 18),
                 const SizedBox(width: BeaconSpace.sm),
                 Text(
-                  'TRUST SECURED',
+                  context.l10n.onboardTrustSecured,
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
@@ -440,11 +451,11 @@ class _ConnectIllustration extends StatelessWidget {
             horizontal: BeaconSpace.md, vertical: BeaconSpace.md),
         decoration: BoxDecoration(
           color: isLeft ? t.surface : t.primary,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isLeft ? 4 : 16),
-            bottomRight: Radius.circular(isLeft ? 16 : 4),
+          borderRadius: BorderRadiusDirectional.only(
+            topStart: const Radius.circular(16),
+            topEnd: const Radius.circular(16),
+            bottomStart: Radius.circular(isLeft ? 4 : 16),
+            bottomEnd: Radius.circular(isLeft ? 16 : 4),
           ),
           border: isLeft ? Border.all(color: t.outlineVariant) : null,
         ),

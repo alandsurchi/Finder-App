@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 
@@ -15,9 +16,13 @@ class ActionFeedback {
 
   static void showComingSoon(
     BuildContext context, {
-    String feature = 'This feature',
+    String? feature,
   }) =>
-      _show(context, '$feature is coming soon.', Icons.auto_awesome_outlined);
+      _show(
+        context,
+        context.l10n.helpComingSoon(feature ?? context.l10n.helpThisFeature),
+        Icons.auto_awesome_outlined,
+      );
 
   static void _show(
     BuildContext context,

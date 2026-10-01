@@ -11,6 +11,7 @@ import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/screens/edit_post_screen.dart';
+import 'package:finder/l10n/l10n.dart';
 
 class MyPostsScreen extends ConsumerStatefulWidget {
   const MyPostsScreen({super.key});
@@ -34,6 +35,7 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
   @override
   Widget build(BuildContext context) {
     final postsAsync = ref.watch(myPostsProvider);
+    final l10n = context.l10n;
 
     final allItems = postsAsync.value ?? [];
     final active = allItems.where((p) => !p.isResolved).length;
@@ -48,20 +50,20 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
           (_) => ref.read(myPostsProvider.notifier).load(),
         ),
         icon: const Icon(Icons.add_rounded),
-        label: const Text('New post'),
+        label: Text(l10n.postNewPost),
       ),
       body: SafeArea(
         child: Column(
           children: [
             AppPageHeader(
-              title: 'My posts',
+              title: l10n.postMyPosts,
               subtitle: postsAsync.hasValue
-                  ? '$active open · $resolved returned'
+                  ? l10n.postOpenReturnedCount(active, resolved)
                   : null,
               actions: [
                 AppIconButton(
                   icon: Icons.refresh_rounded,
-                  tooltip: 'Refresh',
+                  tooltip: l10n.commonRefresh,
                   onPressed: () => ref.read(myPostsProvider.notifier).load(),
                 ),
               ],
@@ -71,7 +73,7 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
               child: SegmentedPills(
-                options: const ['Open', 'Returned'],
+                options: [l10n.commonOpen, l10n.commonReturned],
                 selectedIndex: _tabIndex,
                 onChanged: (i) => setState(() => _tabIndex = i),
               ),
@@ -82,8 +84,8 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
             // ── Content ──
             Expanded(
               child: postsAsync.when(
-                loading: () => const LoadingWidget(
-                  message: 'Loading posts...',
+                loading: () => LoadingWidget(
+                  message: l10n.homeLoadingPosts,
                   variant: LoadingVariant.rows,
                 ),
                 error: (err, _) => ErrorStateWidget(
@@ -96,10 +98,10 @@ class _MyPostsScreenState extends ConsumerState<MyPostsScreen> {
                       icon: _tabIndex == 0
                           ? Icons.post_add_rounded
                           : Icons.task_alt_rounded,
-                      title: _tabIndex == 0 ? 'No open posts' : 'No returned items yet',
+                      title: _tabIndex == 0 ? l10n.postNoOpenPosts : l10n.postNoReturnedYet,
                       subtitle: _tabIndex == 0
-                          ? 'Create your first post to get started.'
-                          : 'Posts you mark as returned will appear here.',
+                          ? l10n.postCreateYourFirst
+                          : l10n.postReturnedAppearHere,
                     );
                   }
                   return ListView.separated(
@@ -132,6 +134,7 @@ class _PostManageCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
 
     return ItemCard(
       item: post,
@@ -149,7 +152,7 @@ class _PostManageCard extends ConsumerWidget {
         children: [
           if (!post.isResolved)
             AppButton.tonal(
-              label: 'Edit',
+              label: l10n.commonEdit,
               icon: Icons.edit_outlined,
               size: AppButtonSize.small,
               expand: false,
@@ -166,7 +169,7 @@ class _PostManageCard extends ConsumerWidget {
             ),
           if (!post.isResolved)
             AppButton.secondary(
-              label: 'Returned',
+              label: l10n.commonReturned,
               icon: Icons.check_circle_outline_rounded,
               size: AppButtonSize.small,
               expand: false,
@@ -174,7 +177,7 @@ class _PostManageCard extends ConsumerWidget {
             )
           else
             AppButton.tonal(
-              label: 'Reopen',
+              label: l10n.commonReopen,
               icon: Icons.replay_rounded,
               size: AppButtonSize.small,
               expand: false,
@@ -183,14 +186,14 @@ class _PostManageCard extends ConsumerWidget {
                     await ref.read(myPostsProvider.notifier).reopen(post.id);
                 if (!context.mounted) return;
                 result.fold(
-                  onSuccess: (_) => ActionFeedback.showSuccess(context, 'Post is active again.'),
+                  onSuccess: (_) => ActionFeedback.showSuccess(context, l10n.postActiveAgain),
                   onFailure: (f) => ActionFeedback.showError(context, f.message),
                 );
               },
             ),
           AppIconButton(
             icon: Icons.delete_outline_rounded,
-            tooltip: 'Delete post',
+            tooltip: l10n.postDeletePost,
             size: 36,
             iconSize: 18,
             variant: AppIconButtonVariant.tonal,
@@ -205,16 +208,16 @@ class _PostManageCard extends ConsumerWidget {
 
   void _confirmResolve(
       BuildContext context, WidgetRef ref, ItemModel post) {
+    final l10n = context.l10n;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Mark as returned?'),
-        content: Text(
-            'Mark "${post.title}" as returned? It leaves the Home feed but stays visible in Search.'),
+        title: Text(l10n.postMarkReturnedTitle),
+        content: Text(l10n.postMarkReturnedBody(post.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -223,11 +226,11 @@ class _PostManageCard extends ConsumerWidget {
                   await ref.read(myPostsProvider.notifier).markResolved(post.id);
               if (!context.mounted) return;
               result.fold(
-                onSuccess: (_) => ActionFeedback.showSuccess(context, 'Marked as returned.'),
+                onSuccess: (_) => ActionFeedback.showSuccess(context, l10n.commonMarkedAsReturned),
                 onFailure: (f) => ActionFeedback.showError(context, f.message),
               );
             },
-            child: const Text('Mark as returned'),
+            child: Text(l10n.commonMarkAsReturned),
           ),
         ],
       ),
@@ -237,16 +240,16 @@ class _PostManageCard extends ConsumerWidget {
   void _confirmDelete(
       BuildContext context, WidgetRef ref, ItemModel post) {
     final t = AppColorTokens.of(context);
+    final l10n = context.l10n;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete post?'),
-        content: Text(
-            'Are you sure you want to delete "${post.title}"? This cannot be undone.'),
+        title: Text(l10n.postDeleteTitle),
+        content: Text(l10n.postDeleteBodyConfirm(post.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -259,11 +262,11 @@ class _PostManageCard extends ConsumerWidget {
                   await ref.read(myPostsProvider.notifier).deletePost(post.id);
               if (!context.mounted) return;
               result.fold(
-                onSuccess: (_) => ActionFeedback.showSuccess(context, 'Post deleted.'),
+                onSuccess: (_) => ActionFeedback.showSuccess(context, l10n.postDeleted),
                 onFailure: (f) => ActionFeedback.showError(context, f.message),
               );
             },
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),

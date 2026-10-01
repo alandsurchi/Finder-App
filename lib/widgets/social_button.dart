@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/widgets/ui/press_scale.dart';
@@ -27,7 +28,7 @@ class SocialButton extends StatelessWidget {
     return Semantics(
       button: true,
       enabled: enabled,
-      label: semanticLabel ?? 'Continue with social account',
+      label: semanticLabel ?? context.l10n.authSocialSemantic,
       child: PressScale(
         enabled: enabled,
         scale: 0.93,

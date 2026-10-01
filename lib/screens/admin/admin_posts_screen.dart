@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/features/admin/admin_console_service.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/providers/post_provider.dart';
@@ -56,24 +57,30 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final posts = ref.watch(adminPostsProvider(_key));
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            const AppPageHeader(title: 'Posts', subtitle: 'Everything on the feed'),
+            AppPageHeader(title: l10n.commonPosts, subtitle: l10n.adminPostsSubtitle),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.page),
               child: Column(
                 children: [
                   SearchField(
                     controller: _search,
-                    hint: 'Title, description, owner',
+                    hint: l10n.adminPostsSearchHint,
                     onChanged: _onQuery,
                   ),
                   const SizedBox(height: BeaconSpace.md),
                   SegmentedPills(
-                    options: const ['All', 'Open', 'Returned', 'Reported'],
+                    options: [
+                      l10n.adminFilterAll,
+                      l10n.adminFilterOpen,
+                      l10n.commonReturned,
+                      l10n.adminFilterReported,
+                    ],
                     selectedIndex: _tab,
                     onChanged: (i) => setState(() => _tab = i),
                   ),
@@ -87,7 +94,8 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                 error: (e, _) => ErrorStateWidget(message: describeError(e), onRetry: _refresh),
                 data: (items) {
                   if (items.isEmpty) {
-                    return const EmptyWidget(icon: Icons.inventory_2_outlined, title: 'No posts here');
+                    return EmptyWidget(
+                        icon: Icons.inventory_2_outlined, title: l10n.adminNoPostsHere);
                   }
                   return RefreshIndicator(
                     onRefresh: () async => _refresh(),
@@ -103,7 +111,7 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                           layout: ItemCardLayout.row,
                           onTap: () => _showActions(item),
                           subtitle: NameWithMarks(
-                            name: item.ownerName ?? 'Finder User',
+                            name: item.ownerName ?? l10n.commonFinderUser,
                             verified: item.isVerified,
                             admin: item.ownerIsAdmin,
                             style: Theme.of(context).textTheme.labelSmall,
@@ -123,18 +131,22 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
   }
 
   void _showActions(ItemModel item) {
+    final l10n = context.l10n;
     AppBottomSheet.show<void>(
       context,
       builder: (sheetCtx) => AppBottomSheet(
         title: item.title,
-        subtitle: 'by ${item.ownerName ?? 'Finder User'} · ${item.isResolved ? 'returned' : 'open'}',
+        subtitle: l10n.adminPostSheetSubtitle(
+          item.ownerName ?? l10n.commonFinderUser,
+          item.isResolved ? l10n.adminStatusReturned : l10n.adminStatusOpen,
+        ),
         scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SheetOption(
               icon: Icons.open_in_new_rounded,
-              label: 'Open the post',
+              label: l10n.adminOpenThePost,
               onTap: () {
                 Navigator.pop(sheetCtx);
                 Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: item);
@@ -142,18 +154,18 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
             ),
             SheetOption(
               icon: item.isResolved ? Icons.replay_rounded : Icons.assignment_turned_in_outlined,
-              label: item.isResolved ? 'Reopen the post' : 'Mark as returned',
+              label: item.isResolved ? l10n.adminReopenThePost : l10n.commonMarkAsReturned,
               onTap: () => _run(
                 sheetCtx,
                 () => ref.read(adminConsoleServiceProvider).setPostStatus(
                     item.id, item.isResolved ? 'active' : 'resolved'),
-                item.isResolved ? 'Post reopened.' : 'Marked as returned.',
+                item.isResolved ? l10n.adminPostReopened : l10n.commonMarkedAsReturned,
               ),
             ),
             SheetOption(
               icon: Icons.delete_outline_rounded,
-              label: 'Remove the post',
-              subtitle: 'The owner is notified with your reason',
+              label: l10n.adminRemoveThePost,
+              subtitle: l10n.adminRemovePostOwnerNotified,
               destructive: true,
               onTap: () async {
                 Navigator.pop(sheetCtx);
@@ -162,7 +174,7 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                 try {
                   await ref.read(adminConsoleServiceProvider).deletePost(item.id, reason: reason);
                   if (!mounted) return;
-                  ActionFeedback.showSuccess(context, 'Post removed.');
+                  ActionFeedback.showSuccess(context, l10n.adminPostRemoved);
                   _refresh();
                 } catch (e) {
                   if (mounted) ActionFeedback.showError(context, describeError(e));
@@ -177,23 +189,24 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
   }
 
   Future<String?> _askReason() {
+    final l10n = context.l10n;
     final ctrl = TextEditingController();
     return AppBottomSheet.show<String>(
       context,
       builder: (ctx) => AppBottomSheet(
-        title: 'Remove this post?',
-        subtitle: 'A short reason is sent to the owner.',
+        title: l10n.adminRemovePostTitle,
+        subtitle: l10n.adminRemovePostReasonSubtitle,
         actions: [
-          AppButton.ghost(label: 'Cancel', onPressed: () => Navigator.pop(ctx)),
+          AppButton.ghost(label: l10n.commonCancel, onPressed: () => Navigator.pop(ctx)),
           AppButton.danger(
-            label: 'Remove',
+            label: l10n.commonRemove,
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
           ),
         ],
         child: AppTextField(
           controller: ctrl,
-          label: 'Reason (optional)',
-          hint: 'e.g. Not a lost or found item',
+          label: l10n.adminReasonOptionalLabel,
+          hint: l10n.adminReasonPostHint,
           autofocus: true,
           maxLines: 3,
         ),

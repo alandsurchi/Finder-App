@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import '../core/errors/exceptions.dart';
 import '../core/network/api_client.dart';
 import '../features/location/place.dart';
+import '../l10n/l10n.dart';
 
 /// Geocoding (through the Finder API, which proxies OpenStreetMap) and the
 /// device's own position.
@@ -58,21 +59,17 @@ class GeoService {
 
   Future<Position> currentPosition() async {
     if (!await Geolocator.isLocationServiceEnabled()) {
-      throw const ValidationException(
-        'Turn on location services (GPS) to use your current location.',
-      );
+      throw ValidationException(L10n.current.mapErrGpsOff);
     }
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.deniedForever) {
-      throw const ValidationException(
-        'Location access is blocked. Allow it in your phone settings to use your current location.',
-      );
+      throw ValidationException(L10n.current.mapErrBlocked);
     }
     if (permission == LocationPermission.denied) {
-      throw const ValidationException('Location permission was not granted.');
+      throw ValidationException(L10n.current.mapErrDenied);
     }
 
     try {
@@ -85,9 +82,7 @@ class GeoService {
     } on TimeoutException {
       final last = await _lastKnown();
       if (last != null) return last;
-      throw const ValidationException(
-        'Could not get a GPS fix. Move somewhere with a clearer view of the sky and try again.',
-      );
+      throw ValidationException(L10n.current.mapErrNoFix);
     }
   }
 

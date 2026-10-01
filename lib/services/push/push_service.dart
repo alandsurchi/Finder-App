@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/di/app_providers.dart';
 import '../../features/notifications/presentation/notification_navigator.dart';
 import '../../features/notifications/presentation/notifications_controller.dart';
+import '../../l10n/l10n.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/post_provider.dart';
 import '../../features/profile/presentation/profile_controller.dart';
@@ -41,20 +42,20 @@ class PushService {
   String? _registeredToken;
   Map<String, dynamic>? _pendingOpen;
 
-  static const AndroidNotificationChannel _messagesChannel =
-      AndroidNotificationChannel(
-    'finder_messages',
-    'Messages',
-    description: 'New chat messages',
-    importance: Importance.high,
-  );
-  static const AndroidNotificationChannel _updatesChannel =
-      AndroidNotificationChannel(
-    'finder_updates',
-    'Updates',
-    description: 'Post and account updates',
-    importance: Importance.defaultImportance,
-  );
+  // Channel names show in the phone's notification settings, so they follow
+  // the app language; the ids never change.
+  AndroidNotificationChannel get _messagesChannel => AndroidNotificationChannel(
+        'finder_messages',
+        L10n.current.commonMessages,
+        description: L10n.current.pushMessagesChannelDesc,
+        importance: Importance.high,
+      );
+  AndroidNotificationChannel get _updatesChannel => AndroidNotificationChannel(
+        'finder_updates',
+        L10n.current.pushUpdatesChannel,
+        description: L10n.current.pushUpdatesChannelDesc,
+        importance: Importance.defaultImportance,
+      );
 
   bool get supported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   bool get isReady => _ready;
@@ -246,7 +247,7 @@ class PushService {
       return;
     }
 
-    final title = message.notification?.title ?? data['title']?.toString() ?? 'Finder';
+    final title = message.notification?.title ?? data['title']?.toString() ?? L10n.current.appName;
     final body = message.notification?.body ?? data['body']?.toString() ?? '';
     await showLocal(title: title, body: body, data: data);
   }

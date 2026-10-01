@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/social_button.dart';
@@ -34,10 +35,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return AuthShell(
       icon: Icons.person_add_alt_1_rounded,
-      title: 'Create your account',
-      subtitle: 'Report and track lost & found items with the community.',
+      title: l10n.authSignupTitle,
+      subtitle: l10n.authSignupSubtitle,
       showBack: true,
       children: [
         AutofillGroup(
@@ -46,8 +48,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             children: [
               AppTextField(
                 controller: _emailCtrl,
-                label: 'Email address',
-                hint: 'yourname@example.com',
+                label: l10n.authEmailAddressLabel,
+                hint: l10n.authEmailAddressHint,
                 prefixIcon: Icons.mail_outline_rounded,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
@@ -56,8 +58,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               const SizedBox(height: BeaconSpace.lg),
               AppTextField(
                 controller: _nameCtrl,
-                label: 'Your name',
-                hint: 'How should we call you?',
+                label: l10n.authNameLabel,
+                hint: l10n.authNameHint,
                 prefixIcon: Icons.person_outline_rounded,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
@@ -66,8 +68,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               const SizedBox(height: BeaconSpace.lg),
               AppTextField(
                 controller: _phoneCtrl,
-                label: 'Phone number',
-                hint: '+1 234 567 8900',
+                label: l10n.authPhoneLabel,
+                hint: l10n.authPhoneHint,
                 prefixIcon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.next,
@@ -76,9 +78,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               const SizedBox(height: BeaconSpace.lg),
               AppTextField(
                 controller: _passwordCtrl,
-                label: 'Password',
-                hint: 'At least 8 characters',
-                helper: Validators.passwordRule,
+                label: l10n.authPasswordLabel,
+                hint: l10n.authSignupPasswordHint,
+                helper: l10n.authPasswordRule,
                 prefixIcon: Icons.lock_outline_rounded,
                 obscureText: true,
                 textInputAction: TextInputAction.done,
@@ -91,18 +93,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         Padding(
           padding: const EdgeInsets.only(top: BeaconSpace.xxl, bottom: BeaconSpace.xxxl),
           child: AppButton(
-            label: 'Create account',
+            label: l10n.authCreateAccount,
             isLoading: _isLoading,
             onPressed: _isLoading ? null : _submit,
           ),
         ),
-        const LabeledDivider(label: 'Or sign up with'),
+        LabeledDivider(label: l10n.authOrSignUpWith),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: BeaconSpace.xl),
           child: Center(
             child: SocialButton(
               imageAsset: 'assets/images/google_logo.png',
-              semanticLabel: 'Sign up with Google',
+              semanticLabel: l10n.authSignUpWithGoogle,
               onTap: _isLoading ? null : _handleGoogleSignIn,
             ),
           ),
@@ -110,8 +112,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         const LegalFooter(),
         const SizedBox(height: BeaconSpace.md),
         AuthFooterLink(
-          prompt: 'Already have an account?',
-          action: 'Log in',
+          prompt: l10n.authHaveAccountPrompt,
+          action: l10n.authLogIn,
           onTap: () => Navigator.pushNamed(context, AppRoutes.login),
         ),
       ],
@@ -129,16 +131,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
     final name = _nameCtrl.text.trim();
     final phone = _phoneCtrl.text.trim();
     if (!Validators.isEmail(email)) {
-      ActionFeedback.showError(context, 'Enter a valid email address.');
+      ActionFeedback.showError(context, l10n.authInvalidEmail);
       return;
     }
     if (!Validators.isStrongPassword(password)) {
-      ActionFeedback.showError(context, Validators.passwordRule);
+      ActionFeedback.showError(context, l10n.authPasswordRule);
       return;
     }
 

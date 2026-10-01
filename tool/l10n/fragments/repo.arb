@@ -1,0 +1,51 @@
+{
+  "@@locale": "en",
+  "repoUnableLogin": "Unable to login",
+  "repoUnableLoginGoogle": "Unable to login with Google",
+  "repoUnableLogout": "Unable to logout",
+  "repoUnableSignUp": "Unable to sign up",
+  "repoUnableSendResetCode": "Unable to send password reset code",
+  "repoUnableVerifyCode": "Unable to verify verification code",
+  "repoUnableResetPassword": "Unable to reset password",
+  "repoUnableVerifyEmail": "Unable to verify email address",
+  "repoUnableResendCode": "Unable to resend verification code",
+  "repoUnableLoadNotifications": "Unable to load notifications.",
+  "repoUnableUpdateNotification": "Unable to update the notification.",
+  "repoUnableUpdateNotifications": "Unable to update notifications.",
+  "repoUnableLoadProfile": "Unable to load your profile.",
+  "repoUnableUpdateProfile": "Unable to update your profile.",
+  "repoUnableLoadPrivacy": "Unable to load privacy settings.",
+  "repoUnableUpdatePrivacy": "Unable to update privacy settings.",
+  "repoUnableLoadNotifSettings": "Unable to load notification settings.",
+  "repoUnableUpdateNotifSettings": "Unable to update notification settings.",
+  "repoUnableLoadBlocked": "Unable to load blocked users.",
+  "repoUnableBlock": "Unable to block this user.",
+  "repoUnableUnblock": "Unable to unblock this user.",
+  "repoUnableSubmitVerification": "Unable to submit your verification.",
+  "repoUnableLoadVerification": "Unable to load verification status.",
+  "repoUnableDeleteAccount": "Unable to delete your account.",
+  "repoUnableLoadSaved": "Unable to load saved items.",
+  "repoUnableUpdateSaved": "Unable to update saved items.",
+  "repoLoginToSave": "Please log in to save items.",
+  "repoLoginToManageNotifications": "Please log in to manage notifications.",
+  "repoActionBlockUsers": "block users",
+  "repoActionCheckVerification": "check verification",
+  "repoActionDeleteAccount": "delete your account",
+  "repoActionSubmitVerification": "submit verification",
+  "repoActionUpdateBlocked": "update blocked users",
+  "repoActionUpdateNotifSettings": "update notification settings",
+  "repoActionUpdatePrivacy": "update privacy settings",
+  "repoActionUpdateProfile": "update your profile",
+  "repoActionViewBlocked": "view blocked users",
+  "repoActionViewNotifSettings": "view notification settings",
+  "repoActionViewPrivacy": "view privacy settings",
+  "repoActionViewProfile": "view your profile",
+  "repoPleaseLogInTo": "Please log in to {action}.",
+  "@repoPleaseLogInTo": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  }
+}

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
+import 'package:finder/l10n/l10n.dart';
 import 'app_button.dart';
 
 /// Pill search input with clear button and optional filter action.
 class SearchField extends StatefulWidget {
   final TextEditingController? controller;
-  final String hint;
+  final String? hint;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final VoidCallback? onFilterTap;
@@ -17,7 +18,7 @@ class SearchField extends StatefulWidget {
   const SearchField({
     super.key,
     this.controller,
-    this.hint = 'Search',
+    this.hint,
     this.onChanged,
     this.onSubmitted,
     this.onFilterTap,
@@ -54,6 +55,7 @@ class _SearchFieldState extends State<SearchField> {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final hasText = _ctrl.text.isNotEmpty;
+    final l10n = context.l10n;
 
     return Row(
       children: [
@@ -70,11 +72,11 @@ class _SearchFieldState extends State<SearchField> {
               style: text.bodyLarge,
               cursorColor: t.primary,
               decoration: InputDecoration(
-                hintText: widget.hint,
+                hintText: widget.hint ?? l10n.commonSearch,
                 prefixIcon: const Icon(Icons.search_rounded, size: BeaconIcon.md),
                 suffixIcon: hasText
                     ? IconButton(
-                        tooltip: 'Clear search',
+                        tooltip: l10n.searchClear,
                         icon: const Icon(Icons.close_rounded, size: 20),
                         onPressed: () {
                           _ctrl.clear();
@@ -106,7 +108,7 @@ class _SearchFieldState extends State<SearchField> {
           const SizedBox(width: BeaconSpace.sm),
           AppIconButton(
             icon: Icons.tune_rounded,
-            tooltip: 'Filters',
+            tooltip: l10n.filterTitle,
             size: 52,
             variant: widget.filterActive
                 ? AppIconButtonVariant.filled

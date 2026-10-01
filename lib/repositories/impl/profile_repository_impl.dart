@@ -1,3 +1,4 @@
+import '../../l10n/l10n.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/errors/failure.dart';
 import '../../core/network/api_client.dart';
@@ -25,7 +26,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   Failure? _requireAuth(String action) => _apiClient.isAuthenticated
       ? null
-      : Failure(message: 'Please log in to $action.', type: FailureType.auth);
+      : Failure(message: L10n.current.repoPleaseLogInTo(action), type: FailureType.auth);
 
   /// Runs [call] and maps any thrown error to a [Failure].
   Future<Result<T>> _guard<T>(
@@ -47,14 +48,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<Result<UserModel>> getProfile() => _guard(
-        'view your profile',
+        L10n.current.repoActionViewProfile,
         () async => UserModel.fromApi(_map(await _apiClient.get('/profile'))),
-        fallback: 'Unable to load your profile.',
+        fallback: L10n.current.repoUnableLoadProfile,
       );
 
   @override
   Future<Result<UserModel>> updateProfile(UserModel profile) => _guard(
-        'update your profile',
+        L10n.current.repoActionUpdateProfile,
         () async {
           final res = await _apiClient.put('/profile', {
             'fullName': profile.fullName,
@@ -71,12 +72,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
             postsCount: profile.postsCount,
           );
         },
-        fallback: 'Unable to update your profile.',
+        fallback: L10n.current.repoUnableUpdateProfile,
       );
 
   @override
   Future<Result<PrivacySettings>> getPrivacySettings() => _guard(
-        'view privacy settings',
+        L10n.current.repoActionViewPrivacy,
         () async {
           final map = _map(await _apiClient.get('/profile/privacy'));
           return PrivacySettings(
@@ -86,7 +87,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
             hidePhone: map['hidePhone'] as bool? ?? _defaultSettings.hidePhone,
           );
         },
-        fallback: 'Unable to load privacy settings.',
+        fallback: L10n.current.repoUnableLoadPrivacy,
       );
 
   @override
@@ -94,7 +95,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     PrivacySettings settings,
   ) =>
       _guard(
-        'update privacy settings',
+        L10n.current.repoActionUpdatePrivacy,
         () async {
           await _apiClient.put('/profile/privacy', {
             'showProfile': settings.showProfile,
@@ -104,15 +105,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
           });
           return settings;
         },
-        fallback: 'Unable to update privacy settings.',
+        fallback: L10n.current.repoUnableUpdatePrivacy,
       );
 
   @override
   Future<Result<NotificationSettings>> getNotificationSettings() => _guard(
-        'view notification settings',
+        L10n.current.repoActionViewNotifSettings,
         () async => NotificationSettings.fromApi(
             _map(await _apiClient.get('/profile/notification-settings'))),
-        fallback: 'Unable to load notification settings.',
+        fallback: L10n.current.repoUnableLoadNotifSettings,
       );
 
   @override
@@ -120,15 +121,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
     NotificationSettings settings,
   ) =>
       _guard(
-        'update notification settings',
+        L10n.current.repoActionUpdateNotifSettings,
         () async => NotificationSettings.fromApi(_map(await _apiClient.put(
             '/profile/notification-settings', settings.toApiBody()))),
-        fallback: 'Unable to update notification settings.',
+        fallback: L10n.current.repoUnableUpdateNotifSettings,
       );
 
   @override
   Future<Result<List<BlockedUser>>> getBlockedUsers() => _guard(
-        'view blocked users',
+        L10n.current.repoActionViewBlocked,
         () async {
           final list = await _apiClient.get('/profile/blocked') as List<dynamic>? ?? [];
           return list.map((item) {
@@ -142,39 +143,39 @@ class ProfileRepositoryImpl implements ProfileRepository {
             );
           }).toList();
         },
-        fallback: 'Unable to load blocked users.',
+        fallback: L10n.current.repoUnableLoadBlocked,
       );
 
   @override
   Future<Result<void>> blockUser(String userId) => _guard(
-        'block users',
+        L10n.current.repoActionBlockUsers,
         () => _apiClient.post('/profile/blocked', {'blockedUserId': userId}),
-        fallback: 'Unable to block this user.',
+        fallback: L10n.current.repoUnableBlock,
       );
 
   @override
   Future<Result<void>> unblockUser(String userId) => _guard(
-        'update blocked users',
+        L10n.current.repoActionUpdateBlocked,
         () => _apiClient.delete('/profile/blocked/$userId'),
-        fallback: 'Unable to unblock this user.',
+        fallback: L10n.current.repoUnableUnblock,
       );
 
   @override
   Future<Result<void>> deleteAccount({String? password, String? confirm}) => _guard(
-        'delete your account',
+        L10n.current.repoActionDeleteAccount,
         () => _apiClient.deleteWithBody('/profile', {
           if (password != null) 'password': password,
           if (confirm != null) 'confirm': confirm,
         }),
-        fallback: 'Unable to delete your account.',
+        fallback: L10n.current.repoUnableDeleteAccount,
       );
 
   @override
   Future<Result<VerificationStatus>> getVerificationStatus() => _guard(
-        'check verification',
+        L10n.current.repoActionCheckVerification,
         () async => VerificationStatus.fromApi(
             _map(await _apiClient.get('/profile/verification'))),
-        fallback: 'Unable to load verification status.',
+        fallback: L10n.current.repoUnableLoadVerification,
       );
 
   @override
@@ -182,10 +183,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
     VerificationRequest request,
   ) =>
       _guard(
-        'submit verification',
+        L10n.current.repoActionSubmitVerification,
         () async => VerificationStatus.fromApi(_map(
             await _apiClient.post('/profile/verification', request.toApiBody()))),
-        fallback: 'Unable to submit your verification.',
+        fallback: L10n.current.repoUnableSubmitVerification,
       );
 
   String _avatarLabel(String name) {
