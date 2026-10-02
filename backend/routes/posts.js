@@ -195,15 +195,23 @@ router.post('/', verifyToken, limits.posts, validate(schemas.createPost), async 
     const id = crypto.randomUUID();
     const now = Date.now();
     const ownerId = req.userId;
+    // Admins moderate the queue, so their own posts skip it and go live at once.
+    const admin = await isAdmin(ownerId);
 
     await db.exec(
-      `INSERT INTO posts (id, owner_id, title, description, category, is_lost, reward, location, image_url, lost_on, status, created_at_ms, updated_at_ms, latitude, longitude, translation_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
-      [id, ownerId, title, description, category, bool(!!isLost), reward === undefined || reward === null || reward === '' ? null : String(reward), location, imageUrl || '', lostOn || null, 'pending', now, now, coord(latitude), coord(longitude), 'pending']
+      `INSERT INTO posts (id, owner_id, title, description, category, is_lost, reward, location, image_url, lost_on, status, created_at_ms, updated_at_ms, latitude, longitude, translation_status, reviewed_at_ms, reviewer_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+      [id, ownerId, title, description, category, bool(!!isLost), reward === undefined || reward === null || reward === '' ? null : String(reward), location, imageUrl || '', lostOn || null, admin ? 'active' : 'pending', now, now, coord(latitude), coord(longitude), 'pending', admin ? now : null, admin ? ownerId : null]
     );
 
     const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [id]);
     res.status(201).json(mapPost(row, { lang: req.lang }));
+    if (admin) {
+      // Already public: translate in the background and start matching now.
+      moderation.retranslate(id).catch(err => console.error('Translate error:', err.message));
+      matching.notifyMatches(row).catch(err => console.error('Match error:', err.message));
+      return;
+    }
     // Translate, pre-check and wake the admins after replying; the AI must never delay the post.
     // Lost/found matching runs once an admin approves the post.
     moderation.processNewPost(id).catch(err => console.error('Review pipeline error:', err.message));

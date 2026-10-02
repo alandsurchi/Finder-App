@@ -237,23 +237,24 @@ router.post('/posts/:id/status', validate(schemas.adminPostStatus), async (req, 
   }
 });
 
-async function loadPendingPost(req, res) {
+/** Loads the post unless its status is not one of `allowed` (409 with the current state). */
+async function loadPostFor(req, res, allowed) {
   const row = await db.queryOne('SELECT * FROM posts WHERE id = $1', [req.params.id]);
   if (!row) {
     res.status(404).json({ message: 'Post not found.' });
     return null;
   }
-  if (row.status !== 'pending') {
+  if (!allowed.includes(row.status)) {
     res.status(409).json({ message: `This request was already ${row.status === 'active' ? 'approved' : row.status}.` });
     return null;
   }
   return row;
 }
 
-// POST /admin/posts/:id/approve
+// POST /admin/posts/:id/approve — pending or rejected → live
 router.post('/posts/:id/approve', async (req, res) => {
   try {
-    const post = await loadPendingPost(req, res);
+    const post = await loadPostFor(req, res, ['pending', 'rejected']);
     if (!post) return;
     const now = Date.now();
     await db.exec(
@@ -277,19 +278,20 @@ router.post('/posts/:id/approve', async (req, res) => {
   }
 });
 
-// POST /admin/posts/:id/reject { reason }
+// POST /admin/posts/:id/reject { reason } — pending, or take a live/returned/archived post down
 router.post('/posts/:id/reject', validate(schemas.rejectPost), async (req, res) => {
   const { reason } = req.body;
   try {
-    const post = await loadPendingPost(req, res);
+    const post = await loadPostFor(req, res, ['pending', 'active', 'resolved', 'expired']);
     if (!post) return;
+    const wasLive = post.status !== 'pending';
     const now = Date.now();
     await db.exec(
       `UPDATE posts SET status = 'rejected', reviewed_at_ms = $1, reviewer_id = $2, rejection_reason = $3, updated_at_ms = $4 WHERE id = $5`,
       [now, req.userId, reason, now, post.id]
     );
     await notify(post.owner_id, {
-      title: 'Your post was not approved',
+      title: wasLive ? 'Your post was taken down' : 'Your post was not approved',
       message: `"${post.title}": ${reason} You can edit it and send it again.`,
       type: 'update',
       data: { type: 'post_rejected', postId: post.id, reason },

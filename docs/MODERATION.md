@@ -7,10 +7,10 @@ runs first and only advises; a person decides.
 
 | status | who sees it | how it gets there |
 |---|---|---|
-| `pending` | owner, admins | `POST /posts`; editing a `rejected` post |
-| `active` | everyone | `POST /admin/posts/:id/approve`; owner reopens a returned/archived post |
+| `pending` | owner, admins | `POST /posts` by a normal user; editing a `rejected` post |
+| `active` | everyone | `POST /posts` by an admin (skips the queue, matching starts at once); `POST /admin/posts/:id/approve` (from `pending` or `rejected`); owner reopens a returned/archived post |
 | `resolved` | everyone (badge "Returned") | owner marks returned |
-| `rejected` | owner, admins | `POST /admin/posts/:id/reject {reason}` |
+| `rejected` | owner, admins | `POST /admin/posts/:id/reject {reason}` from `pending`, or from `active`/`resolved`/`expired` to take a post down |
 | `expired` | owner, admins | sweeper, 90 days after creation while still `active` |
 
 `GET /posts` without `status` returns `active`/`resolved` for other people and
