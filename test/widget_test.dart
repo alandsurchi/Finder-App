@@ -30,13 +30,13 @@ void main() {
     await tester.pumpWidget(_app(const Locale('en')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Lost Something?'), findsOneWidget);
-    expect(find.text('Found Something?'), findsNothing);
+    expect(find.text('Lost something? Post it in a minute'), findsOneWidget);
+    expect(find.text('Found something? Help it get home'), findsNothing);
 
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Found Something?'), findsOneWidget);
+    expect(find.text('Found something? Help it get home'), findsOneWidget);
   });
 
   testWidgets('Arabic renders right-to-left with translated copy', (tester) async {
@@ -45,8 +45,8 @@ void main() {
 
     final context = tester.element(find.byType(OnboardingScreen));
     expect(Directionality.of(context), TextDirection.rtl);
-    expect(find.text('فقدت شيئًا؟'), findsOneWidget);
-    expect(find.text('Lost Something?'), findsNothing);
+    expect(find.text('فقدت شيئًا؟ انشره في دقيقة'), findsOneWidget);
+    expect(find.text('Lost something? Post it in a minute'), findsNothing);
   });
 
   testWidgets('Kurdish (Sorani) is supported and right-to-left', (tester) async {
@@ -55,7 +55,7 @@ void main() {
 
     final context = tester.element(find.byType(OnboardingScreen));
     expect(Directionality.of(context), TextDirection.rtl);
-    expect(find.text('شتێکت ون کردووە؟'), findsOneWidget);
+    expect(find.text('شتێکت ون کردووە؟ لە یەک خولەکدا بڵاوی بکەرەوە'), findsOneWidget);
     // Flutter's own widget strings come from the Kurdish delegate.
     expect(MaterialLocalizations.of(context).okButtonLabel, 'باشە');
     expect(MaterialLocalizations.of(context).formatMonthYear(DateTime(2026, 10)),
