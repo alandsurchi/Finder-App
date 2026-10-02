@@ -43,18 +43,64 @@ class AdminStats {
   }
 }
 
-/// Whether the Gemini key is installed (never the key itself).
-class AiKeyInfo {
+/// One AI provider the server supports.
+class AiProvider {
+  final String id, label, defaultModel;
+  const AiProvider(this.id, this.label, this.defaultModel);
+}
+
+/// The server's AI settings as the console sees them (never the key itself).
+class AiSettingsInfo {
   final bool configured, enabled;
-  final String source, model, keyHint;
-  const AiKeyInfo({required this.configured, required this.enabled, required this.source, required this.model, required this.keyHint});
-  factory AiKeyInfo.fromApi(Map<String, dynamic> m) => AiKeyInfo(
-        configured: m['configured'] == true,
-        enabled: m['enabled'] == true,
-        source: m['source']?.toString() ?? 'none',
-        model: m['model']?.toString() ?? '',
-        keyHint: m['keyHint']?.toString() ?? '',
-      );
+  final String provider, providerLabel, model, baseUrl, source, keyHint;
+  final int pendingTranslations, unscoredPending;
+  final List<AiProvider> providers;
+  const AiSettingsInfo({
+    required this.configured,
+    required this.enabled,
+    required this.provider,
+    required this.providerLabel,
+    required this.model,
+    required this.baseUrl,
+    required this.source,
+    required this.keyHint,
+    required this.pendingTranslations,
+    required this.unscoredPending,
+    required this.providers,
+  });
+
+  static const fallbackProviders = [
+    AiProvider('google', 'Google AI Studio', 'gemini-2.5-flash-lite'),
+    AiProvider('openai', 'OpenAI', 'gpt-4o-mini'),
+    AiProvider('anthropic', 'Anthropic', 'claude-haiku-4-5-20251001'),
+    AiProvider('custom', 'OpenAI-compatible', ''),
+  ];
+
+  String defaultModelFor(String id) =>
+      providers.where((p) => p.id == id).map((p) => p.defaultModel).firstOrNull ?? '';
+
+  factory AiSettingsInfo.fromApi(Map<String, dynamic> m) {
+    int n(String k) => (m[k] is num) ? (m[k] as num).toInt() : int.tryParse('${m[k]}') ?? 0;
+    final list = (m['providers'] is List)
+        ? (m['providers'] as List)
+            .whereType<Map>()
+            .map((p) => AiProvider('${p['id']}', '${p['label']}', '${p['defaultModel'] ?? ''}'))
+            .toList()
+        : <AiProvider>[];
+    return AiSettingsInfo(
+      configured: m['configured'] == true,
+      enabled: m['enabled'] == true,
+      provider: m['provider']?.toString() ?? 'google',
+      providerLabel: m['providerLabel']?.toString() ?? '',
+      model: m['model']?.toString() ?? '',
+      baseUrl: m['baseUrl']?.toString() ?? '',
+      source: m['source']?.toString() ?? 'none',
+      keyHint: m['keyHint']?.toString() ?? '',
+      pendingTranslations: n('pendingTranslations'),
+      unscoredPending: n('unscoredPending'),
+      providers: list.isEmpty ? fallbackProviders : list,
+    );
+  }
 }
 
 /// A user as the console sees them.
@@ -176,10 +222,22 @@ class AdminConsoleService {
       ItemModel.fromApi(Map<String, dynamic>.from(await _api.post('/admin/posts/$id/approve', {}) as Map));
   Future<ItemModel> rejectPost(String id, String reason) async =>
       ItemModel.fromApi(Map<String, dynamic>.from(await _api.post('/admin/posts/$id/reject', {'reason': reason}) as Map));
-  Future<AiKeyInfo> aiKeyInfo() async =>
-      AiKeyInfo.fromApi(Map<String, dynamic>.from(await _api.get('/admin/ai-key') as Map));
-  Future<AiKeyInfo> setAiKey(String key) async =>
-      AiKeyInfo.fromApi(Map<String, dynamic>.from(await _api.post('/admin/ai-key', {'key': key}) as Map));
+  Future<AiSettingsInfo> aiInfo() async =>
+      AiSettingsInfo.fromApi(Map<String, dynamic>.from(await _api.get('/admin/ai') as Map));
+  Future<AiSettingsInfo> saveAi({
+    required String provider,
+    required String model,
+    required String key,
+    String baseUrl = '',
+  }) async =>
+      AiSettingsInfo.fromApi(Map<String, dynamic>.from(await _api.post('/admin/ai', {
+        'provider': provider,
+        if (model.isNotEmpty) 'model': model,
+        'key': key,
+        if (baseUrl.isNotEmpty) 'baseUrl': baseUrl,
+      }) as Map));
+  Future<AiSettingsInfo> clearAi() async =>
+      AiSettingsInfo.fromApi(Map<String, dynamic>.from(await _api.delete('/admin/ai') as Map));
   Future<void> deletePost(String id, {String reason = ''}) =>
       _api.deleteWithBody('/admin/posts/$id', {'reason': reason});
 

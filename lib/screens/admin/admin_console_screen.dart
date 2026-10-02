@@ -4,7 +4,7 @@ import 'package:finder/features/admin/admin_console_service.dart';
 import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/screens/admin/admin_posts_screen.dart';
-import 'package:finder/screens/admin/ai_key_sheet.dart';
+import 'package:finder/screens/admin/ai_settings_sheet.dart';
 import 'package:finder/screens/admin/admin_reports_screen.dart';
 import 'package:finder/screens/admin/admin_users_screen.dart';
 import 'package:finder/screens/admin/verification_queue_screen.dart';
@@ -97,7 +97,7 @@ class AdminConsoleScreen extends ConsumerWidget {
                           icon: Icons.auto_awesome_outlined,
                           title: l10n.adminAiTitle,
                           subtitle: l10n.adminAiSubtitle,
-                          onTap: () => showAiKeySheet(context, ref),
+                          onTap: () => showAiSettingsSheet(context, ref),
                         ),
                       ],
                     ),

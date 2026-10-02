@@ -131,8 +131,16 @@ String localizeServerMessage(String raw) {
     'Could not approve the post.' => s.serverCouldNotApproveThePost,
     'Could not reject the post.' => s.serverCouldNotRejectThePost,
     'That status is not public.' => s.serverThatStatusIsNotPublic,
-    'That does not look like a Google AI Studio key.' => s.serverNotAGoogleKey,
-    'Google AI Studio rejected the key.' => s.serverGoogleRejectedTheKey,
+    'That does not look like an API key.' => s.serverNotAnApiKey,
+    'Model not found.' => s.serverModelNotFound,
+    'A model name is required.' => s.serverModelNameRequired,
+    'A base URL is required for a custom provider.' => s.serverBaseUrlRequired,
+    'A base URL and a model name are required for a custom provider.' => s.serverBaseUrlRequired,
+    'Could not load the AI settings.' => s.serverCouldNotLoadAiSettings,
+    'Could not remove the AI settings.' => s.serverCouldNotRemoveAiSettings,
+    // "<Provider> rejected the key." / "Could not reach <Provider>." carry the provider name.
+    _ when raw.endsWith(' rejected the key.') => s.serverProviderRejectedTheKey,
+    _ when raw.startsWith('Could not reach ') => s.serverCouldNotReachProvider,
     _ => raw,
   };
 }
