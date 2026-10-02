@@ -107,10 +107,11 @@ class SegmentedPills extends StatelessWidget {
           final w = c.maxWidth / options.length;
           return Stack(
             children: [
-              AnimatedPositioned(
+              // Directional so the highlight sits under the selected pill in RTL too.
+              AnimatedPositionedDirectional(
                 duration: duration,
                 curve: BeaconMotion.emphasized,
-                left: w * selectedIndex,
+                start: w * selectedIndex,
                 top: 0,
                 bottom: 0,
                 width: w,

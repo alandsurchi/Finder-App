@@ -96,8 +96,16 @@ final notificationsControllerProvider = StateNotifierProvider<NotificationsContr
   (ref) => NotificationsController(ref),
 );
 
-/// Unread notifications, for the Home bell badge.
+/// Notifications shown on the Notifications page: everything except chat
+/// messages, which live on the Messages tab (its badge counts them).
+final visibleNotificationsProvider = Provider<AsyncValue<List<NotificationModel>>>((ref) {
+  return ref
+      .watch(notificationsControllerProvider)
+      .whenData((items) => items.where((n) => n.type != NotificationType.newMessage).toList());
+});
+
+/// Unread notifications, for the Home bell badge (chat messages excluded).
 final unreadNotificationsCountProvider = Provider<int>((ref) {
-  final items = ref.watch(notificationsControllerProvider).value ?? const [];
+  final items = ref.watch(visibleNotificationsProvider).value ?? const [];
   return items.where((n) => n.isUnread).length;
 });

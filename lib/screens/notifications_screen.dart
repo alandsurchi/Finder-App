@@ -22,7 +22,7 @@ class NotificationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppColorTokens.of(context);
     final l10n = context.l10n;
-    final notificationsState = ref.watch(notificationsControllerProvider);
+    final notificationsState = ref.watch(visibleNotificationsProvider);
     final unreadCount = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(

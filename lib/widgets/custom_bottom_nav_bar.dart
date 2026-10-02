@@ -1,6 +1,8 @@
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:finder/providers/chat_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'package:finder/l10n/l10n.dart';
@@ -148,12 +150,16 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                     final k = (1 - (position - i).abs()).clamp(0.0, 1.0);
                     return SizedBox(
                       width: itemWidth,
-                      child: _Destination(
-                        item: _items[i],
-                        selected: widget.currentIndex == i,
-                        k: k,
-                        onTap: () => widget.onTap(i),
-                        bottomInset: bottomInset,
+                      child: Consumer(
+                        builder: (context, ref, _) => _Destination(
+                          item: _items[i],
+                          selected: widget.currentIndex == i,
+                          k: k,
+                          onTap: () => widget.onTap(i),
+                          bottomInset: bottomInset,
+                          // Unread chats on the Messages tab, like WhatsApp.
+                          badgeCount: i == 3 ? ref.watch(unreadConversationsCountProvider) : 0,
+                        ),
                       ),
                     );
                   }),
@@ -182,6 +188,7 @@ class _Destination extends StatelessWidget {
   final double k;
   final VoidCallback onTap;
   final double bottomInset;
+  final int badgeCount;
 
   const _Destination({
     required this.item,
@@ -189,6 +196,7 @@ class _Destination extends StatelessWidget {
     required this.k,
     required this.onTap,
     required this.bottomInset,
+    this.badgeCount = 0,
   });
 
   @override
@@ -219,12 +227,37 @@ class _Destination extends StatelessWidget {
           children: [
             Positioned(
               top: top,
-              child: _BeaconDisc(
-                k: k,
-                size: size,
-                icon: active ? item.activeIcon : item.icon,
-                iconColor: iconColor,
-                iconSize: lerpDouble(24, 27, k)!,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _BeaconDisc(
+                    k: k,
+                    size: size,
+                    icon: active ? item.activeIcon : item.icon,
+                    iconColor: iconColor,
+                    iconSize: lerpDouble(24, 27, k)!,
+                  ),
+                  if (badgeCount > 0)
+                    PositionedDirectional(
+                      top: -4,
+                      end: -6,
+                      child: Container(
+                        constraints: const BoxConstraints(minWidth: 18),
+                        height: 18,
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: t.lost,
+                          borderRadius: BeaconRadius.rPill,
+                          border: Border.all(color: t.surface, width: 1.5),
+                        ),
+                        child: Text(
+                          badgeCount > 99 ? '99+' : '$badgeCount',
+                          style: text.labelSmall!.copyWith(color: t.onLost, fontSize: 10, height: 1),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             Positioned(
