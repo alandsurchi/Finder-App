@@ -7,6 +7,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const config = require('../config');
+const limits = require('../lib/limits');
 const { verifyToken } = require('./auth');
 
 const router = express.Router();
@@ -81,8 +82,29 @@ function publicBase(req) {
   return `${req.protocol}://${req.get('host')}`;
 }
 
+/** Re-encodes an image without metadata (EXIF, GPS) and no larger than
+ *  1800 px on the long side. Falls back to the original bytes when sharp
+ *  is unavailable or the image cannot be decoded. */
+async function cleanImage(buffer, ext) {
+  let sharp;
+  try { sharp = require('sharp'); } catch (_) { return { buffer, ext }; }
+  try {
+    const keepPng = ext === 'png';
+    const img = sharp(buffer, { failOn: 'none' }).rotate().resize({
+      width: 1800, height: 1800, fit: 'inside', withoutEnlargement: true,
+    });
+    const out = keepPng
+      ? await img.png({ compressionLevel: 8 }).toBuffer()
+      : await img.jpeg({ quality: 82, mozjpeg: true }).toBuffer();
+    return { buffer: out, ext: keepPng ? 'png' : 'jpg' };
+  } catch (err) {
+    console.error('Image clean-up failed, storing original:', err.message);
+    return { buffer, ext };
+  }
+}
+
 // POST /uploads  (multipart: file=<image>, folder=posts|avatars|chat|verification)
-router.post('/', verifyToken, (req, res, next) => {
+router.post('/', verifyToken, limits.uploads, (req, res, next) => {
   upload.single('file')(req, res, err => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
@@ -108,10 +130,13 @@ router.post('/', verifyToken, (req, res, next) => {
         message: wantAudio ? 'That file does not look like a voice recording we can play.' : 'That file does not look like an image we can read.',
       });
     }
-    const name = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${ext}`;
-    await fs.promises.writeFile(path.join(config.uploadsDir, folder, name), req.file.buffer);
+    // Photos lose their metadata (a phone writes its GPS position into
+    // every picture) and are downscaled; voice notes are stored as they are.
+    const stored = wantAudio ? { buffer: req.file.buffer, ext } : await cleanImage(req.file.buffer, ext);
+    const name = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${stored.ext}`;
+    await fs.promises.writeFile(path.join(config.uploadsDir, folder, name), stored.buffer);
     const url = `${publicBase(req)}/uploads/${folder}/${name}`;
-    res.status(201).json({ url, bytes: req.file.size });
+    res.status(201).json({ url, bytes: stored.buffer.length });
   } catch (err) {
     console.error('Upload error:', err);
     res.status(500).json({ message: 'Could not store the image.' });

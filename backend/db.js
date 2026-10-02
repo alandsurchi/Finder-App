@@ -273,6 +273,8 @@ async function initDb() {
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS translation_attempts INTEGER DEFAULT 0;');
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS expired_at_ms BIGINT;');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status, created_at_ms DESC);');
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_title_lower ON posts(LOWER(title));');
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_coords ON posts(latitude, longitude);');
       // Chat receipts, presence, waveforms, forward, delete-for-me (round 4).
       await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS waveform TEXT;');
       await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS forwarded BOOLEAN DEFAULT FALSE;');

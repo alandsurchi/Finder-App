@@ -6,6 +6,7 @@ const { POST_SELECT, mapPost, bool, truthy, notify, blockedIdsFor, getSettings, 
 const { validate, schemas } = require('../lib/validate');
 const matching = require('../lib/matching');
 const moderation = require('../lib/moderation');
+const limits = require('../lib/limits');
 
 const router = express.Router();
 
@@ -34,6 +35,12 @@ router.get('/', verifyToken, async (req, res) => {
   const category = req.query.category; // e.g. "All Items", "Lost", "Found"
   const ownerId = req.query.ownerId;
   const status = req.query.status; // optional: active | resolved (owner/admin: any)
+  // Server-side search over the original text and every translation.
+  const q = String(req.query.q || '').trim().toLowerCase().slice(0, 80);
+  // Nearby: near=lat,lng&km=25 (bounding box, then exact distance in JS).
+  const near = String(req.query.near || '').split(',').map(Number);
+  const hasNear = near.length === 2 && near.every(Number.isFinite);
+  const km = Math.min(Math.max(parseFloat(req.query.km) || 25, 1), 500);
 
   let sql = POST_SELECT;
   const params = [];
@@ -67,6 +74,26 @@ router.get('/', verifyToken, async (req, res) => {
     conditions.push(`p.status IN ('active', 'resolved')`);
   }
 
+  if (q) {
+    // SQLite placeholders are positional: push the term once per use.
+    const term = `%${q}%`;
+    const i = params.length + 1;
+    const uses = 9;
+    for (let k = 0; k < (db.isPostgres ? 1 : uses); k++) params.push(term);
+    const ph = n => db.isPostgres ? `$${i}` : `$${i + n}`;
+    conditions.push(`(LOWER(p.title) LIKE ${ph(0)} OR LOWER(p.description) LIKE ${ph(1)} OR LOWER(p.location) LIKE ${ph(2)}
+      OR LOWER(COALESCE(p.title_en, '')) LIKE ${ph(3)} OR LOWER(COALESCE(p.title_ar, '')) LIKE ${ph(4)} OR LOWER(COALESCE(p.title_ckb, '')) LIKE ${ph(5)}
+      OR LOWER(COALESCE(p.description_en, '')) LIKE ${ph(6)} OR LOWER(COALESCE(p.description_ar, '')) LIKE ${ph(7)} OR LOWER(COALESCE(p.description_ckb, '')) LIKE ${ph(8)})`);
+  }
+  if (hasNear) {
+    const dLat = km / 111;
+    const dLng = km / (111 * Math.max(0.2, Math.cos(near[0] * Math.PI / 180)));
+    params.push(near[0] - dLat); conditions.push(`p.latitude >= $${params.length}`);
+    params.push(near[0] + dLat); conditions.push(`p.latitude <= $${params.length}`);
+    params.push(near[1] - dLng); conditions.push(`p.longitude >= $${params.length}`);
+    params.push(near[1] + dLng); conditions.push(`p.longitude <= $${params.length}`);
+  }
+
   // Hide posts from users blocked in either direction.
   params.push(req.userId);
   conditions.push(`p.owner_id NOT IN (SELECT blocked_user_id FROM blocked_users WHERE user_id = $${params.length})`);
@@ -82,8 +109,19 @@ router.get('/', verifyToken, async (req, res) => {
   sql += ` ORDER BY CASE WHEN p.status IN ('active', 'pending') THEN 0 ELSE 1 END, p.created_at_ms DESC LIMIT $${params.length}`;
 
   try {
-    const rows = await db.query(sql, params);
-    const items = rows.map(r => mapPost(r, { lang: req.lang }));
+    let rows = await db.query(sql, params);
+    if (hasNear) {
+      rows = rows
+        .map(r => ({ r, d: matching.haversineKm(near[0], near[1], Number(r.latitude), Number(r.longitude)) }))
+        .filter(x => x.d <= km)
+        .sort((a, b) => a.d - b.d)
+        .map(x => Object.assign(x.r, { distance_km: x.d }));
+    }
+    const items = rows.map(r => {
+      const out = mapPost(r, { lang: req.lang });
+      if (hasNear) out.distanceKm = Math.round(r.distance_km * 10) / 10;
+      return out;
+    });
     const hasMore = items.length === limit;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAtMs.toString() : null;
     res.status(200).json({ items, nextCursor, hasMore });
@@ -150,7 +188,7 @@ router.get('/:id/similar', verifyToken, async (req, res) => {
 });
 
 // POST /posts (Create)
-router.post('/', verifyToken, validate(schemas.createPost), async (req, res) => {
+router.post('/', verifyToken, limits.posts, validate(schemas.createPost), async (req, res) => {
   const { title, description, category, isLost, reward, location, imageUrl, lostOn, latitude, longitude } = req.body;
 
   try {

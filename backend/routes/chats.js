@@ -14,6 +14,7 @@ const {
   bool, truthy } = require('../lib/helpers');
 const chatState = require('../lib/chat_state');
 const realtime = require('../websocket');
+const limits = require('../lib/limits');
 
 const { validate, schemas } = require('../lib/validate');
 
@@ -288,7 +289,7 @@ router.delete('/:id/messages/:mid', verifyToken, async (req, res) => {
 });
 
 // POST /chats/:id/messages - Send a text, image or voice message (or forward one)
-router.post('/:id/messages', verifyToken, validate(schemas.sendMessage), async (req, res) => {
+router.post('/:id/messages', verifyToken, limits.messages, validate(schemas.sendMessage), async (req, res) => {
   const chatId = req.params.id;
   const senderId = req.userId;
   let text = typeof req.body.text === 'string' ? req.body.text.trim() : '';
