@@ -36,11 +36,18 @@ app.use(helmet({
 app.use(cors({
   origin: config.corsOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language'],
   maxAge: 86400,
 }));
 
 app.use(express.json({ limit: '1mb' }));
+
+// The app's language (en | ar | ckb) for translated post text; null = original.
+const { parseLang } = require('./lib/helpers');
+app.use((req, res, next) => {
+  req.lang = parseLang(req.headers['accept-language']);
+  next();
+});
 
 // Request log: method path status ms
 app.use((req, res, next) => {
@@ -140,6 +147,9 @@ db.initDb()
         console.error('Migration failed on startup:', migErr);
       }
     }
+
+    // Translations, AI pre-checks and 90-day archiving run in the background.
+    require('./lib/moderation').startSweeper();
 
     server.listen(config.port, () => {
       console.log(`Finder backend listening on port ${config.port} (${config.isProduction ? 'production' : 'development'})`);

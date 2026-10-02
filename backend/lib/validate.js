@@ -122,6 +122,8 @@ const schemas = {
   rejectVerification: z.object({ reason: trimmed(300, 3) }),
   adminFlag: z.object({ value: z.boolean() }),
   adminPostStatus: z.object({ status: z.enum(['active', 'resolved']) }),
+  rejectPost: z.object({ reason: trimmed(300, 3) }),
+  adminAiKey: z.object({ key: trimmed(200, 20) }),
   adminResolveReport: z.object({ action: z.enum(['dismiss', 'remove_post']) }),
   pushToken: z.object({
     token: trimmed(4096, 20),

@@ -78,7 +78,7 @@ function notFound(url) {
 async function loadPost(id) {
   if (!/^[A-Za-z0-9-]{8,64}$/.test(id)) return null;
   const row = await db.queryOne(
-    `SELECT p.*, u.is_banned AS owner_banned FROM posts p LEFT JOIN users u ON u.uid = p.owner_id WHERE p.id = $1`,
+    `SELECT p.*, u.is_banned AS owner_banned FROM posts p LEFT JOIN users u ON u.uid = p.owner_id WHERE p.id = $1 AND p.status IN ('active', 'resolved')`,
     [id]
   );
   if (!row || truthy(row.owner_banned)) return null;

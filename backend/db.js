@@ -255,6 +255,24 @@ async function initDb() {
           status VARCHAR(32) DEFAULT 'pending',
           created_at_ms BIGINT NOT NULL
         );`);
+      // Post review lifecycle, AI pre-check and translations (round 4).
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS rejection_reason TEXT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS reviewed_at_ms BIGINT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS reviewer_id VARCHAR(255);');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS ai_risk INTEGER;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS ai_reasons TEXT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS ai_checked_at_ms BIGINT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS source_lang VARCHAR(8);');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS title_en TEXT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS title_ar TEXT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS title_ckb TEXT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS description_en TEXT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS description_ar TEXT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS description_ckb TEXT;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS translation_status VARCHAR(16);');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS translation_attempts INTEGER DEFAULT 0;');
+      await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS expired_at_ms BIGINT;');
+      await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status, created_at_ms DESC);');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at_ms DESC);');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_owner ON posts(owner_id);');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, created_at_ms DESC);');
@@ -468,6 +486,24 @@ async function initDb() {
             FOREIGN KEY (user_id) REFERENCES users(uid) ON DELETE CASCADE
           )
         `);
+        // Post review lifecycle, AI pre-check and translations (round 4).
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN rejection_reason TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN reviewed_at_ms INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN reviewer_id TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN ai_risk INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN ai_reasons TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN ai_checked_at_ms INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN source_lang TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN title_en TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN title_ar TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN title_ckb TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN description_en TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN description_ar TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN description_ckb TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN translation_status TEXT', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN translation_attempts INTEGER DEFAULT 0', () => {});
+        sqliteDb.run('ALTER TABLE posts ADD COLUMN expired_at_ms INTEGER', () => {});
+        sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status, created_at_ms DESC)');
         sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at_ms DESC)');
         sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_owner ON posts(owner_id)');
         sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, created_at_ms DESC)');

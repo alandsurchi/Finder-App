@@ -49,6 +49,11 @@ function daysBetween(a, b) {
   return Math.abs(da - dbb) / 86400000;
 }
 
+/** Original text plus every stored translation, so a Kurdish lost post can meet an English found one. */
+function textOf(row, field) {
+  return [row[field], row[`${field}_en`], row[`${field}_ar`], row[`${field}_ckb`]].filter(Boolean).join(' ');
+}
+
 /** Returns { score, distanceKm } for two post rows, or null when they cannot match. */
 function scoreMatch(a, b) {
   if (!a || !b || a.category !== b.category) return null;
@@ -57,10 +62,10 @@ function scoreMatch(a, b) {
   let score = 0;
   const reasons = [];
 
-  const titleHits = overlap(tokens(a.title), tokens(b.title));
+  const titleHits = overlap(tokens(textOf(a, 'title')), tokens(textOf(b, 'title')));
   if (titleHits) { score += 3 * titleHits; reasons.push('title'); }
 
-  const descHits = Math.min(5, overlap(tokens(`${a.title} ${a.description}`), tokens(`${b.title} ${b.description}`)) - titleHits);
+  const descHits = Math.min(5, overlap(tokens(`${textOf(a, 'title')} ${textOf(a, 'description')}`), tokens(`${textOf(b, 'title')} ${textOf(b, 'description')}`)) - titleHits);
   if (descHits > 0) { score += descHits; reasons.push('description'); }
 
   let distanceKm = null;

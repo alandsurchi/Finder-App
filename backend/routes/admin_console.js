@@ -7,6 +7,8 @@ const { notify, displayName, bool, truthy, POST_SELECT, mapPost } = require('../
 const { deleteUserData, deletePostData } = require('../lib/users');
 const { validate, schemas } = require('../lib/validate');
 const push = require('../lib/push');
+const ai = require('../lib/ai');
+const matching = require('../lib/matching');
 const config = require('../config');
 const fs = require('fs');
 const path = require('path');
@@ -46,6 +48,8 @@ router.get('/stats', async (req, res) => {
       verifiedUsers: await one('SELECT COUNT(*) AS n FROM users WHERE identity_verified = $1', [bool(true)]),
       posts: await one('SELECT COUNT(*) AS n FROM posts'),
       openPosts: await one("SELECT COUNT(*) AS n FROM posts WHERE status = 'active'"),
+      pendingPosts: await one("SELECT COUNT(*) AS n FROM posts WHERE status = 'pending'"),
+      rejectedPosts: await one("SELECT COUNT(*) AS n FROM posts WHERE status = 'rejected'"),
       returnedPosts: await one("SELECT COUNT(*) AS n FROM posts WHERE status = 'resolved'"),
       pendingReports: await one("SELECT COUNT(*) AS n FROM reports WHERE status = 'pending'"),
       pendingVerifications: await one("SELECT COUNT(*) AS n FROM verification_requests WHERE status = 'pending'"),
@@ -190,7 +194,7 @@ router.delete('/users/:uid', async (req, res) => {
   }
 });
 
-// GET /admin/posts?q=&status=all|active|resolved|reported
+// GET /admin/posts?q=&status=all|pending|active|resolved|rejected|expired|reported
 router.get('/posts', async (req, res) => {
   const q = String(req.query.q || '').trim().toLowerCase().slice(0, 60);
   const status = String(req.query.status || 'all');
@@ -200,15 +204,15 @@ router.get('/posts', async (req, res) => {
     params.push(`%${q}%`);
     conditions.push(`(LOWER(p.title) LIKE $${params.length} OR LOWER(p.description) LIKE $${params.length} OR LOWER(u.full_name) LIKE $${params.length} OR LOWER(u.email) LIKE $${params.length})`);
   }
-  if (status === 'active' || status === 'resolved') { params.push(status); conditions.push(`p.status = $${params.length}`); }
+  if (['pending', 'active', 'resolved', 'rejected', 'expired'].includes(status)) { params.push(status); conditions.push(`p.status = $${params.length}`); }
   if (status === 'reported') conditions.push(`p.id IN (SELECT post_id FROM reports WHERE status = 'pending')`);
   try {
     const rows = await db.query(
       `${POST_SELECT}${conditions.length ? ' WHERE ' + conditions.join(' AND ') : ''}
-       ORDER BY p.created_at_ms DESC LIMIT 100`,
+       ORDER BY p.created_at_ms ${status === 'pending' ? 'ASC' : 'DESC'} LIMIT 100`,
       params
     );
-    res.json(rows.map(mapPost));
+    res.json(rows.map(r => mapPost(r, { lang: req.lang, admin: true })));
   } catch (err) {
     console.error('Admin posts error:', err);
     res.status(500).json({ message: 'Error loading posts.' });
@@ -220,12 +224,81 @@ router.post('/posts/:id/status', validate(schemas.adminPostStatus), async (req, 
   try {
     const post = await db.queryOne('SELECT * FROM posts WHERE id = $1', [req.params.id]);
     if (!post) return res.status(404).json({ message: 'Post not found.' });
+    if (post.status === 'pending' || post.status === 'rejected') {
+      return res.status(409).json({ message: 'Approve or reject this post first.' });
+    }
     await db.exec('UPDATE posts SET status = $1, updated_at_ms = $2 WHERE id = $3', [req.body.status, Date.now(), post.id]);
     const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [post.id]);
-    res.json(mapPost(row));
+    res.json(mapPost(row, { lang: req.lang, admin: true }));
   } catch (err) {
     console.error('Admin post status error:', err);
     res.status(500).json({ message: 'Could not update the post.' });
+  }
+});
+
+async function loadPendingPost(req, res) {
+  const row = await db.queryOne('SELECT * FROM posts WHERE id = $1', [req.params.id]);
+  if (!row) {
+    res.status(404).json({ message: 'Post not found.' });
+    return null;
+  }
+  if (row.status !== 'pending') {
+    res.status(409).json({ message: `This request was already ${row.status === 'active' ? 'approved' : row.status}.` });
+    return null;
+  }
+  return row;
+}
+
+// POST /admin/posts/:id/approve
+router.post('/posts/:id/approve', async (req, res) => {
+  try {
+    const post = await loadPendingPost(req, res);
+    if (!post) return;
+    const now = Date.now();
+    await db.exec(
+      `UPDATE posts SET status = 'active', reviewed_at_ms = $1, reviewer_id = $2, rejection_reason = NULL, updated_at_ms = $3 WHERE id = $4`,
+      [now, req.userId, now, post.id]
+    );
+    await notify(post.owner_id, {
+      title: 'Your post is live',
+      message: `"${post.title}" was approved and is now visible to everyone.`,
+      type: 'update',
+      data: { type: 'post_approved', postId: post.id },
+    });
+    const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [post.id]);
+    console.log(`[ADMIN] ${req.adminUser.email} approved post ${post.id}`);
+    res.json(mapPost(row, { lang: req.lang, admin: true }));
+    // Lost/found matching starts once the post is public.
+    matching.notifyMatches(row).catch(err => console.error('Match error:', err.message));
+  } catch (err) {
+    console.error('Admin approve post error:', err);
+    res.status(500).json({ message: 'Could not approve the post.' });
+  }
+});
+
+// POST /admin/posts/:id/reject { reason }
+router.post('/posts/:id/reject', validate(schemas.rejectPost), async (req, res) => {
+  const { reason } = req.body;
+  try {
+    const post = await loadPendingPost(req, res);
+    if (!post) return;
+    const now = Date.now();
+    await db.exec(
+      `UPDATE posts SET status = 'rejected', reviewed_at_ms = $1, reviewer_id = $2, rejection_reason = $3, updated_at_ms = $4 WHERE id = $5`,
+      [now, req.userId, reason, now, post.id]
+    );
+    await notify(post.owner_id, {
+      title: 'Your post was not approved',
+      message: `"${post.title}": ${reason} You can edit it and send it again.`,
+      type: 'update',
+      data: { type: 'post_rejected', postId: post.id, reason },
+    });
+    const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [post.id]);
+    console.log(`[ADMIN] ${req.adminUser.email} rejected post ${post.id}`);
+    res.json(mapPost(row, { lang: req.lang, admin: true }));
+  } catch (err) {
+    console.error('Admin reject post error:', err);
+    res.status(500).json({ message: 'Could not reject the post.' });
   }
 });
 
@@ -320,6 +393,20 @@ router.post('/reports/:id/resolve', validate(schemas.adminResolveReport), async 
 });
 
 // ── Push key (when the hosting dashboard is not reachable) ───────────────────
+// GET /admin/ai-key → { configured, enabled, source, model, keyHint }
+router.get('/ai-key', (req, res) => res.json(ai.aiInfo()));
+
+// POST /admin/ai-key { key } — Google AI Studio key for translations and the pre-check
+router.post('/ai-key', validate(schemas.adminAiKey), async (req, res) => {
+  try {
+    await ai.setApiKey(req.body.key);
+    console.log(`[ADMIN] ${req.adminUser.email} installed the Gemini key`);
+    res.json(ai.aiInfo());
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
 // GET /admin/push-key → { configured, projectId, source }
 router.get('/push-key', (req, res) => res.json(push.pushInfo()));
 

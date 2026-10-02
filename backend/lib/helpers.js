@@ -165,11 +165,47 @@ const POST_SELECT = `
   FROM posts p
   LEFT JOIN users u ON u.uid = p.owner_id`;
 
-function mapPost(row) {
-  return {
+/** Statuses other members may see. pending/rejected/expired stay private. */
+const POST_PUBLIC_STATUSES = ['active', 'resolved'];
+const POST_LANGS = ['en', 'ar', 'ckb'];
+
+/** App language from an Accept-Language header: en | ar | ckb | null. */
+function parseLang(header) {
+  const first = String(header || '').split(',')[0].trim().toLowerCase();
+  if (!first) return null;
+  const code = first.split(/[-_;]/)[0];
+  if (code === 'ku') return 'ckb';
+  return POST_LANGS.includes(code) ? code : null;
+}
+
+/** The post's text in the viewer language when a translation exists. */
+function pick(row, field, lang) {
+  if (lang && POST_LANGS.includes(lang)) {
+    const v = row[`${field}_${lang}`];
+    if (typeof v === 'string' && v.trim()) return v;
+  }
+  return row[field];
+}
+
+function parseReasons(raw) {
+  if (!raw) return [];
+  try { const v = JSON.parse(raw); return Array.isArray(v) ? v.map(String) : []; } catch (_) { return []; }
+}
+
+/**
+ * Shapes a post row for the API. `opts.lang` picks the viewer language
+ * (old apps send none and get the original text); `opts.admin` adds the
+ * review fields.
+ */
+function mapPost(row, opts = {}) {
+  const lang = opts.lang || null;
+  const out = {
     id: row.id,
-    title: row.title,
-    description: row.description,
+    title: pick(row, 'title', lang),
+    description: pick(row, 'description', lang),
+    originalTitle: row.title,
+    originalDescription: row.description,
+    sourceLang: row.source_lang || null,
     category: row.category,
     isLost: truthy(row.is_lost),
     reward: row.reward,
@@ -188,6 +224,15 @@ function mapPost(row) {
     status: row.status || 'active',
     shareUrl: shareUrlFor(row.id),
   };
+  if (row.status === 'rejected') out.rejectionReason = row.rejection_reason || '';
+  if (opts.admin) {
+    out.aiRisk = row.ai_risk === null || row.ai_risk === undefined ? null : Number(row.ai_risk);
+    out.aiReasons = parseReasons(row.ai_reasons);
+    out.aiCheckedAtMs = row.ai_checked_at_ms ? parseInt(row.ai_checked_at_ms) : null;
+    out.reviewedAtMs = row.reviewed_at_ms ? parseInt(row.reviewed_at_ms) : null;
+    out.translationStatus = row.translation_status || null;
+  }
+  return out;
 }
 
 /** Public link for a post; empty when the server has no public URL. */
@@ -243,7 +288,7 @@ module.exports = {
   SETTINGS_DEFAULTS,
   notify,
   POST_SELECT,
-  mapPost,
+  mapPost, parseLang, pick, POST_PUBLIC_STATUSES, POST_LANGS,
   shareUrlFor,
   mapMessage,
   MESSAGE_SELECT,

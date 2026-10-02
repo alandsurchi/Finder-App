@@ -386,11 +386,11 @@ router.get('/saved', verifyToken, async (req, res) => {
     const rows = await db.query(
       `${POST_SELECT}
        JOIN saved_items s ON s.post_id = p.id
-       WHERE s.user_id = $1
+       WHERE s.user_id = $1 AND p.status IN ('active', 'resolved')
        ORDER BY p.created_at_ms DESC`,
       [req.userId]
     );
-    res.status(200).json(rows.map(mapPost));
+    res.status(200).json(rows.map(r => mapPost(r, { lang: req.lang })));
   } catch (err) {
     console.error('Get saved items error:', err);
     res.status(500).json({ message: 'Error loading saved items.' });
@@ -474,7 +474,7 @@ router.get('/:userId', verifyToken, async (req, res) => {
     }
 
     const settings = await getSettings(targetId);
-    const countRow = await db.queryOne('SELECT COUNT(*) AS n FROM posts WHERE owner_id = $1', [targetId]);
+    const countRow = await db.queryOne("SELECT COUNT(*) AS n FROM posts WHERE owner_id = $1 AND status IN ('active', 'resolved')", [targetId]);
     const base = {
       uid: user.uid,
       fullName: user.full_name || '',

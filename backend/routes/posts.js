@@ -2,9 +2,10 @@ const express = require('express');
 const db = require('../db');
 const { verifyToken } = require('./auth');
 const crypto = require('crypto');
-const { POST_SELECT, mapPost, bool, truthy, notify, blockedIdsFor, getSettings } = require('../lib/helpers');
+const { POST_SELECT, mapPost, bool, truthy, notify, blockedIdsFor, getSettings, POST_PUBLIC_STATUSES } = require('../lib/helpers');
 const { validate, schemas } = require('../lib/validate');
 const matching = require('../lib/matching');
+const moderation = require('../lib/moderation');
 
 const router = express.Router();
 
@@ -13,13 +14,26 @@ function coord(v) {
   return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
+async function isAdmin(userId) {
+  const me = await db.queryOne('SELECT is_admin FROM users WHERE uid = $1', [userId]);
+  return !!(me && truthy(me.is_admin));
+}
+
+/** Pending, rejected and expired posts are only for their owner and admins. */
+async function canSee(row, userId) {
+  if (!row) return false;
+  if (POST_PUBLIC_STATUSES.includes(row.status || 'active')) return true;
+  if (row.owner_id === userId) return true;
+  return isAdmin(userId);
+}
+
 // GET /posts
 router.get('/', verifyToken, async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 20, 100);
   const cursor = req.query.cursor ? parseInt(req.query.cursor) : null;
   const category = req.query.category; // e.g. "All Items", "Lost", "Found"
   const ownerId = req.query.ownerId;
-  const status = req.query.status; // optional: active | resolved
+  const status = req.query.status; // optional: active | resolved (owner/admin: any)
 
   let sql = POST_SELECT;
   const params = [];
@@ -41,9 +55,16 @@ router.get('/', verifyToken, async (req, res) => {
     conditions.push(`p.owner_id = $${params.length}`);
   }
 
+  const mine = !!ownerId && ownerId === req.userId;
   if (status) {
+    if (!POST_PUBLIC_STATUSES.includes(status) && !mine && !(await isAdmin(req.userId))) {
+      return res.status(400).json({ message: 'That status is not public.' });
+    }
     params.push(status);
     conditions.push(`p.status = $${params.length}`);
+  } else if (!mine) {
+    // Other people only ever see live and returned posts.
+    conditions.push(`p.status IN ('active', 'resolved')`);
   }
 
   // Hide posts from users blocked in either direction.
@@ -58,11 +79,11 @@ router.get('/', verifyToken, async (req, res) => {
 
   params.push(limit);
   // Open posts first so returned ones never crowd them out of the page.
-  sql += ` ORDER BY CASE WHEN p.status = 'active' THEN 0 ELSE 1 END, p.created_at_ms DESC LIMIT $${params.length}`;
+  sql += ` ORDER BY CASE WHEN p.status IN ('active', 'pending') THEN 0 ELSE 1 END, p.created_at_ms DESC LIMIT $${params.length}`;
 
   try {
     const rows = await db.query(sql, params);
-    const items = rows.map(mapPost);
+    const items = rows.map(r => mapPost(r, { lang: req.lang }));
     const hasMore = items.length === limit;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAtMs.toString() : null;
     res.status(200).json({ items, nextCursor, hasMore });
@@ -76,8 +97,8 @@ router.get('/', verifyToken, async (req, res) => {
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [req.params.id]);
-    if (!row) return res.status(404).json({ message: 'Post not found.' });
-    res.status(200).json(mapPost(row));
+    if (!row || !(await canSee(row, req.userId))) return res.status(404).json({ message: 'Post not found.' });
+    res.status(200).json(mapPost(row, { lang: req.lang }));
   } catch (err) {
     console.error('Fetch post error:', err);
     res.status(500).json({ message: 'Error loading post.' });
@@ -95,7 +116,7 @@ router.get('/:id/matches', verifyToken, async (req, res) => {
     }
     const matches = await matching.findMatches(post, { limit: 10 });
     res.status(200).json(matches.map(m => ({
-      ...mapPost(m.row),
+      ...mapPost(m.row, { lang: req.lang }),
       matchScore: m.score,
       distanceKm: m.distanceKm === null || m.distanceKm === undefined ? null : Math.round(m.distanceKm * 10) / 10,
       matchReasons: m.reasons,
@@ -120,7 +141,7 @@ router.get('/:id/similar', verifyToken, async (req, res) => {
        LIMIT 12`,
       [post.category, post.id, bool(truthy(post.is_lost))]
     );
-    const items = rows.filter(r => !blocked.has(r.owner_id)).slice(0, 6).map(mapPost);
+    const items = rows.filter(r => !blocked.has(r.owner_id)).slice(0, 6).map(r => mapPost(r, { lang: req.lang }));
     res.status(200).json(items);
   } catch (err) {
     console.error('Fetch similar posts error:', err);
@@ -138,15 +159,16 @@ router.post('/', verifyToken, validate(schemas.createPost), async (req, res) => 
     const ownerId = req.userId;
 
     await db.exec(
-      `INSERT INTO posts (id, owner_id, title, description, category, is_lost, reward, location, image_url, lost_on, status, created_at_ms, updated_at_ms, latitude, longitude)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
-      [id, ownerId, title, description, category, bool(!!isLost), reward === undefined || reward === null || reward === '' ? null : String(reward), location, imageUrl || '', lostOn || null, 'active', now, now, coord(latitude), coord(longitude)]
+      `INSERT INTO posts (id, owner_id, title, description, category, is_lost, reward, location, image_url, lost_on, status, created_at_ms, updated_at_ms, latitude, longitude, translation_status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+      [id, ownerId, title, description, category, bool(!!isLost), reward === undefined || reward === null || reward === '' ? null : String(reward), location, imageUrl || '', lostOn || null, 'pending', now, now, coord(latitude), coord(longitude), 'pending']
     );
 
     const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [id]);
-    res.status(201).json(mapPost(row));
-    // Look for lost/found counterparts after replying; a slow match must never delay the post.
-    matching.notifyMatches(row).catch(err => console.error('Match error:', err.message));
+    res.status(201).json(mapPost(row, { lang: req.lang }));
+    // Translate, pre-check and wake the admins after replying; the AI must never delay the post.
+    // Lost/found matching runs once an admin approves the post.
+    moderation.processNewPost(id).catch(err => console.error('Review pipeline error:', err.message));
   } catch (err) {
     console.error('Create post error:', err);
     res.status(500).json({ message: 'Error creating post.' });
@@ -168,7 +190,16 @@ router.put('/:id', verifyToken, validate(schemas.updatePost), async (req, res) =
     }
 
     const now = Date.now();
-    const nextStatus = status !== undefined ? status : post.status;
+    const underReview = post.status === 'pending' || post.status === 'rejected';
+    if (underReview && status !== undefined) {
+      return res.status(400).json({ message: 'This post is awaiting review.' });
+    }
+    const contentChanged = ['title', 'description', 'category', 'imageUrl']
+      .some(k => k in req.body && String(req.body[k] ?? '') !== String(post[k === 'imageUrl' ? 'image_url' : k] ?? ''));
+    // Edits to a rejected post send it back to the queue; edits to a live post keep it live.
+    let nextStatus = status !== undefined ? status : post.status;
+    if (post.status === 'rejected' && contentChanged) nextStatus = 'pending';
+    if (post.status === 'expired' && status === 'active') nextStatus = 'active';
     await db.exec(
       `UPDATE posts
        SET title = $1, description = $2, category = $3, is_lost = $4, reward = $5, location = $6,
@@ -211,8 +242,21 @@ router.put('/:id', verifyToken, validate(schemas.updatePost), async (req, res) =
       }
     }
 
+    if (contentChanged) {
+      // Fresh translations and, for a resubmission, a fresh pre-check.
+      await db.exec(
+        `UPDATE posts SET translation_status = 'pending', translation_attempts = 0${nextStatus === 'pending' ? ", rejection_reason = NULL, ai_risk = NULL, ai_reasons = NULL, ai_checked_at_ms = NULL" : ''} WHERE id = $1`,
+        [id]
+      );
+    }
+
     const row = await db.queryOne(`${POST_SELECT} WHERE p.id = $1`, [id]);
-    res.status(200).json(mapPost(row));
+    res.status(200).json(mapPost(row, { lang: req.lang }));
+    if (nextStatus === 'pending' && (contentChanged || post.status === 'rejected')) {
+      moderation.processNewPost(id).catch(err => console.error('Review pipeline error:', err.message));
+      return;
+    }
+    if (contentChanged) moderation.retranslate(id).catch(err => console.error('Translate error:', err.message));
     const changed = ['title', 'description', 'category', 'location', 'latitude', 'longitude']
       .some(k => k in req.body && String(req.body[k] ?? '') !== String(post[k] ?? ''));
     if (changed && nextStatus === 'active') {
@@ -265,8 +309,8 @@ router.post('/:id/report', verifyToken, validate(schemas.reportPost), async (req
   const { reason } = req.body;
 
   try {
-    const post = await db.queryOne('SELECT id FROM posts WHERE id = $1', [id]);
-    if (!post) return res.status(404).json({ message: 'Post not found.' });
+    const post = await db.queryOne('SELECT id, status FROM posts WHERE id = $1', [id]);
+    if (!post || !POST_PUBLIC_STATUSES.includes(post.status || 'active')) return res.status(404).json({ message: 'Post not found.' });
 
     const existing = await db.queryOne(
       'SELECT id FROM reports WHERE post_id = $1 AND reporter_id = $2',

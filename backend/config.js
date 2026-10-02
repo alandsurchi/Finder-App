@@ -72,6 +72,13 @@ const config = {
     passwordReset: parseInt(process.env.RATE_LIMIT_RESET, 10) || 5,
   },
   supportEmail: process.env.SUPPORT_EMAIL || 'support@finder.app',
+  // Google AI Studio (Gemini) for post translation and the moderation pre-check.
+  // The key can also be saved from the admin console (POST /admin/ai-key).
+  gemini: {
+    model: (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite').trim(),
+    timeoutMs: parseInt(process.env.AI_TIMEOUT_MS, 10) || 12000,
+    enabled: process.env.AI_DISABLED !== 'true',
+  },
   // OAuth client ids whose Google ID tokens the API accepts (comma separated).
   // The Web client id is the audience for both the web app and Android
   // (Android passes it as serverClientId).
