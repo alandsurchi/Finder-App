@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
 import 'package:finder/theme/beacon_tokens.dart';
 import 'press_scale.dart';
+import 'status_badge.dart';
 
-enum AppButtonVariant { primary, secondary, tonal, ghost, danger, accent }
+enum AppButtonVariant { primary, secondary, tonal, ghost, danger, accent, signal }
 
 enum AppButtonSize { large, medium, small }
 
@@ -18,6 +19,8 @@ class AppButton extends StatelessWidget {
   final bool iconTrailing;
   final bool isLoading;
   final bool expand;
+  /// Lost (red) or found (green) colouring for [AppButtonVariant.signal].
+  final SignalKind? signal;
 
   const AppButton({
     super.key,
@@ -29,6 +32,7 @@ class AppButton extends StatelessWidget {
     this.iconTrailing = false,
     this.isLoading = false,
     this.expand = true,
+    this.signal,
   });
 
   const AppButton.secondary({
@@ -40,7 +44,8 @@ class AppButton extends StatelessWidget {
     this.iconTrailing = false,
     this.isLoading = false,
     this.expand = true,
-  }) : variant = AppButtonVariant.secondary;
+  })  : variant = AppButtonVariant.secondary,
+        signal = null;
 
   const AppButton.tonal({
     super.key,
@@ -51,7 +56,8 @@ class AppButton extends StatelessWidget {
     this.iconTrailing = false,
     this.isLoading = false,
     this.expand = true,
-  }) : variant = AppButtonVariant.tonal;
+  })  : variant = AppButtonVariant.tonal,
+        signal = null;
 
   const AppButton.ghost({
     super.key,
@@ -62,7 +68,8 @@ class AppButton extends StatelessWidget {
     this.iconTrailing = false,
     this.isLoading = false,
     this.expand = false,
-  }) : variant = AppButtonVariant.ghost;
+  })  : variant = AppButtonVariant.ghost,
+        signal = null;
 
   const AppButton.danger({
     super.key,
@@ -73,7 +80,8 @@ class AppButton extends StatelessWidget {
     this.iconTrailing = false,
     this.isLoading = false,
     this.expand = true,
-  }) : variant = AppButtonVariant.danger;
+  })  : variant = AppButtonVariant.danger,
+        signal = null;
 
   double get _height => switch (size) {
         AppButtonSize.large => 52,
@@ -93,6 +101,7 @@ class AppButton extends StatelessWidget {
       AppButtonVariant.tonal => (t.primaryContainer, t.onPrimaryContainer, null),
       AppButtonVariant.ghost => (Colors.transparent, t.primary, null),
       AppButtonVariant.danger => (t.errorSurface, t.error, null),
+      AppButtonVariant.signal => ((signal ?? SignalKind.lost).color(t), (signal ?? SignalKind.lost).onColor(t), null),
     };
 
     final textStyle = (size == AppButtonSize.small
@@ -147,6 +156,7 @@ class AppButton extends StatelessWidget {
     final Gradient? gradient = switch (variant) {
       AppButtonVariant.primary => t.primaryGradient,
       AppButtonVariant.accent => t.accentGradient,
+      AppButtonVariant.signal => (signal ?? SignalKind.lost).gradient(t),
       _ => null,
     };
     final lit = gradient != null && enabled;

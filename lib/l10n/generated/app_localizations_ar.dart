@@ -3454,6 +3454,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get postSeeTranslation => 'عرض الترجمة';
 
   @override
+  String get postPostLostCta => 'نشر المفقود';
+
+  @override
+  String get postPostFoundCta => 'نشر الموجود';
+
+  @override
   String get repoUnableLogin => 'تعذّر تسجيل الدخول';
 
   @override

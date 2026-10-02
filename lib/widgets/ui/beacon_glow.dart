@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:finder/theme/app_color_tokens.dart';
+import 'package:finder/theme/beacon_tokens.dart';
 
 /// A soft radial amber glow — the Beacon signature. Purely decorative and
 /// pointer-transparent; place it in a [Stack] behind content.
@@ -118,6 +119,10 @@ class BeaconBackdrop extends StatelessWidget {
   final bool secondary;
   final bool rings;
 
+  /// Tint of the main glow; null keeps the amber signature. Changing it
+  /// cross-fades (the create post page turns red or green with the type).
+  final Color? color;
+
   const BeaconBackdrop({
     super.key,
     required this.child,
@@ -125,6 +130,7 @@ class BeaconBackdrop extends StatelessWidget {
     this.intensity = 1,
     this.secondary = false,
     this.rings = false,
+    this.color,
   });
 
   @override
@@ -134,7 +140,13 @@ class BeaconBackdrop extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         if (rings) BeaconRings(alignment: alignment),
-        BeaconGlow(alignment: alignment, radius: 0.75, intensity: intensity),
+        TweenAnimationBuilder<Color?>(
+          tween: ColorTween(end: color ?? t.accentGlow),
+          duration: BeaconMotion.scaled(context, BeaconMotion.enter),
+          curve: BeaconMotion.emphasized,
+          builder: (_, c, __) =>
+              BeaconGlow(alignment: alignment, radius: 0.75, intensity: intensity, color: c),
+        ),
         if (secondary)
           BeaconGlow(
             alignment: const Alignment(-1.3, 1.2),

@@ -3460,6 +3460,12 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get postSeeTranslation => 'بینینی وەرگێڕان';
 
   @override
+  String get postPostLostCta => 'بڵاوکردنەوەی شتی ونبوو';
+
+  @override
+  String get postPostFoundCta => 'بڵاوکردنەوەی شتی دۆزراوە';
+
+  @override
   String get repoUnableLogin => 'چوونەژوورەوە سەرکەوتوو نەبوو';
 
   @override

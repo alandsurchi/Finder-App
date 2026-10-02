@@ -275,5 +275,7 @@
   "postExpiredBody": "ئەم پۆستە دوای ٩٠ ڕۆژ ئەرشیف کرا. ئەگەر هێشتا گرنگە دووبارە بیکەرەوە.",
   "postTranslatedNote": "بە شێوەی ئۆتۆماتیکی وەرگێڕدراوە",
   "postSeeOriginal": "بینینی دەقی ڕەسەن",
-  "postSeeTranslation": "بینینی وەرگێڕان"
+  "postSeeTranslation": "بینینی وەرگێڕان",
+  "postPostLostCta": "بڵاوکردنەوەی شتی ونبوو",
+  "postPostFoundCta": "بڵاوکردنەوەی شتی دۆزراوە"
 }

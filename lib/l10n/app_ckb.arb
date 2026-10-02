@@ -1003,6 +1003,8 @@
   "postTranslatedNote": "بە شێوەی ئۆتۆماتیکی وەرگێڕدراوە",
   "postSeeOriginal": "بینینی دەقی ڕەسەن",
   "postSeeTranslation": "بینینی وەرگێڕان",
+  "postPostLostCta": "بڵاوکردنەوەی شتی ونبوو",
+  "postPostFoundCta": "بڵاوکردنەوەی شتی دۆزراوە",
   "repoUnableLogin": "چوونەژوورەوە سەرکەوتوو نەبوو",
   "repoUnableLoginGoogle": "چوونەژوورەوە بە Google سەرکەوتوو نەبوو",
   "repoUnableLogout": "چوونەدەرەوە سەرکەوتوو نەبوو",

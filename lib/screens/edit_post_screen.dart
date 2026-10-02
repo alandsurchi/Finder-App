@@ -271,6 +271,8 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
               BeaconSpace.page, BeaconSpace.sm, BeaconSpace.page, BeaconSpace.lg),
           child: AppButton(
             label: l10n.postSaveChanges,
+            variant: AppButtonVariant.signal,
+            signal: _isLostItem ? SignalKind.lost : SignalKind.found,
             icon: Icons.check_rounded,
             isLoading: _isSaving,
             onPressed: _isSaving ? null : _save,

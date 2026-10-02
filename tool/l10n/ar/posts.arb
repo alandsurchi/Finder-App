@@ -275,5 +275,7 @@
   "postExpiredBody": "تمت أرشفة هذا المنشور بعد 90 يومًا. أعد فتحه إذا كان لا يزال قائمًا.",
   "postTranslatedNote": "تمت الترجمة تلقائيًا",
   "postSeeOriginal": "عرض النص الأصلي",
-  "postSeeTranslation": "عرض الترجمة"
+  "postSeeTranslation": "عرض الترجمة",
+  "postPostLostCta": "نشر المفقود",
+  "postPostFoundCta": "نشر الموجود"
 }

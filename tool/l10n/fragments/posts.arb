@@ -468,5 +468,7 @@
   "postExpiredBody": "This post was archived after 90 days. Reopen it if it is still relevant.",
   "postTranslatedNote": "Translated automatically",
   "postSeeOriginal": "See original",
-  "postSeeTranslation": "See translation"
+  "postSeeTranslation": "See translation",
+  "postPostLostCta": "Post lost item",
+  "postPostFoundCta": "Post found item"
 }

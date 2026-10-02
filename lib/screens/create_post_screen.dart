@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/providers/post_provider.dart';
@@ -103,9 +104,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final t = AppColorTokens.of(context);
     final navClearance = CustomBottomNavBar.totalHeight(context) + BeaconSpace.lg;
 
+    final kind = _isLostItem ? SignalKind.lost : SignalKind.found;
     return Scaffold(
       body: BeaconBackdrop(
         alignment: const Alignment(1.3, -1.2),
+        color: kind.glow(t),
         child: SafeArea(
           bottom: false,
           child: SingleChildScrollView(
@@ -139,9 +142,24 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final done = _completedSteps;
+    final kind = _isLostItem ? SignalKind.lost : SignalKind.found;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Semantics(
+          liveRegion: true,
+          child: AnimatedSwitcher(
+            duration: BeaconMotion.scaled(context, BeaconMotion.state),
+            child: StatusBadge.signal(
+              kind,
+              key: ValueKey(kind),
+              style: BadgeStyle.soft,
+              small: true,
+              withIcon: true,
+            ),
+          ),
+        ),
+        const SizedBox(height: BeaconSpace.sm),
         Text(l10n.postNewPost, style: text.headlineMedium),
         const SizedBox(height: BeaconSpace.xs),
         Text(
@@ -153,10 +171,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         const SizedBox(height: BeaconSpace.lg),
         ClipRRect(
           borderRadius: BeaconRadius.rPill,
-          child: LinearProgressIndicator(
-            value: done / 5,
-            minHeight: 6,
-            color: done == 5 ? t.found : t.accent,
+          child: TweenAnimationBuilder<Color?>(
+            tween: ColorTween(end: done == 5 ? kind.color(t) : kind.color(t).withValues(alpha: 0.55)),
+            duration: BeaconMotion.scaled(context, BeaconMotion.enter),
+            builder: (_, c, __) => LinearProgressIndicator(
+              value: done / 5,
+              minHeight: 6,
+              color: c,
+            ),
           ),
         ),
         const SizedBox(height: BeaconSpace.sm),
@@ -175,7 +197,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           child: LostFoundTypeTile(
             kind: SignalKind.lost,
             selected: _isLostItem,
-            onTap: () => setState(() => _isLostItem = true),
+            onTap: () => _setKind(true),
           ),
         ),
         const SizedBox(width: BeaconSpace.md),
@@ -183,15 +205,22 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           child: LostFoundTypeTile(
             kind: SignalKind.found,
             selected: !_isLostItem,
-            onTap: () => setState(() => _isLostItem = false),
+            onTap: () => _setKind(false),
           ),
         ),
       ],
     );
   }
 
+  void _setKind(bool lost) {
+    if (_isLostItem == lost) return;
+    HapticFeedback.selectionClick();
+    setState(() => _isLostItem = lost);
+  }
+
   Widget _buildPhotoSection(AppColorTokens t) {
     final busy = _isSubmitting || _isUploadingImage;
+    final accent = (_isLostItem ? SignalKind.lost : SignalKind.found).color(t);
     final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,17 +239,19 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             _MediaTile(
               icon: Icons.photo_camera_outlined,
               label: l10n.postCamera,
+              accent: accent,
               onTap: busy ? null : () => _pickAndUploadImage(ImageSourceKind.camera),
             ),
             const SizedBox(width: BeaconSpace.md),
             _MediaTile(
               icon: Icons.photo_library_outlined,
               label: l10n.postGallery,
+              accent: accent,
               onTap: busy ? null : () => _pickAndUploadImage(ImageSourceKind.gallery),
             ),
             const SizedBox(width: BeaconSpace.md),
             if (_isUploadingImage)
-              _MediaTile.loading()
+              _MediaTile.loading(accent: accent)
             else if (_imagePath.isNotEmpty)
               _buildSelectedImageTile(t),
           ],
@@ -332,10 +363,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       runSpacing: BeaconSpace.sm,
       children: _categories.map((category) {
         final isSelected = _category == category;
+        final kind = _isLostItem ? SignalKind.lost : SignalKind.found;
+        final t = AppColorTokens.of(context);
         return AppChoiceChip(
           label: AppCategories.label(context.l10n, category),
           icon: categoryIcon(category),
           selected: isSelected,
+          selectedColor: kind.color(t),
+          selectedForeground: kind.onColor(t),
           onTap: _isSubmitting
               ? null
               : () => setState(() {
@@ -511,12 +546,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppButton(
-          label: context.l10n.postPostNow,
-          icon: Icons.send_rounded,
-          iconTrailing: true,
-          isLoading: _isSubmitting,
-          onPressed: _isSubmitting ? null : _submitPost,
+        AnimatedSwitcher(
+          duration: BeaconMotion.scaled(context, BeaconMotion.state),
+          child: AppButton(
+            key: ValueKey(_isLostItem),
+            label: _isLostItem ? context.l10n.postPostLostCta : context.l10n.postPostFoundCta,
+            variant: AppButtonVariant.signal,
+            signal: _isLostItem ? SignalKind.lost : SignalKind.found,
+            icon: Icons.send_rounded,
+            iconTrailing: true,
+            isLoading: _isSubmitting,
+            onPressed: _isSubmitting ? null : _submitPost,
+          ),
         ),
         const SizedBox(height: BeaconSpace.sm),
         Center(
@@ -897,11 +938,13 @@ class _MediaTile extends StatelessWidget {
   final String? label;
   final VoidCallback? onTap;
   final bool loading;
+  /// Lost or found colour for the icon, spinner and border.
+  final Color? accent;
 
-  const _MediaTile({required this.icon, required this.label, required this.onTap})
+  const _MediaTile({required this.icon, required this.label, required this.onTap, this.accent})
       : loading = false;
 
-  const _MediaTile.loading()
+  const _MediaTile.loading({this.accent})
       : icon = null,
         label = null,
         onTap = null,
@@ -912,16 +955,23 @@ class _MediaTile extends StatelessWidget {
     final t = AppColorTokens.of(context);
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
+    final tint = accent ?? t.primary;
     return Semantics(
       button: !loading,
       label: loading ? l10n.postUploadingPhoto : l10n.postAddPhotoFrom(label!.toLowerCase()),
       child: PressScale(
         enabled: onTap != null,
-        child: Material(
-          color: t.surfaceLow,
+        child: AnimatedContainer(
+          duration: BeaconMotion.scaled(context, BeaconMotion.enter),
+          decoration: BoxDecoration(
+            color: t.surfaceLow,
+            borderRadius: BeaconRadius.rLg,
+            border: Border.all(color: accent == null ? t.outlineVariant : tint.withValues(alpha: 0.35)),
+          ),
+          child: Material(
+          color: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BeaconRadius.rLg,
-            side: BorderSide(color: t.outlineVariant),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -935,18 +985,19 @@ class _MediaTile extends StatelessWidget {
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2.5, color: t.primary),
+                            strokeWidth: 2.5, color: tint),
                       ),
                     )
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(icon, color: t.primary, size: 24),
+                        Icon(icon, color: tint, size: 24),
                         const SizedBox(height: BeaconSpace.sm),
                         Text(label!, style: text.labelMedium),
                       ],
                     ),
             ),
+          ),
           ),
         ),
       ),

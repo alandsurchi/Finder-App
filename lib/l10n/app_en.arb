@@ -1720,6 +1720,8 @@
   "postTranslatedNote": "Translated automatically",
   "postSeeOriginal": "See original",
   "postSeeTranslation": "See translation",
+  "postPostLostCta": "Post lost item",
+  "postPostFoundCta": "Post found item",
   "repoUnableLogin": "Unable to login",
   "repoUnableLoginGoogle": "Unable to login with Google",
   "repoUnableLogout": "Unable to logout",

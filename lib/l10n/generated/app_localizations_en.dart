@@ -3447,6 +3447,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get postSeeTranslation => 'See translation';
 
   @override
+  String get postPostLostCta => 'Post lost item';
+
+  @override
+  String get postPostFoundCta => 'Post found item';
+
+  @override
   String get repoUnableLogin => 'Unable to login';
 
   @override

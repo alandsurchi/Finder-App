@@ -15,6 +15,17 @@ extension SignalKindX on SignalKind {
   String get label => this == SignalKind.lost ? 'LOST' : 'FOUND';
   String localizedLabel(AppLocalizations l10n) =>
       (this == SignalKind.lost ? l10n.commonLost : l10n.commonFound).toUpperCase();
+  /// The "lit object" gradient used by Home's report tiles and the create
+  /// post CTA: the signal colour fading into a touch of shadow.
+  LinearGradient gradient(AppColorTokens t) => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [color(t), Color.lerp(color(t), t.shadow, 0.18)!],
+      );
+
+  /// Backdrop glow in the signal hue, same strength as the amber one.
+  Color glow(AppColorTokens t) => color(t).withValues(alpha: t.accentGlow.a);
+
   IconData get icon => this == SignalKind.lost
       ? Icons.search_rounded
       : Icons.check_circle_outline_rounded;

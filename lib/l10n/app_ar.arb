@@ -1003,6 +1003,8 @@
   "postTranslatedNote": "تمت الترجمة تلقائيًا",
   "postSeeOriginal": "عرض النص الأصلي",
   "postSeeTranslation": "عرض الترجمة",
+  "postPostLostCta": "نشر المفقود",
+  "postPostFoundCta": "نشر الموجود",
   "repoUnableLogin": "تعذّر تسجيل الدخول",
   "repoUnableLoginGoogle": "تعذّر تسجيل الدخول عبر Google",
   "repoUnableLogout": "تعذّر تسجيل الخروج",

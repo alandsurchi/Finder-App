@@ -6118,6 +6118,18 @@ abstract class AppLocalizations {
   /// **'See translation'**
   String get postSeeTranslation;
 
+  /// No description provided for @postPostLostCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Post lost item'**
+  String get postPostLostCta;
+
+  /// No description provided for @postPostFoundCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Post found item'**
+  String get postPostFoundCta;
+
   /// No description provided for @repoUnableLogin.
   ///
   /// In en, this message translates to:
