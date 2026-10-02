@@ -7,7 +7,11 @@ import 'package:finder/app/di/app_providers.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/features/chat/domain/message.dart';
+import 'package:finder/features/chat/domain/chat_presence.dart';
 import 'package:finder/features/chat/presentation/chat_widgets.dart';
+import 'package:finder/features/chat/presentation/image_viewer_screen.dart';
+import 'package:finder/features/chat/presentation/message_ticks.dart';
+import 'package:finder/features/chat/presentation/photo_caption_sheet.dart';
 import 'package:finder/features/chat/presentation/open_chat.dart';
 import 'package:finder/features/chat/presentation/voice_message_bubble.dart';
 import 'package:finder/features/chat/presentation/voice_player_controller.dart';
@@ -21,7 +25,10 @@ import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/providers/post_provider.dart';
 import 'package:finder/routes.dart';
 import 'package:finder/services/push/push_service.dart';
+import 'package:finder/services/chat/chat_socket.dart' show conversationsRefreshTickProvider;
 import 'package:finder/services/voice_recorder_service.dart';
+import 'package:finder/widgets/sheets/image_source_sheet.dart';
+import 'package:finder/models/conversation_model.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
@@ -41,10 +48,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scroll = ScrollController();
   final Map<String, GlobalKey> _bubbleKeys = {};
 
+  final GlobalKey<VoiceRecorderButtonState> _micKey = GlobalKey();
   bool _sending = false;
   bool _uploading = false;
-  bool _recording = false;
+  RecorderPhase _recorderPhase = RecorderPhase.idle;
+  double _lockProgress = 0;
+  bool _revealedUnread = false;
   bool _hasText = false;
+
+  bool get _recording => _recorderPhase != RecorderPhase.idle;
   bool _awayFromBottom = false;
   int _newWhileAway = 0;
   int _lastCount = 0;
@@ -120,6 +132,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!_scroll.hasClients) return;
     // The list is reversed: offset 0 is the newest message.
     final away = _scroll.offset > 240;
+    if (_scroll.position.pixels > _scroll.position.maxScrollExtent - 300) {
+      final id = _arg(ChatArgs.chatId);
+      if (id.isNotEmpty) ref.read(chatMessagesProvider(id).notifier).loadOlder();
+    }
     if (away != _awayFromBottom) {
       setState(() {
         _awayFromBottom = away;
@@ -215,6 +231,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ref.listen(chatMessagesProvider(chatId), (prev, next) {
       final list = next.value;
       if (list == null) return;
+      if (!_revealedUnread) {
+        // Open where the reader left off, like WhatsApp.
+        _revealedUnread = true;
+        final firstUnread = ref.read(chatMessagesProvider(chatId).notifier).firstUnreadId;
+        if (firstUnread != null) {
+          _lastCount = list.length;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _revealMessage(firstUnread));
+          return;
+        }
+      }
       final count = list.length;
       if (count == _lastCount) return;
       final grew = count > _lastCount;
@@ -236,6 +262,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             _buildChatHeader(
               context,
+              chatId: chatId,
               userName: userName,
               itemName: itemName,
               peerId: peerId,
@@ -326,8 +353,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           horizontal: BeaconSpace.lg,
           vertical: BeaconSpace.lg,
         ),
-        itemCount: ordered.length,
+        itemCount: ordered.length + 1,
         itemBuilder: (context, index) {
+          if (index == ordered.length) {
+            final ctrl = ref.watch(chatMessagesProvider(chatId).notifier);
+            return ctrl.loadingOlder
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: BeaconSpace.md),
+                    child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                  )
+                : const SizedBox.shrink();
+          }
           final msg = ordered[index];
           final older = index + 1 < ordered.length ? ordered[index + 1] : null;
           final newer = index > 0 ? ordered[index - 1] : null;
@@ -344,11 +380,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           final tight = newer != null && newer.senderId == msg.senderId;
           final key = _bubbleKeys.putIfAbsent(msg.messageId, GlobalKey.new);
 
+          final ctrl = ref.read(chatMessagesProvider(chatId).notifier);
           return Column(
             key: key,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (newDay) DaySeparator(day: day),
+              if (ctrl.firstUnreadId == msg.messageId && ctrl.unreadOnOpen > 0)
+                UnreadDivider(count: ctrl.unreadOnOpen),
               Padding(
                 padding: EdgeInsets.only(bottom: tight ? BeaconSpace.xs : BeaconSpace.sm),
                 child: SwipeToReply(
@@ -382,6 +421,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildChatHeader(
     BuildContext context, {
+    required String chatId,
     required String userName,
     required String itemName,
     required String peerId,
@@ -433,6 +473,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               admin: peerIsAdmin,
                               style: text.titleMedium,
                             ),
+                            _PresenceLine(chatId: chatId, peerId: peerId),
                             if (itemName.isNotEmpty)
                               InkWell(
                                 borderRadius: BeaconRadius.rSm,
@@ -690,6 +731,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   _setReply(chatId, msg);
                 },
               ),
+            if (!msg.deleted && !msg.isLocal)
+              SheetOption(
+                icon: Icons.shortcut_rounded,
+                label: l10n.chatForward,
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _forward(msg);
+                },
+              ),
             if (msg.text.isNotEmpty)
               SheetOption(
                 icon: Icons.copy_rounded,
@@ -719,21 +769,85 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ref.read(chatMessagesProvider(chatId).notifier).discard(msg.messageId);
                 },
               ),
-            ] else if (isMe && !msg.deleted && !msg.isLocal)
-              SheetOption(
-                icon: Icons.delete_outline_rounded,
-                label: l10n.chatDeleteForEveryone,
-                destructive: true,
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  _confirmDelete(chatId, msg);
-                },
-              ),
+            ] else ...[
+              if (!msg.isLocal)
+                SheetOption(
+                  icon: Icons.visibility_off_outlined,
+                  label: l10n.chatDeleteForMe,
+                  onTap: () async {
+                    Navigator.pop(sheetCtx);
+                    final r = await ref.read(chatMessagesProvider(chatId).notifier).hideMessage(msg.messageId);
+                    if (!mounted) return;
+                    r.fold(onSuccess: (_) {}, onFailure: (f) => ActionFeedback.showError(context, f.message));
+                  },
+                ),
+              if (isMe && !msg.deleted && !msg.isLocal)
+                SheetOption(
+                  icon: Icons.delete_outline_rounded,
+                  label: l10n.chatDeleteForEveryone,
+                  destructive: true,
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    _confirmDelete(chatId, msg);
+                  },
+                ),
+            ],
             const SizedBox(height: BeaconSpace.lg),
           ],
         ),
       ),
     );
+  }
+
+  /// Pick another conversation and send a copy of [msg] there.
+  void _forward(Message msg) {
+    final l10n = context.l10n;
+    final me = ref.read(authStateProvider).userId ?? '';
+    AppBottomSheet.show<void>(
+      context,
+      builder: (sheetCtx) => Consumer(
+        builder: (context, ref, _) {
+          final convos = ref.watch(conversationsStreamProvider).value ?? const <ConversationModel>[];
+          return AppBottomSheet(
+            title: l10n.chatForwardTo,
+            child: convos.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(BeaconSpace.lg),
+                    child: Text(l10n.msgNoConversations, style: Theme.of(context).textTheme.bodyMedium),
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final c in convos)
+                        SheetOption(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          label: c.name,
+                          subtitle: c.itemName.isEmpty ? null : c.itemName,
+                          onTap: () async {
+                            Navigator.pop(sheetCtx);
+                            try {
+                              await ref.read(chatServiceProvider).sendMessage(c.chatId, forwardOf: msg.messageId);
+                              ref.read(conversationsRefreshTickProvider.notifier).state++;
+                              if (c.chatId == _arg(ChatArgs.chatId)) {
+                                ref.read(chatMessagesProvider(c.chatId).notifier).load();
+                              }
+                              if (!mounted) return;
+                              ActionFeedback.showSuccess(this.context, l10n.chatForwardSent);
+                            } catch (e) {
+                              if (!mounted) return;
+                              ActionFeedback.showError(this.context, describeError(e));
+                            }
+                          },
+                        ),
+                      const SizedBox(height: BeaconSpace.lg),
+                    ],
+                  ),
+          );
+        },
+      ),
+    );
+    // `me` keeps the sender id handy for future per-chat rules.
+    assert(me.isNotEmpty || true);
   }
 
   Future<void> _confirmDelete(String chatId, Message msg) async {
@@ -779,7 +893,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final l10n = context.l10n;
     final recorder = ref.read(voiceRecorderProvider);
     final canRecord = !kIsWeb && recorder.supported;
-    final showMic = canRecord && !_hasText && !_sending;
+    final showMic = canRecord && (!_hasText || _recording) && !_sending;
 
     return Container(
       decoration: BoxDecoration(
@@ -821,10 +935,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: _recording
                 ? VoiceRecordingBar(
                     recorder: recorder,
-                    onCancel: () async {
-                      await recorder.cancel();
-                      if (mounted) setState(() => _recording = false);
-                    },
+                    locked: _recorderPhase == RecorderPhase.locked,
+                    lockProgress: _lockProgress,
+                    onCancel: () => _micKey.currentState?.cancelFromBar(),
                   )
                 : DecoratedBox(
                     decoration: BoxDecoration(
@@ -840,6 +953,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         maxLines: 5,
                         textCapitalization: TextCapitalization.sentences,
                         textInputAction: TextInputAction.send,
+                        onChanged: (v) => ref
+                            .read(chatMessagesProvider(chatId).notifier)
+                            .sendTyping(v.trim().isNotEmpty),
                         onSubmitted: (_) => _sendText(chatId),
                         style: text.bodyLarge,
                         cursorColor: t.primary,
@@ -863,9 +979,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
             child: showMic
                 ? VoiceRecorderButton(
-                    key: const ValueKey('mic'),
+                    key: _micKey,
                     recorder: recorder,
-                    onRecordingChanged: (on) => setState(() => _recording = on),
+                    onPhaseChanged: (p) => setState(() {
+                      _recorderPhase = p;
+                      if (p != RecorderPhase.holding) _lockProgress = 0;
+                    }),
+                    onLockProgress: (v) => setState(() => _lockProgress = v),
                     onPermissionDenied: () =>
                         ActionFeedback.showError(context, l10n.chatMicPermission),
                     onRecorded: (rec) => _sendVoice(chatId, rec),
@@ -894,6 +1014,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final value = _controller.text.trim();
     if (value.isEmpty || _sending) return;
     _controller.clear();
+    ref.read(chatMessagesProvider(chatId).notifier).sendTyping(false);
     setState(() => _sending = true);
     final reply = _takeReply(chatId);
     final result =
@@ -911,6 +1032,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final result = await ref.read(chatMessagesProvider(chatId).notifier).send(
           localAudioPath: rec.path,
           audioMs: rec.durationMs,
+          waveform: rec.waveform,
           replyTo: reply,
         );
     if (!mounted) return;
@@ -921,16 +1043,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _sendPhoto(String chatId) async {
+    final source = await showImageSourceSheet(context, title: context.l10n.chatSendPhoto);
+    if (source == null || !mounted) return;
     setState(() => _uploading = true);
     try {
-      final url = await ref.read(imageUploadServiceProvider).pickAndUpload(
-            folder: 'chat',
-            fileName: 'chat_${DateTime.now().millisecondsSinceEpoch}',
-          );
-      if (url == null || !mounted) return;
+      final uploads = ref.read(imageUploadServiceProvider);
+      final bytes = await uploads.pickBytes(source: source);
+      if (bytes == null || !mounted) return;
+      final caption = await showPhotoCaptionSheet(context, bytes);
+      if (caption == null || !mounted) return;
+      final url = await uploads.uploadBytes(bytes, folder: 'chat');
+      if (!mounted) return;
       final reply = _takeReply(chatId);
-      final result =
-          await ref.read(chatMessagesProvider(chatId).notifier).send(imageUrl: url, replyTo: reply);
+      final result = await ref
+          .read(chatMessagesProvider(chatId).notifier)
+          .send(text: caption, imageUrl: url, replyTo: reply);
       if (!mounted) return;
       result.fold(
         onSuccess: (_) => ref.invalidate(conversationsStreamProvider),
@@ -1025,6 +1152,19 @@ class _ChatBubble extends ConsumerWidget {
                 onTap: onQuoteTap,
               ),
             ),
+          if (!deleted && message.forwarded)
+            Padding(
+              padding: const EdgeInsets.only(bottom: BeaconSpace.xs),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.shortcut_rounded, size: 13, color: meta),
+                  const SizedBox(width: BeaconSpace.xs),
+                  Text(l10n.chatForwarded,
+                      style: text.labelSmall?.copyWith(color: meta, fontStyle: FontStyle.italic)),
+                ],
+              ),
+            ),
           if (deleted)
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -1038,14 +1178,24 @@ class _ChatBubble extends ConsumerWidget {
               ],
             ),
           if (!deleted && message.hasImage)
-            ClipRRect(
-              borderRadius: BeaconRadius.rLg,
-              child: ItemImage(
-                url: message.imageUrl,
-                width: 220,
-                height: 220,
-                fit: BoxFit.cover,
-                fallbackIcon: Icons.image_outlined,
+            Semantics(
+              button: true,
+              label: l10n.chatOpenPhoto,
+              child: GestureDetector(
+                onTap: () => ImageViewerScreen.open(context, message.imageUrl, heroTag: 'msg-${message.messageId}'),
+                child: Hero(
+                  tag: 'msg-${message.messageId}',
+                  child: ClipRRect(
+                    borderRadius: BeaconRadius.rLg,
+                    child: ItemImage(
+                      url: message.imageUrl,
+                      width: 220,
+                      height: 220,
+                      fit: BoxFit.cover,
+                      fallbackIcon: Icons.image_outlined,
+                    ),
+                  ),
+                ),
               ),
             ),
           if (!deleted && message.hasAudio)
@@ -1072,11 +1222,7 @@ class _ChatBubble extends ConsumerWidget {
                 ),
                 if (isMe && !failed && !deleted) ...[
                   const SizedBox(width: BeaconSpace.xs),
-                  Icon(
-                    message.isPending ? Icons.schedule_rounded : Icons.done_all_rounded,
-                    color: meta,
-                    size: 14,
-                  ),
+                  MessageTicks(message: message, color: meta),
                 ],
               ],
             ),
@@ -1140,5 +1286,47 @@ class VoicePlayerScope extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(voicePlayerProvider);
     return child;
+  }
+}
+
+/// "typing…", "online" or "last seen …" under the peer's name.
+class _PresenceLine extends ConsumerWidget {
+  final String chatId;
+  final String peerId;
+  const _PresenceLine({required this.chatId, required this.peerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    final l10n = context.l10n;
+    final typing = chatId.isEmpty ? false : ref.watch(typingProvider(chatId));
+    PresenceInfo? presence = peerId.isEmpty ? null : ref.watch(presenceProvider)[peerId];
+    if (presence == null) {
+      final convo = (ref.watch(conversationsStreamProvider).value ?? const <ConversationModel>[])
+          .where((c) => c.chatId == chatId)
+          .firstOrNull;
+      if (convo != null && (convo.isOnline || convo.peerLastSeenMs != null)) {
+        presence = PresenceInfo(online: convo.isOnline, lastSeenMs: convo.peerLastSeenMs);
+      }
+    }
+    String? label;
+    Color color = t.onSurfaceMuted;
+    if (typing) {
+      label = l10n.chatTyping;
+      color = t.primary;
+    } else if (presence != null && presence.online) {
+      label = l10n.chatOnline;
+      color = t.found;
+    } else if (presence?.lastSeenMs != null) {
+      label = l10n.chatLastSeen(relativeTime(presence!.lastSeenMs, l10n: l10n));
+    }
+    return AnimatedSize(
+      duration: BeaconMotion.scaled(context, BeaconMotion.state),
+      alignment: AlignmentDirectional.topStart,
+      child: label == null
+          ? const SizedBox.shrink()
+          : Text(label, style: text.labelSmall?.copyWith(color: color), maxLines: 1, overflow: TextOverflow.ellipsis),
+    );
   }
 }

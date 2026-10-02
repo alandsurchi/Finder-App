@@ -11,6 +11,7 @@ class VoicePlayback {
   final bool loading;
   final Duration position;
   final Duration? duration;
+  final double speed;
 
   const VoicePlayback({
     required this.source,
@@ -18,6 +19,7 @@ class VoicePlayback {
     this.loading = false,
     this.position = Duration.zero,
     this.duration,
+    this.speed = 1,
   });
 
   VoicePlayback copyWith({
@@ -25,6 +27,7 @@ class VoicePlayback {
     bool? loading,
     Duration? position,
     Duration? duration,
+    double? speed,
   }) =>
       VoicePlayback(
         source: source,
@@ -32,6 +35,7 @@ class VoicePlayback {
         loading: loading ?? this.loading,
         position: position ?? this.position,
         duration: duration ?? this.duration,
+        speed: speed ?? this.speed,
       );
 }
 
@@ -69,6 +73,12 @@ class VoicePlayerController extends StateNotifier<VoicePlayback?> {
   StreamSubscription<PlayerState>? _stateSub;
   StreamSubscription<Duration?>? _durSub;
 
+  static const speeds = [1.0, 1.5, 2.0];
+
+  /// Chosen speed survives from note to note for the session.
+  double _speed = 1;
+  double get speed => _speed;
+
   bool isCurrent(String source) => state?.source == source;
 
   /// Play/pause [source] (a URL or a local file path).
@@ -83,12 +93,13 @@ class VoicePlayerController extends StateNotifier<VoicePlayback?> {
         }
         return;
       }
-      state = VoicePlayback(source: source, loading: true);
+      state = VoicePlayback(source: source, loading: true, speed: _speed);
       if (source.startsWith('http')) {
         await _player.setUrl(source);
       } else {
         await _player.setFilePath(source);
       }
+      await _player.setSpeed(_speed);
       await _player.play();
     } catch (e) {
       debugPrint('Voice playback failed: $e');
@@ -99,6 +110,17 @@ class VoicePlayerController extends StateNotifier<VoicePlayback?> {
   Future<void> seek(String source, Duration to) async {
     if (!isCurrent(source)) return;
     await _player.seek(to);
+  }
+
+  /// 1× → 1.5× → 2× → 1×.
+  Future<void> cycleSpeed() async {
+    final i = speeds.indexOf(_speed);
+    _speed = speeds[(i + 1) % speeds.length];
+    try {
+      await _player.setSpeed(_speed);
+    } catch (_) {}
+    final s = state;
+    if (s != null) state = s.copyWith(speed: _speed);
   }
 
   Future<void> stop() async {

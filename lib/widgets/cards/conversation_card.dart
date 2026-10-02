@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/features/chat/presentation/message_ticks.dart';
 import 'package:finder/core/utils/relative_time.dart';
 import 'package:finder/features/chat/presentation/open_chat.dart';
 import 'package:finder/l10n/l10n.dart';
@@ -21,6 +22,8 @@ class ConversationCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final unread = convo.unreadCount > 0;
+    // The list does not know my id; the last message is mine when it is not the peer's.
+    final isMine = convo.lastMessageSenderId.isNotEmpty && convo.lastMessageSenderId != convo.peerId;
 
     return SurfaceCard(
       margin: const EdgeInsets.only(bottom: BeaconSpace.md),
@@ -46,10 +49,29 @@ class ConversationCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          AppAvatar(
-            url: convo.avatarUrl,
-            name: convo.name,
-            size: 52,
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AppAvatar(
+                url: convo.avatarUrl,
+                name: convo.name,
+                size: 52,
+              ),
+              if (convo.isOnline)
+                PositionedDirectional(
+                  end: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: t.found,
+                      border: Border.all(color: t.surface, width: 2),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(width: BeaconSpace.md),
           Expanded(
@@ -107,9 +129,19 @@ class ConversationCard extends StatelessWidget {
                 const SizedBox(height: BeaconSpace.xs),
                 Row(
                   children: [
+                    if (isMine) ...[
+                      ListTicks(
+                        read: convo.lastMessageRead,
+                        delivered: convo.lastMessageDelivered,
+                        color: t.onSurfaceMuted,
+                      ),
+                      const SizedBox(width: BeaconSpace.xs),
+                    ],
                     Expanded(
                       child: Text(
-                        convo.message.isEmpty ? l10n.msgNoMessagesYet : convo.message,
+                        convo.message.isEmpty
+                            ? l10n.msgNoMessagesYet
+                            : (isMine ? '${l10n.chatYouPrefix}${convo.message}' : convo.message),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: text.bodyMedium?.copyWith(

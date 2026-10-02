@@ -62,6 +62,14 @@ class Message {
   final bool deleted;
   final Timestamp createdAt;
   final bool isRead;
+  /// Reached the peer's phone (two grey ticks); [isRead] = seen (blue).
+  final bool isDelivered;
+  /// Loudness buckets 0-100 of a voice note, for the waveform.
+  final List<int>? waveform;
+  /// Copied from another chat ("Forwarded" label).
+  final bool forwarded;
+  /// Id of the message being forwarded while the copy is pending.
+  final String? forwardOf;
 
   /// True while the message is on its way to the server (optimistic bubble).
   final bool isPending;
@@ -84,6 +92,10 @@ class Message {
     this.deleted = false,
     required this.createdAt,
     this.isRead = false,
+    this.isDelivered = false,
+    this.waveform,
+    this.forwarded = false,
+    this.forwardOf,
     this.isPending = false,
     this.failed = false,
     this.localAudioPath = '',
@@ -112,6 +124,11 @@ class Message {
       deleted: map['deleted'] == true,
       createdAt: Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
       isRead: map['isRead'] == true,
+      isDelivered: map['isDelivered'] == true || map['isRead'] == true,
+      waveform: map['waveform'] is List
+          ? (map['waveform'] as List).map((e) => (e as num).toInt()).toList()
+          : null,
+      forwarded: map['forwarded'] == true,
     );
   }
 
@@ -151,6 +168,10 @@ class Message {
     bool? deleted,
     Timestamp? createdAt,
     bool? isRead,
+    bool? isDelivered,
+    List<int>? waveform,
+    bool? forwarded,
+    String? forwardOf,
     bool? isPending,
     bool? failed,
     String? localAudioPath,
@@ -167,9 +188,30 @@ class Message {
       deleted: deleted ?? this.deleted,
       createdAt: createdAt ?? this.createdAt,
       isRead: isRead ?? this.isRead,
+      isDelivered: isDelivered ?? this.isDelivered,
+      waveform: waveform ?? this.waveform,
+      forwarded: forwarded ?? this.forwarded,
+      forwardOf: forwardOf ?? this.forwardOf,
       isPending: isPending ?? this.isPending,
       failed: failed ?? this.failed,
       localAudioPath: localAudioPath ?? this.localAudioPath,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Message &&
+          other.messageId == messageId &&
+          other.text == text &&
+          other.imageUrl == imageUrl &&
+          other.audioUrl == audioUrl &&
+          other.deleted == deleted &&
+          other.isRead == isRead &&
+          other.isDelivered == isDelivered &&
+          other.isPending == isPending &&
+          other.failed == failed;
+
+  @override
+  int get hashCode => Object.hash(messageId, text, imageUrl, audioUrl, deleted, isRead, isDelivered, isPending, failed);
 }

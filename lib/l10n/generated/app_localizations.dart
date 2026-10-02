@@ -4462,6 +4462,114 @@ abstract class AppLocalizations {
   /// **'Post and account updates'**
   String get pushUpdatesChannelDesc;
 
+  /// No description provided for @chatTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'typing…'**
+  String get chatTyping;
+
+  /// No description provided for @chatOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'online'**
+  String get chatOnline;
+
+  /// No description provided for @chatLastSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'last seen {when}'**
+  String chatLastSeen(String when);
+
+  /// No description provided for @chatYouPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'You: '**
+  String get chatYouPrefix;
+
+  /// No description provided for @chatAddCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a caption…'**
+  String get chatAddCaption;
+
+  /// No description provided for @chatLoadingOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading older messages…'**
+  String get chatLoadingOlder;
+
+  /// No description provided for @voiceTapToLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to record hands-free, hold to record'**
+  String get voiceTapToLock;
+
+  /// No description provided for @voiceSlideUpToLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide up to lock'**
+  String get voiceSlideUpToLock;
+
+  /// No description provided for @voiceSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send voice message'**
+  String get voiceSend;
+
+  /// No description provided for @voiceDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard recording'**
+  String get voiceDiscard;
+
+  /// No description provided for @voiceSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{speed}×'**
+  String voiceSpeed(String speed);
+
+  /// No description provided for @chatForwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarded'**
+  String get chatForwarded;
+
+  /// No description provided for @chatDeleteForMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for me'**
+  String get chatDeleteForMe;
+
+  /// No description provided for @chatForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get chatForward;
+
+  /// No description provided for @chatForwardTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward to'**
+  String get chatForwardTo;
+
+  /// No description provided for @chatForwardSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarded.'**
+  String get chatForwardSent;
+
+  /// No description provided for @chatUnreadMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 unread message} other{{count} unread messages}}'**
+  String chatUnreadMessages(int count);
+
+  /// No description provided for @chatOpenPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Open photo'**
+  String get chatOpenPhoto;
+
   /// No description provided for @navPost.
   ///
   /// In en, this message translates to:

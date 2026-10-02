@@ -28,6 +28,7 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
   final Color onAccent;
   final Color accentContainer;
   final Color accentGlow;
+  final Color tickRead;
 
   // ── Signal colors ─────────────────────────────────────────────────────────
   final Color lost;
@@ -70,6 +71,7 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
     required this.onAccent,
     required this.accentContainer,
     required this.accentGlow,
+    required this.tickRead,
     required this.lost,
     required this.onLost,
     required this.lostContainer,
@@ -106,6 +108,7 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
     onAccent: Color(0xFF3B2300),
     accentContainer: Color(0xFFFCEBD2),
     accentGlow: Color(0x5CF2A33A),
+    tickRead: Color(0xFF4FC3F7),
     lost: Color(0xFFD9483B),
     onLost: Color(0xFFFFFFFF),
     lostContainer: Color(0xFFFBE4E1),
@@ -142,6 +145,7 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
     onAccent: Color(0xFF2B1A00),
     accentContainer: Color(0xFF3D2A0E),
     accentGlow: Color(0x44F5B45C),
+    tickRead: Color(0xFF5AC8FA),
     lost: Color(0xFFFF7A6B),
     onLost: Color(0xFF2B0B07),
     lostContainer: Color(0xFF3A1A16),
@@ -178,6 +182,7 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
     Color? onAccent,
     Color? accentContainer,
     Color? accentGlow,
+    Color? tickRead,
     Color? lost,
     Color? onLost,
     Color? lostContainer,
@@ -212,6 +217,7 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
       onAccent: onAccent ?? this.onAccent,
       accentContainer: accentContainer ?? this.accentContainer,
       accentGlow: accentGlow ?? this.accentGlow,
+      tickRead: tickRead ?? this.tickRead,
       lost: lost ?? this.lost,
       onLost: onLost ?? this.onLost,
       lostContainer: lostContainer ?? this.lostContainer,
@@ -252,6 +258,7 @@ class BeaconColors extends ThemeExtension<BeaconColors> {
       onAccent: l(onAccent, other.onAccent),
       accentContainer: l(accentContainer, other.accentContainer),
       accentGlow: l(accentGlow, other.accentGlow),
+      tickRead: l(tickRead, other.tickRead),
       lost: l(lost, other.lost),
       onLost: l(onLost, other.onLost),
       lostContainer: l(lostContainer, other.lostContainer),

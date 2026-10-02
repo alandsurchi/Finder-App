@@ -2531,6 +2531,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pushUpdatesChannelDesc => 'Post and account updates';
 
   @override
+  String get chatTyping => 'typing…';
+
+  @override
+  String get chatOnline => 'online';
+
+  @override
+  String chatLastSeen(String when) {
+    return 'last seen $when';
+  }
+
+  @override
+  String get chatYouPrefix => 'You: ';
+
+  @override
+  String get chatAddCaption => 'Add a caption…';
+
+  @override
+  String get chatLoadingOlder => 'Loading older messages…';
+
+  @override
+  String get voiceTapToLock => 'Tap to record hands-free, hold to record';
+
+  @override
+  String get voiceSlideUpToLock => 'Slide up to lock';
+
+  @override
+  String get voiceSend => 'Send voice message';
+
+  @override
+  String get voiceDiscard => 'Discard recording';
+
+  @override
+  String voiceSpeed(String speed) {
+    return '$speed×';
+  }
+
+  @override
+  String get chatForwarded => 'Forwarded';
+
+  @override
+  String get chatDeleteForMe => 'Delete for me';
+
+  @override
+  String get chatForward => 'Forward';
+
+  @override
+  String get chatForwardTo => 'Forward to';
+
+  @override
+  String get chatForwardSent => 'Forwarded.';
+
+  @override
+  String chatUnreadMessages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unread messages',
+      one: '1 unread message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatOpenPhoto => 'Open photo';
+
+  @override
   String get navPost => 'Post';
 
   @override

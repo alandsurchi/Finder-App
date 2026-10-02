@@ -1,19 +1,36 @@
 {
   "@@locale": "en",
-
   "chatConversationTitle": "Conversation",
   "chatNotFoundTitle": "Conversation not found",
   "chatNotFoundSubtitle": "Open a chat from a post or from Messages.",
   "chatLoadingMessages": "Loading messages...",
   "chatSayHello": "Say hello to {name}",
-  "@chatSayHello": {"placeholders": {"name": {"type": "String"}}},
+  "@chatSayHello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chatStartSubtitle": "Start the conversation by sending a message.",
   "chatAskAbout": "Ask about \"{item}\" or arrange a safe hand-over.",
-  "@chatAskAbout": {"placeholders": {"item": {"type": "String"}}},
+  "@chatAskAbout": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "chatDirectMessageViewProfile": "Direct message · view profile",
   "chatDirectMessage": "Direct message",
   "chatAboutItem": "About \"{item}\"",
-  "@chatAboutItem": {"placeholders": {"item": {"type": "String"}}},
+  "@chatAboutItem": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "chatReopenPost": "Reopen the post",
   "chatReopenSubtitle": "Show it on Home again",
   "chatReturnedSubtitle": "The item is back with its owner",
@@ -23,9 +40,21 @@
   "chatReopenTitle": "Reopen this post?",
   "chatMarkReturnedTitle": "Mark as returned?",
   "chatReopenBody": "\"{item}\" will show on Home again as an open post.",
-  "@chatReopenBody": {"placeholders": {"item": {"type": "String"}}},
+  "@chatReopenBody": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "chatMarkReturnedBody": "\"{item}\" leaves the Home feed but stays visible in Search. Everyone in this chat gets a note.",
-  "@chatMarkReturnedBody": {"placeholders": {"item": {"type": "String"}}},
+  "@chatMarkReturnedBody": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "chatPostReopened": "Post reopened.",
   "chatAutoReopened": "I reopened this post.",
   "chatAutoReturned": "I marked this item as returned. Thank you!",
@@ -46,7 +75,13 @@
   "chatTheySaid": "They said",
   "chatCancelReply": "Cancel reply",
   "chatNewCount": "{count} new",
-  "@chatNewCount": {"placeholders": {"count": {"type": "int"}}},
+  "@chatNewCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "chatLatest": "Latest",
   "chatSignInToMessage": "Please sign in to send messages.",
   "chatOwnPost": "This is your own post.",
@@ -55,7 +90,6 @@
   "chatNotSentFailure": "Message not sent.",
   "chatNothingToRetry": "Nothing to retry.",
   "chatDeleteFailed": "Could not delete the message.",
-
   "msgDeleted": "This message was deleted",
   "msgVoiceMessage": "Voice message",
   "msgPhoto": "Photo",
@@ -63,7 +97,13 @@
   "msgNewConversation": "New conversation",
   "msgNewChat": "New chat",
   "msgUnreadConversations": "{count, plural, =1{1 unread conversation} other{{count} unread conversations}}",
-  "@msgUnreadConversations": {"placeholders": {"count": {"type": "int"}}},
+  "@msgUnreadConversations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "msgSubtitle": "Chat safely with owners and finders",
   "msgSearchHint": "Search conversations…",
   "msgLoading": "Loading conversations...",
@@ -71,9 +111,14 @@
   "msgNoConversationsFound": "No conversations found",
   "msgEmptySubtitle": "Contact an owner or finder from any post, or start a new chat.",
   "msgTryAnother": "Try another name or keyword.",
-
   "notifUnreadCount": "{count} unread",
-  "@notifUnreadCount": {"placeholders": {"count": {"type": "int"}}},
+  "@notifUnreadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "notifCaughtUp": "You are all caught up",
   "notifMarkAllRead": "Mark all read",
   "notifLoading": "Loading notifications...",
@@ -101,7 +146,6 @@
   "notifEmailCopies": "E-mail copies",
   "notifEmailCopiesSubtitle": "Also send important notifications by e-mail",
   "notifFooter": "Notifications are delivered inside the app. Push delivery to your phone will follow the same preferences.",
-
   "privacyTitle": "Privacy & safety",
   "privacyBlockMemberTitle": "Block a member",
   "privacyAdminCannotBlock": "Finder administrators cannot be blocked.",
@@ -131,34 +175,68 @@
   "privacyBlockedMembers": "Blocked members",
   "privacyBlockedMembersBody": "Blocked members can't see your posts or message you, and you won't see theirs.",
   "privacyBlockedTotal": "{count} total",
-  "@privacyBlockedTotal": {"placeholders": {"count": {"type": "int"}}},
+  "@privacyBlockedTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "privacyLoadingBlocked": "Loading blocked members...",
   "privacyNoBlocked": "No blocked members",
   "privacyNoBlockedSubtitle": "Members you block will appear here.",
   "privacyBlockAnother": "Block another member",
   "privacyDeleteAccountSubtitle": "Permanently remove your account, posts and conversations.",
-
   "blockUserLabel": "Block {name}",
-  "@blockUserLabel": {"placeholders": {"name": {"type": "String"}}},
+  "@blockUserLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "blockUserTitle": "Block {name}?",
-  "@blockUserTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@blockUserTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "blockUserDone": "{name} has been blocked.",
-  "@blockUserDone": {"placeholders": {"name": {"type": "String"}}},
+  "@blockUserDone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "blockUnblocked": "{name} can contact you again.",
-  "@blockUnblocked": {"placeholders": {"name": {"type": "String"}}},
+  "@blockUnblocked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "blockChatConfirmBody": "This conversation will disappear and neither of you can message the other. Undo it any time in Privacy & safety.",
   "blockProfileSubtitle": "Neither of you can see or message the other",
   "blockProfileConfirmBody": "Undo it any time in Privacy & safety.",
   "blockStaffSubtitle": "Staff accounts cannot be blocked",
   "blockMemberFallback": "Member",
-
   "profileFinderMember": "Finder member",
   "profileChangePhoto": "Change photo",
   "profileStatActive": "Active",
   "profileStatResolved": "Resolved",
   "profileStatSaved": "Saved",
   "profileShareLine": "Find me on Finder · member id {id}",
-  "@profileShareLine": {"placeholders": {"id": {"type": "String"}}},
+  "@profileShareLine": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "profileCopied": "Profile details copied to clipboard.",
   "profileEdit": "Edit profile",
   "profileCopyDetails": "Copy profile details",
@@ -207,13 +285,37 @@
   "profileUnavailableSubtitle": "The account may have been removed, or you cannot see each other.",
   "profileMore": "More",
   "profileMemberSince": "Member since {time}",
-  "@profileMemberSince": {"placeholders": {"time": {"type": "String"}}},
+  "@profileMemberSince": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "profilePostsCount": "{count, plural, =1{1 post} other{{count} posts}}",
-  "@profilePostsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@profilePostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "profileMessageFirstName": "Message {name}",
-  "@profileMessageFirstName": {"placeholders": {"name": {"type": "String"}}},
+  "@profileMessageFirstName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "profileItemsReported": "Items {name} reported",
-  "@profileItemsReported": {"placeholders": {"name": {"type": "String"}}},
+  "@profileItemsReported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "profileNoPosts": "No posts yet",
   "profileSendMessage": "Send a message",
   "profileFinderAdmin": "Finder administrator",
@@ -225,10 +327,24 @@
   "profileSearchSubtitle": "Type at least two letters of a name or e-mail address.",
   "profileSearchBlockedNote": "Members you have blocked will not appear here.",
   "profileSearchNoMatch": "No members match \"{query}\".",
-  "@profileSearchNoMatch": {"placeholders": {"query": {"type": "String"}}},
+  "@profileSearchNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "profileUserRowSemantics": "{name}, {action}",
-  "@profileUserRowSemantics": {"placeholders": {"name": {"type": "String"}, "action": {"type": "String"}}},
-
+  "@profileUserRowSemantics": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
   "verifyVerifiedIdentity": "Verified identity",
   "verifyGetVerified": "Get verified",
   "verifyBadgeVisible": "Your badge is visible to the community",
@@ -241,7 +357,13 @@
   "verifyUnderReview": "Under review",
   "verifyNeedsNewPhotos": "Needs new photos",
   "verifyStepsComplete": "{count} of 3 steps complete",
-  "@verifyStepsComplete": {"placeholders": {"count": {"type": "int"}}},
+  "@verifyStepsComplete": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "verifyCheckingStatus": "Checking your status...",
   "verifyVerifiedMember": "Verified member",
   "verifyReviewedByPerson": "Reviewed by a person",
@@ -260,17 +382,44 @@
   "verifyPending": "Verification pending",
   "verifyPendingBadge": "PENDING",
   "verifyVerifiedWith": "Verified with your {doc}.",
-  "@verifyVerifiedWith": {"placeholders": {"doc": {"type": "String"}}},
+  "@verifyVerifiedWith": {
+    "placeholders": {
+      "doc": {
+        "type": "String"
+      }
+    }
+  },
   "verifyReceived": "We received your {doc} {time}. A Finder team member is reviewing it; you will get a notification when it is done.",
-  "@verifyReceived": {"placeholders": {"doc": {"type": "String"}, "time": {"type": "String"}}},
+  "@verifyReceived": {
+    "placeholders": {
+      "doc": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "verifyNotApproved": "Not approved yet",
   "verifyNeedsPhotosBadge": "NEEDS PHOTOS",
   "verifyPhotosRejected": "The photos could not be verified.",
   "verifyReviewedAt": "Reviewed {time}",
-  "@verifyReviewedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@verifyReviewedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "verifySubmitNewPhotos": "Submit new photos",
   "verifyDocTypeLower": "{type, select, id_card{identity card} drivers_license{driver's license} passport{passport} other{document}}",
-  "@verifyDocTypeLower": {"placeholders": {"type": {"type": "String"}}},
+  "@verifyDocTypeLower": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "verifyDocSelection": "Document selection",
   "verifyDocSelectionSubtitle": "Choose the ID you wish to use for verification",
   "verifyDocPhotos": "Document photos",
@@ -288,23 +437,52 @@
   "verifyBackOfYourId": "Back of your ID",
   "verifyStoredPrivately": "Stored privately, seen only by the reviewer.",
   "verifyAddDocumentFirst": "{count, plural, =1{Please add your document photo first.} other{Please add your document photos first.}}",
-  "@verifyAddDocumentFirst": {"placeholders": {"count": {"type": "int"}}},
+  "@verifyAddDocumentFirst": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "verifyTakeSelfieFirst": "Please take a selfie to finish.",
   "verifySubmitted": "Submitted. You will be notified once it has been reviewed.",
   "verifyStepLabel": "STEP {index}",
-  "@verifyStepLabel": {"placeholders": {"index": {"type": "int"}}},
+  "@verifyStepLabel": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "verifySubmitForReview": "Submit for review",
   "verifyConfirmOwnership": "By submitting you confirm the documents are yours.",
   "verifyAddToContinue": "Add your document photos and a selfie to continue.",
   "verifyUploadAddedSemantics": "{label} added, tap to replace",
-  "@verifyUploadAddedSemantics": {"placeholders": {"label": {"type": "String"}}},
+  "@verifyUploadAddedSemantics": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "verifyUploadAddSemantics": "Add {label}",
-  "@verifyUploadAddSemantics": {"placeholders": {"label": {"type": "String"}}},
+  "@verifyUploadAddSemantics": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "verifyUploadAdded": "{label} added",
-  "@verifyUploadAdded": {"placeholders": {"label": {"type": "String"}}},
+  "@verifyUploadAdded": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "verifyTapToReplace": "Tap to replace",
   "verifyCameraOrGallery": "Camera or gallery",
-
   "helpTitle": "Help & support",
   "helpHeroPrefix": "How can we ",
   "helpHeroAccent": "support",
@@ -312,9 +490,21 @@
   "helpIntro": "Whether you've lost a treasure or found a memory, the answers below cover most questions.",
   "helpSearchHint": "Search questions (e.g. 'password')",
   "helpNoAnswers": "No answers match \"{query}\". Try another word or contact us below.",
-  "@helpNoAnswers": {"placeholders": {"query": {"type": "String"}}},
+  "@helpNoAnswers": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "helpAnswersCount": "{count, plural, =1{1 answer} other{{count} answers}}",
-  "@helpAnswersCount": {"placeholders": {"count": {"type": "int"}}},
+  "@helpAnswersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "helpBrowseByTopic": "Browse by topic",
   "helpStillQuestions": "Still have questions?",
   "helpEmailReply": "E-mail us and we reply within one working day.",
@@ -323,7 +513,13 @@
   "helpEmailBody": "Hi Finder team,\n\n",
   "helpCopyAddress": "Copy support address",
   "helpAddressCopied": "{email} copied.",
-  "@helpAddressCopied": {"placeholders": {"email": {"type": "String"}}},
+  "@helpAddressCopied": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "helpTechnicalFeedback": "TECHNICAL FEEDBACK",
   "helpFoundGlitch": "Found a glitch?",
   "helpGlitchBody": "Tell us what you did, what you expected and what happened instead. Screenshots help a lot.",
@@ -331,7 +527,13 @@
   "helpBugSubject": "Finder bug report",
   "helpBugBody": "What I did:\n\nWhat I expected:\n\nWhat happened:\n\nDevice / platform:\n",
   "helpNoEmailApp": "No e-mail app found. {email} was copied to your clipboard.",
-  "@helpNoEmailApp": {"placeholders": {"email": {"type": "String"}}},
+  "@helpNoEmailApp": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "helpGotIt": "Got it",
   "helpTopicAccountSubtitle": "Profile, verification and passwords",
   "helpFaqChangeNameQ": "How do I change my name or photo?",
@@ -367,16 +569,20 @@
   "helpFaqCantMessageQ": "Why can't I message someone?",
   "helpFaqCantMessageA": "Either one of you blocked the other, or they turned off direct messages in their privacy settings.",
   "helpComingSoon": "{feature} is coming soon.",
-  "@helpComingSoon": {"placeholders": {"feature": {"type": "String"}}},
+  "@helpComingSoon": {
+    "placeholders": {
+      "feature": {
+        "type": "String"
+      }
+    }
+  },
   "helpThisFeature": "This feature",
-
   "voicePlay": "Play voice message",
   "voicePause": "Pause voice message",
   "voiceHoldHint": "Hold the microphone to record a voice message.",
   "voiceHoldTap": "Hold to record a voice message.",
   "voiceSlideToCancel": "Slide to cancel",
   "voiceCancelRecording": "Cancel recording",
-
   "photoAddTitle": "Add a photo",
   "photoTakePhoto": "Take a photo",
   "photoOpenCamera": "Open the camera",
@@ -398,7 +604,13 @@
   "photoProfileTitle": "Profile photo",
   "photoCoverTitle": "Cover photo",
   "photoUploadFailed": "Photo upload failed. {detail}",
-  "@photoUploadFailed": {"placeholders": {"detail": {"type": "String"}}},
+  "@photoUploadFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "photoFileEmpty": "The selected file is empty.",
   "photoTooLarge": "Please choose an image under 8 MB.",
   "photoNoFileId": "The server returned no file id.",
@@ -407,8 +619,46 @@
   "photoAccessDenied": "Photo access was denied. Allow it in your phone settings and try again.",
   "photoCameraOpenFailed": "Could not open the camera.",
   "photoPickerOpenFailed": "Could not open the photo picker.",
-
   "pushMessagesChannelDesc": "New chat messages",
   "pushUpdatesChannel": "Updates",
-  "pushUpdatesChannelDesc": "Post and account updates"
+  "pushUpdatesChannelDesc": "Post and account updates",
+  "chatTyping": "typing…",
+  "chatOnline": "online",
+  "chatLastSeen": "last seen {when}",
+  "@chatLastSeen": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "chatYouPrefix": "You: ",
+  "chatAddCaption": "Add a caption…",
+  "chatLoadingOlder": "Loading older messages…",
+  "voiceTapToLock": "Tap to record hands-free, hold to record",
+  "voiceSlideUpToLock": "Slide up to lock",
+  "voiceSend": "Send voice message",
+  "voiceDiscard": "Discard recording",
+  "voiceSpeed": "{speed}×",
+  "@voiceSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "chatForwarded": "Forwarded",
+  "chatDeleteForMe": "Delete for me",
+  "chatForward": "Forward",
+  "chatForwardTo": "Forward to",
+  "chatForwardSent": "Forwarded.",
+  "chatUnreadMessages": "{count, plural, =1{1 unread message} other{{count} unread messages}}",
+  "@chatUnreadMessages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatOpenPhoto": "Open photo"
 }

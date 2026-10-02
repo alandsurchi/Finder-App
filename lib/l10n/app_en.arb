@@ -1251,6 +1251,45 @@
   "pushMessagesChannelDesc": "New chat messages",
   "pushUpdatesChannel": "Updates",
   "pushUpdatesChannelDesc": "Post and account updates",
+  "chatTyping": "typing…",
+  "chatOnline": "online",
+  "chatLastSeen": "last seen {when}",
+  "@chatLastSeen": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "chatYouPrefix": "You: ",
+  "chatAddCaption": "Add a caption…",
+  "chatLoadingOlder": "Loading older messages…",
+  "voiceTapToLock": "Tap to record hands-free, hold to record",
+  "voiceSlideUpToLock": "Slide up to lock",
+  "voiceSend": "Send voice message",
+  "voiceDiscard": "Discard recording",
+  "voiceSpeed": "{speed}×",
+  "@voiceSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "chatForwarded": "Forwarded",
+  "chatDeleteForMe": "Delete for me",
+  "chatForward": "Forward",
+  "chatForwardTo": "Forward to",
+  "chatForwardSent": "Forwarded.",
+  "chatUnreadMessages": "{count, plural, =1{1 unread message} other{{count} unread messages}}",
+  "@chatUnreadMessages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatOpenPhoto": "Open photo",
   "navPost": "Post",
   "navTab": "{label} tab",
   "@navTab": {

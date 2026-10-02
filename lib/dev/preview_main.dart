@@ -326,7 +326,10 @@ class _PreviewChat extends ChatMessagesController {
     String? imageUrl,
     String? localAudioPath,
     int? audioMs,
+    List<int>? waveform,
     ReplyPreview? replyTo,
+    String? forwardOf,
+    Message? forwardSource,
   }) async {
     final m = Message(
       messageId: 'local-${DateTime.now().millisecondsSinceEpoch}',
@@ -335,12 +338,19 @@ class _PreviewChat extends ChatMessagesController {
       imageUrl: imageUrl ?? '',
       localAudioPath: localAudioPath ?? '',
       audioMs: audioMs,
+      waveform: waveform,
       replyTo: replyTo,
       createdAt: Timestamp.now(),
     );
     state = AsyncValue.data([...(state.value ?? []), m]);
     return Result.success(m);
   }
+
+  @override
+  Future<void> loadOlder() async {}
+
+  @override
+  void sendTyping(bool typing) {}
 }
 
 class _PreviewNotificationSettings extends NotificationSettingsController {

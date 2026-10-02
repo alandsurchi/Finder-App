@@ -44,6 +44,7 @@ dependencies:
   image_picker: ^1.1.2
   http: ^1.2.1
   shared_preferences: ^2.2.3
+  web_socket_channel: ^3.0.3
   google_sign_in: ^6.2.1
   flutter_map: ^8.3.2
   latlong2: ^0.10.1
@@ -59,6 +60,8 @@ dependencies:
   flutter_cache_manager: ^3.4.1
   record: ^6.2.1
   just_audio: ^0.10.6
+  firebase_crashlytics: ^5.4.0
+  firebase_analytics: ^12.6.0
 
 dev_dependencies:
 

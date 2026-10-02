@@ -10,6 +10,7 @@ import 'app/router/root_navigator.dart';
 import 'services/push/push_service.dart';
 import 'app/deep_links.dart';
 import 'services/push/local_alerts.dart';
+import 'services/chat/chat_socket.dart';
 import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
 import 'features/auth/presentation/auth_state_provider.dart';
@@ -50,10 +51,12 @@ Future<void> main() async {
   // The saved language must be known before the first frame so the app
   // never flashes English at an Arabic or Kurdish user.
   final savedLocale = await LocaleController.restore();
+  final savedTheme = await ThemeController.restore();
   final container = ProviderContainer(
     overrides: [
       apiClientProvider.overrideWithValue(apiClient),
       localeControllerProvider.overrideWith(() => LocaleController(savedLocale)),
+      themeControllerProvider.overrideWith(() => ThemeController(savedTheme)),
     ],
   );
   apiClient.onUnauthorized =
@@ -115,12 +118,14 @@ class FinderApp extends ConsumerWidget {
         push.syncToken().then((_) => push.flushPendingOpen());
         ref.read(deepLinksProvider).flushPending();
         ref.read(localAlertsProvider).start();
+        ref.read(chatSocketProvider).connect();
       }
 
       // A signed-in session ended (logout or expired token): throw away
       // every pushed screen and land on onboarding.
       if (wasSignedIn && next.status == AuthStatus.unauthenticated) {
         ref.read(localAlertsProvider).reset();
+        ref.read(chatSocketProvider).close();
         final nav = rootNavigatorKey.currentState;
         if (nav == null) return;
         nav.pushNamedAndRemoveUntil(AppRoutes.onboarding, (route) => false);

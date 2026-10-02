@@ -2531,6 +2531,76 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pushUpdatesChannelDesc => 'تحديثات المنشورات والحساب';
 
   @override
+  String get chatTyping => 'يكتب…';
+
+  @override
+  String get chatOnline => 'متصل الآن';
+
+  @override
+  String chatLastSeen(String when) {
+    return 'آخر ظهور $when';
+  }
+
+  @override
+  String get chatYouPrefix => 'أنت: ';
+
+  @override
+  String get chatAddCaption => 'أضف تعليقًا…';
+
+  @override
+  String get chatLoadingOlder => 'جارٍ تحميل الرسائل الأقدم…';
+
+  @override
+  String get voiceTapToLock => 'انقر للتسجيل دون إمساك، أو اضغط مطولًا للتسجيل';
+
+  @override
+  String get voiceSlideUpToLock => 'اسحب للأعلى للقفل';
+
+  @override
+  String get voiceSend => 'إرسال الرسالة الصوتية';
+
+  @override
+  String get voiceDiscard => 'تجاهل التسجيل';
+
+  @override
+  String voiceSpeed(String speed) {
+    return '$speed×';
+  }
+
+  @override
+  String get chatForwarded => 'مُعاد توجيهها';
+
+  @override
+  String get chatDeleteForMe => 'حذف لديّ';
+
+  @override
+  String get chatForward => 'إعادة توجيه';
+
+  @override
+  String get chatForwardTo => 'إعادة التوجيه إلى';
+
+  @override
+  String get chatForwardSent => 'تمت إعادة التوجيه.';
+
+  @override
+  String chatUnreadMessages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count رسالة غير مقروءة',
+      many: '$count رسالة غير مقروءة',
+      few: '$count رسائل غير مقروءة',
+      two: 'رسالتان غير مقروءتين',
+      one: 'رسالة واحدة غير مقروءة',
+      zero: 'لا رسائل غير مقروءة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatOpenPhoto => 'فتح الصورة';
+
+  @override
   String get navPost => 'نشر';
 
   @override

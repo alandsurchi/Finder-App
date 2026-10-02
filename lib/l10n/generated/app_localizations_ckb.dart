@@ -2541,6 +2541,73 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get pushUpdatesChannelDesc => 'نوێکردنەوەی پۆست و هەژمار';
 
   @override
+  String get chatTyping => 'دەنووسێت…';
+
+  @override
+  String get chatOnline => 'ئۆنلاینە';
+
+  @override
+  String chatLastSeen(String when) {
+    return 'دوایین جار $when';
+  }
+
+  @override
+  String get chatYouPrefix => 'تۆ: ';
+
+  @override
+  String get chatAddCaption => 'تێبینییەک زیاد بکە…';
+
+  @override
+  String get chatLoadingOlder => 'بارکردنی نامە کۆنەکان…';
+
+  @override
+  String get voiceTapToLock =>
+      'دەست لێبدە بۆ تۆمارکردنی بێ‌دەست، ڕایبگرە بۆ تۆمارکردن';
+
+  @override
+  String get voiceSlideUpToLock => 'بۆ سەرەوە ڕایکێشە بۆ قوفڵکردن';
+
+  @override
+  String get voiceSend => 'ناردنی نامەی دەنگی';
+
+  @override
+  String get voiceDiscard => 'فڕێدانی تۆمارەکە';
+
+  @override
+  String voiceSpeed(String speed) {
+    return '$speed×';
+  }
+
+  @override
+  String get chatForwarded => 'فۆروارد کراوە';
+
+  @override
+  String get chatDeleteForMe => 'سڕینەوە بۆ خۆم';
+
+  @override
+  String get chatForward => 'فۆرواردکردن';
+
+  @override
+  String get chatForwardTo => 'فۆرواردکردن بۆ';
+
+  @override
+  String get chatForwardSent => 'فۆروارد کرا.';
+
+  @override
+  String chatUnreadMessages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count نامەی نەخوێندراوە',
+      one: '١ نامەی نەخوێندراوە',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get chatOpenPhoto => 'کردنەوەی وێنە';
+
+  @override
   String get navPost => 'پۆست';
 
   @override

@@ -15,7 +15,11 @@ class ConversationModel {
   final String itemName;
   final String postOwnerId;
   final String postStatus;
+  /// My last message was seen / delivered (ticks in the list).
+  final bool lastMessageRead;
+  final bool lastMessageDelivered;
   final bool isOnline;
+  final int? peerLastSeenMs;
   final bool isVerified;
   final bool isAdmin;
   final String avatarUrl;
@@ -34,7 +38,10 @@ class ConversationModel {
     this.itemName = '',
     this.postOwnerId = '',
     this.postStatus = '',
+    this.lastMessageRead = false,
+    this.lastMessageDelivered = false,
     this.isOnline = false,
+    this.peerLastSeenMs,
     this.isVerified = false,
     this.isAdmin = false,
     this.avatarUrl = '',
@@ -72,6 +79,10 @@ class ConversationModel {
       itemName: map['itemName']?.toString() ?? '',
       postOwnerId: map['postOwnerId']?.toString() ?? '',
       postStatus: map['postStatus']?.toString() ?? '',
+      lastMessageRead: map['lastMessageRead'] == true,
+      lastMessageDelivered: map['lastMessageDelivered'] == true,
+      isOnline: map['peerOnline'] == true,
+      peerLastSeenMs: (map['peerLastSeenMs'] as num?)?.toInt(),
     );
   }
 
@@ -93,7 +104,11 @@ class ConversationModel {
         other.postStatus == postStatus &&
         other.isVerified == isVerified &&
         other.isAdmin == isAdmin &&
-        other.avatarUrl == avatarUrl;
+        other.avatarUrl == avatarUrl &&
+        other.lastMessageRead == lastMessageRead &&
+        other.lastMessageDelivered == lastMessageDelivered &&
+        other.isOnline == isOnline &&
+        other.peerLastSeenMs == peerLastSeenMs;
   }
 
   @override
@@ -111,6 +126,10 @@ class ConversationModel {
         postStatus,
         isVerified,
         avatarUrl,
+        lastMessageRead,
+        lastMessageDelivered,
+        isOnline,
+        peerLastSeenMs,
       );
 
   Map<String, dynamic> toMap() {

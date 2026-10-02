@@ -5,6 +5,7 @@ import '../../../l10n/l10n.dart';
 import '../../../widgets/ui/ui.dart';
 import '../domain/message.dart';
 import 'voice_player_controller.dart';
+import 'waveform_bar.dart';
 
 String formatClip(Duration d) {
   final m = d.inMinutes;
@@ -12,8 +13,8 @@ String formatClip(Duration d) {
   return '$m:$s';
 }
 
-/// Inline player for a voice note: play/pause, a seekable bar and the
-/// remaining time. Colours follow the bubble (mine vs theirs).
+/// Inline player for a voice note: play/pause, the waveform (seekable), the
+/// remaining time and a speed pill while playing. Colours follow the bubble.
 class VoiceMessageBubble extends ConsumerWidget {
   final Message message;
   final bool isMe;
@@ -48,9 +49,11 @@ class VoiceMessageBubble extends ConsumerWidget {
     final label = current != null && playing
         ? formatClip(total == null ? position : total - position)
         : (total == null ? '0:00' : formatClip(total));
+    final speed = current?.speed ?? 1;
+    final speedLabel = speed == speed.roundToDouble() ? '${speed.toInt()}' : '$speed';
 
     return SizedBox(
-      width: 232,
+      width: 240,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -88,41 +91,45 @@ class VoiceMessageBubble extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  height: 28,
-                  child: SliderTheme(
-                    data: SliderThemeData(
-                      trackHeight: 3,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                      activeTrackColor: fg,
-                      inactiveTrackColor: muted.withValues(alpha: 0.4),
-                      thumbColor: fg,
-                      overlayColor: fg.withValues(alpha: 0.15),
-                    ),
-                    child: Slider(
-                      value: progress,
-                      onChanged: current == null || total == null
-                          ? null
-                          : (v) => ref.read(voicePlayerProvider.notifier).seek(
-                                source,
-                                Duration(milliseconds: (total.inMilliseconds * v).round()),
-                              ),
-                    ),
-                  ),
+                WaveformBar(
+                  waveform: message.waveform,
+                  progress: progress,
+                  fg: fg,
+                  muted: muted.withValues(alpha: 0.45),
+                  onSeek: current == null || total == null
+                      ? null
+                      : (p) => ref.read(voicePlayerProvider.notifier).seek(
+                            source,
+                            Duration(milliseconds: (total.inMilliseconds * p).round()),
+                          ),
                 ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 6),
-                  child: Row(
-                    children: [
-                      Icon(Icons.mic_rounded, size: 12, color: muted),
-                      const SizedBox(width: 4),
-                      Text(
-                        uploading ? l10n.commonSending : label,
-                        style: text.labelSmall?.copyWith(color: muted),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(Icons.mic_rounded, size: 12, color: muted),
+                    const SizedBox(width: 4),
+                    Text(
+                      uploading ? l10n.commonSending : label,
+                      style: text.labelSmall?.copyWith(color: muted),
+                    ),
+                    const Spacer(),
+                    if (current != null)
+                      Material(
+                        color: fg.withValues(alpha: 0.14),
+                        borderRadius: BeaconRadius.rPill,
+                        child: InkWell(
+                          borderRadius: BeaconRadius.rPill,
+                          onTap: () => ref.read(voicePlayerProvider.notifier).cycleSpeed(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            child: Text(
+                              l10n.voiceSpeed(speedLabel),
+                              style: text.labelSmall?.copyWith(color: fg, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
               ],
             ),

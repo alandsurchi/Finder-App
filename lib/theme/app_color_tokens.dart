@@ -29,6 +29,7 @@ class AppColorTokens {
   final Color onAccent;
   final Color accentContainer;
   final Color accentGlow;
+  final Color tickRead;
 
   // ── Signals ───────────────────────────────────────────────────────────────
   final Color lost;
@@ -95,6 +96,7 @@ class AppColorTokens {
     required this.onAccent,
     required this.accentContainer,
     required this.accentGlow,
+    required this.tickRead,
     required this.lost,
     required this.onLost,
     required this.lostContainer,
@@ -137,6 +139,7 @@ class AppColorTokens {
       onAccent: b.onAccent,
       accentContainer: b.accentContainer,
       accentGlow: b.accentGlow,
+      tickRead: b.tickRead,
       lost: b.lost,
       onLost: b.onLost,
       lostContainer: b.lostContainer,

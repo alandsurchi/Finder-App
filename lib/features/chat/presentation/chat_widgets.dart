@@ -281,3 +281,31 @@ class ScrollToLatestPill extends StatelessWidget {
     );
   }
 }
+
+/// "N unread messages" line above the first message the reader had not seen.
+class UnreadDivider extends StatelessWidget {
+  final int count;
+  const UnreadDivider({super.key, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: BeaconSpace.md),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: t.primary.withValues(alpha: 0.4))),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: BeaconSpace.md),
+            child: Text(
+              context.l10n.chatUnreadMessages(count),
+              style: text.labelSmall?.copyWith(color: t.primary),
+            ),
+          ),
+          Expanded(child: Divider(color: t.primary.withValues(alpha: 0.4))),
+        ],
+      ),
+    );
+  }
+}
