@@ -19,7 +19,8 @@ if (isPostgres) {
   });
 } else {
   const sqlite3 = require('sqlite3').verbose();
-  const dbPath = path.resolve(__dirname, 'database.sqlite');
+  // SQLITE_PATH lets tests use a throw-away database.
+  const dbPath = path.resolve(process.env.SQLITE_PATH || path.join(__dirname, 'database.sqlite'));
   console.log('Connecting to local SQLite database at:', dbPath);
   sqliteDb = new sqlite3.Database(dbPath);
 }
