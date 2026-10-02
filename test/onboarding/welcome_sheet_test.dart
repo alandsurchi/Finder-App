@@ -37,7 +37,7 @@ void main() {
     expect(find.text('Welcome to Finder'), findsNothing);
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool('welcome_seen_v1'), isTrue);
+    expect(prefs.getBool('welcome_seen_v2'), isTrue);
 
     // Second launch: nothing.
     await tester.pumpWidget(_host(locale: const Locale('en'), onReady: showWelcomeIfNeeded));

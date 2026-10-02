@@ -6,7 +6,7 @@ import 'package:finder/widgets/ui/ui.dart';
 
 import '../../screens/help_support_screen.dart';
 
-const _seenKey = 'welcome_seen_v1';
+const _seenKey = 'welcome_seen_v2';
 
 /// Shows the one-time welcome sheet on first entry after sign-in: what
 /// Finder is, the three things to do, and where the full guide lives. The
@@ -19,9 +19,13 @@ Future<void> showWelcomeIfNeeded(BuildContext context) async {
     return;
   }
   if (prefs.getBool(_seenKey) == true || !context.mounted) return;
+  // Mark it seen only once the sheet is really on screen: Home can be rebuilt
+  // during start-up, and a flag written for a disposed widget would mean the
+  // sheet is never shown at all.
+  final shown = showWelcomeSheet(context);
+  debugPrint('Welcome sheet shown (first entry)');
   await prefs.setBool(_seenKey, true);
-  if (!context.mounted) return;
-  await showWelcomeSheet(context);
+  await shown;
 }
 
 /// The welcome sheet itself (also reachable again from Help & Support).

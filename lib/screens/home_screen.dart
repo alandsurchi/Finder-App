@@ -42,7 +42,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     // First entry after sign-in: say what Finder is and where the guide lives.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // A short beat after the first frame so the sheet lands on a settled Home.
+    Future<void>.delayed(const Duration(milliseconds: 700), () {
       if (mounted) showWelcomeIfNeeded(context);
     });
   }
