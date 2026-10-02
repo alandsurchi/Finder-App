@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/chat_provider.dart';
 import '../providers/my_posts_provider.dart';
 import '../providers/post_provider.dart';
+import '../services/analytics/firebase_analytics_service.dart';
 import 'l10n.dart';
 
 const _kLocaleKey = 'app_language';
@@ -29,6 +30,7 @@ class LocaleController extends Notifier<Locale?> {
     ref.invalidate(postsStreamProvider);
     ref.invalidate(conversationsStreamProvider);
     ref.read(myPostsProvider.notifier).load();
+    ref.read(analyticsProvider).logEvent(AnalyticsEvents.languageChanged, parameters: {'language': language?.locale.languageCode ?? 'system'});
     final prefs = await SharedPreferences.getInstance();
     if (language == null) {
       await prefs.remove(_kLocaleKey);

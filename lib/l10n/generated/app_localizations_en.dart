@@ -555,7 +555,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalPrivacy1Body5 =>
-      'Technical data: request logs (IP address, endpoint, time) kept for security.';
+      'Technical data: request logs (IP address, endpoint, time) kept for security, plus anonymous crash reports and usage statistics (which screens are used, never the content of posts or messages).';
 
   @override
   String get legalPrivacy1Body6 =>
@@ -3517,6 +3517,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get postPostFoundCta => 'Post found item';
+
+  @override
+  String get mapNearbyTitle => 'Nearby';
+
+  @override
+  String mapNearbyCount(int count, int km) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posts within $km km',
+      one: '1 post within $km km',
+      zero: 'No posts within $km km',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mapRadius(int km) {
+    return '$km km';
+  }
+
+  @override
+  String get mapNearbyEmpty => 'No posts around here yet. Try a larger radius.';
 
   @override
   String get repoUnableLogin => 'Unable to login';

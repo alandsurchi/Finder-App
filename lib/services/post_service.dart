@@ -1,8 +1,17 @@
 import '../core/network/api_client.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/item_model.dart';
 
 /// Posts API. Every method throws a typed [AppException] on failure so the
 /// caller can show the server's message; nothing is swallowed here.
+/// A page of posts plus the cursor of the next (older) page.
+class PostsPage {
+  final List<ItemModel> items;
+  final String? nextCursor;
+  final bool hasMore;
+  const PostsPage({required this.items, this.nextCursor, this.hasMore = false});
+}
+
 class PostService {
   final ApiClient _apiClient;
 
@@ -31,12 +40,49 @@ class PostService {
     }
   }
 
+  /// One page of the feed with the cursor for the next one.
+  Future<PostsPage> fetchPage({
+    String? ownerId,
+    String? status,
+    String? category,
+    String? q,
+    LatLng? near,
+    int? km,
+    String? cursor,
+    int limit = 100,
+  }) async {
+    final query = <String, String>{'limit': '$limit'};
+    if (ownerId != null && ownerId.isNotEmpty) query['ownerId'] = ownerId;
+    if (status != null && status.isNotEmpty) query['status'] = status;
+    if (category != null && category.isNotEmpty) query['category'] = category;
+    if (q != null && q.trim().isNotEmpty) query['q'] = q.trim();
+    if (near != null) {
+      query['near'] = '${near.latitude},${near.longitude}';
+      query['km'] = '${km ?? 25}';
+    }
+    if (cursor != null && cursor.isNotEmpty) query['cursor'] = cursor;
+    final qs = Uri(queryParameters: query).query;
+
+    final res = await _apiClient.get('/posts?$qs');
+    final map = res is Map ? Map<String, dynamic>.from(res) : <String, dynamic>{'items': res};
+    final items = (map['items'] as List<dynamic>? ?? [])
+        .map((e) => ItemModel.fromApi(Map<String, dynamic>.from(e as Map)))
+        .toList();
+    return PostsPage(items: items, nextCursor: map['nextCursor']?.toString(), hasMore: map['hasMore'] == true);
+  }
+
   Future<List<ItemModel>> fetchItems({
     String? ownerId,
     String? status,
     String? category,
+    String? q,
+    LatLng? near,
+    int? km,
     int limit = 100,
   }) async {
+    if (q != null || near != null) {
+      return (await fetchPage(ownerId: ownerId, status: status, category: category, q: q, near: near, km: km, limit: limit)).items;
+    }
     final query = <String, String>{'limit': '$limit'};
     if (ownerId != null && ownerId.isNotEmpty) query['ownerId'] = ownerId;
     if (status != null && status.isNotEmpty) query['status'] = status;

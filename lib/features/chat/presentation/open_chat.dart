@@ -1,3 +1,4 @@
+import 'package:finder/services/analytics/firebase_analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -55,6 +56,7 @@ Future<void> openChatWith(
           postId: postId,
           itemName: itemName,
         );
+    ref.read(analyticsProvider).logEvent(AnalyticsEvents.chatStarted, parameters: {'from_post': postId == null || postId.isEmpty ? 0 : 1});
     if (!context.mounted) return;
     Navigator.pushNamed(
       context,

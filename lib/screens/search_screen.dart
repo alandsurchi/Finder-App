@@ -63,7 +63,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final postsAsync = ref.watch(postsStreamProvider);
-    final allItems = postsAsync.value?.map((item) => _SearchEntry(
+    final typed = _searchController.text.trim();
+    // Two letters or more: ask the server (it searches every language);
+    // otherwise browse the local feed.
+    final usingServer = typed.length >= 2;
+    final serverAsync = usingServer ? ref.watch(searchPostsProvider(typed)) : null;
+    final sourceItems = usingServer ? (serverAsync!.value ?? postsAsync.value) : postsAsync.value;
+    final allItems = sourceItems?.map((item) => _SearchEntry(
       id: item.id,
       title: item.title,
       description: item.description,
@@ -234,6 +240,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   List<_SearchEntry> _buildFilteredItems(List<_SearchEntry> allItems) {
     final query = _searchController.text.trim().toLowerCase();
+    final usingServer = query.length >= 2;
     final selectedCategories = _activeFilters.selectedCategories
         .map((e) => e.toLowerCase())
         .toSet();
@@ -241,7 +248,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     var results = allItems.where((item) {
       final matchesQuery =
-          query.isEmpty ||
+          query.isEmpty || usingServer ||
           item.title.toLowerCase().contains(query) ||
           item.description.toLowerCase().contains(query) ||
           item.location.toLowerCase().contains(query);

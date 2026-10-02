@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finder/services/analytics/firebase_analytics_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/routes.dart';
@@ -797,6 +798,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       if (!mounted) return;
       _clearDraft();
       ref.read(myPostsProvider.notifier).prepend(created);
+      ref.read(analyticsProvider).logEvent(AnalyticsEvents.postCreated, parameters: {
+        'type': created.isLost ? 'lost' : 'found',
+        'category': created.category,
+        'has_photo': created.hasImage ? 1 : 0,
+      });
       ref.invalidate(postsStreamProvider);
       _resetForm();
       // Details opens on top of Home, so Back lands on the feed, not here.

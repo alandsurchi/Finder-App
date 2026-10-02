@@ -277,5 +277,9 @@
   "postSeeOriginal": "بینینی دەقی ڕەسەن",
   "postSeeTranslation": "بینینی وەرگێڕان",
   "postPostLostCta": "بڵاوکردنەوەی شتی ونبوو",
-  "postPostFoundCta": "بڵاوکردنەوەی شتی دۆزراوە"
+  "postPostFoundCta": "بڵاوکردنەوەی شتی دۆزراوە",
+  "mapNearbyTitle": "نزیک من",
+  "mapNearbyCount": "{count, plural, =0{هیچ پۆستێک لە {km} کم} =1{١ پۆست لە {km} کم} other{{count} پۆست لە {km} کم}}",
+  "mapRadius": "{km} کم",
+  "mapNearbyEmpty": "هێشتا هیچ پۆستێک لێرە نییە. ماوەیەکی گەورەتر تاقی بکەرەوە."
 }

@@ -9,6 +9,7 @@ import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/services/analytics/firebase_analytics_service.dart';
 import 'package:finder/features/posts/presentation/post_review_banner.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/screens/edit_post_screen.dart';
@@ -233,7 +234,10 @@ class _PostManageCard extends ConsumerWidget {
                   await ref.read(myPostsProvider.notifier).markResolved(post.id);
               if (!context.mounted) return;
               result.fold(
-                onSuccess: (_) => ActionFeedback.showSuccess(context, l10n.commonMarkedAsReturned),
+                onSuccess: (_) {
+                  ref.read(analyticsProvider).logEvent(AnalyticsEvents.postResolved, parameters: {'type': post.isLost ? 'lost' : 'found'});
+                  ActionFeedback.showSuccess(context, l10n.commonMarkedAsReturned);
+                },
                 onFailure: (f) => ActionFeedback.showError(context, f.message),
               );
             },

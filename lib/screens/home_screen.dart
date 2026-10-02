@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:finder/services/analytics/firebase_analytics_service.dart';
+import 'package:finder/screens/nearby_map_screen.dart';
 import 'package:finder/widgets/custom_bottom_nav_bar.dart';
 import 'package:finder/screens/search_screen.dart';
 import 'package:finder/screens/create_post_screen.dart';
@@ -215,11 +217,24 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
                           : l10n.homeTrySwitchingAll,
                     );
                   }
+                  final pager = ref.watch(feedPagerProvider);
                   return ListView.builder(
                     padding: EdgeInsets.only(bottom: navClearance, top: BeaconSpace.xs),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) =>
-                        _buildItemCard(items[index], index),
+                    itemCount: items.length + (pager.loading ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= items.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(BeaconSpace.lg),
+                          child: Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))),
+                        );
+                      }
+                      if (index >= items.length - 3 && !pager.exhausted) {
+                        final all = postsStream.value ?? const <ItemModel>[];
+                        WidgetsBinding.instance.addPostFrameCallback(
+                            (_) => ref.read(feedPagerProvider.notifier).loadMore(all));
+                      }
+                      return _buildItemCard(items[index], index);
+                    },
                   );
                 },
               ),
@@ -285,6 +300,16 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
               ),
             ),
           ),
+          AppIconButton(
+            icon: Icons.map_outlined,
+            tooltip: context.l10n.mapNearbyTitle,
+            variant: AppIconButtonVariant.ghost,
+            onPressed: () {
+              ref.read(analyticsProvider).logEvent(AnalyticsEvents.nearbyOpened);
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyMapScreen()));
+            },
+          ),
+          const SizedBox(width: BeaconSpace.xs),
           _NotificationBell(
             onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
           ),

@@ -552,7 +552,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get legalPrivacy1Body5 =>
-      'بيانات تقنية: سجلات الطلبات (عنوان IP، نقطة الاتصال، الوقت) تُحفظ لأغراض الأمان.';
+      'بيانات تقنية: سجلات الطلبات (عنوان IP، نقطة الاتصال، الوقت) تُحفظ لأغراض الأمان، إضافة إلى تقارير أعطال مجهولة وإحصاءات استخدام (الشاشات المستخدمة، وليس محتوى المنشورات أو الرسائل أبدًا).';
 
   @override
   String get legalPrivacy1Body6 =>
@@ -3528,6 +3528,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get postPostFoundCta => 'نشر الموجود';
+
+  @override
+  String get mapNearbyTitle => 'بالقرب مني';
+
+  @override
+  String mapNearbyCount(int count, int km) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count منشور ضمن $km كم',
+      many: '$count منشورًا ضمن $km كم',
+      few: '$count منشورات ضمن $km كم',
+      two: 'منشوران ضمن $km كم',
+      one: 'منشور واحد ضمن $km كم',
+      zero: 'لا منشورات ضمن $km كم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mapRadius(int km) {
+    return '$km كم';
+  }
+
+  @override
+  String get mapNearbyEmpty => 'لا توجد منشورات هنا بعد. جرّب نطاقًا أوسع.';
 
   @override
   String get repoUnableLogin => 'تعذّر تسجيل الدخول';

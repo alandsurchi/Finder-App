@@ -558,7 +558,7 @@ class AppLocalizationsCkb extends AppLocalizations {
 
   @override
   String get legalPrivacy1Body5 =>
-      'زانیاری تەکنیکی: تۆماری داواکارییەکان (ناونیشانی IP، خاڵی پەیوەندی، کات) بۆ ئاسایش هەڵدەگیرێن.';
+      'زانیاری تەکنیکی: تۆماری داواکارییەکان (ناونیشانی IP، خاڵی پەیوەندی، کات) بۆ ئاسایش هەڵدەگیرێن، لەگەڵ ڕاپۆرتی ناسناوی تێکچوون و ئاماری بەکارهێنان (کام شاشە بەکاردێن، هەرگیز ناوەڕۆکی پۆست یان نامەکان نا).';
 
   @override
   String get legalPrivacy1Body6 =>
@@ -3531,6 +3531,30 @@ class AppLocalizationsCkb extends AppLocalizations {
 
   @override
   String get postPostFoundCta => 'بڵاوکردنەوەی شتی دۆزراوە';
+
+  @override
+  String get mapNearbyTitle => 'نزیک من';
+
+  @override
+  String mapNearbyCount(int count, int km) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count پۆست لە $km کم',
+      one: '١ پۆست لە $km کم',
+      zero: 'هیچ پۆستێک لە $km کم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mapRadius(int km) {
+    return '$km کم';
+  }
+
+  @override
+  String get mapNearbyEmpty =>
+      'هێشتا هیچ پۆستێک لێرە نییە. ماوەیەکی گەورەتر تاقی بکەرەوە.';
 
   @override
   String get repoUnableLogin => 'چوونەژوورەوە سەرکەوتوو نەبوو';

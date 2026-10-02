@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/features/admin/admin_console_service.dart';
+import 'package:finder/services/analytics/firebase_analytics_service.dart';
 import 'package:finder/l10n/l10n.dart';
 import 'package:finder/models/item_model.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
@@ -194,6 +195,7 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                 () => ref.read(adminConsoleServiceProvider).rejectPost(item.id, reason),
                 l10n.adminPostRejected,
               );
+              ref.read(analyticsProvider).logEvent(AnalyticsEvents.postRejected, parameters: {'risk': item.aiRisk});
             },
           ),
           AppButton(
@@ -205,6 +207,7 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                 () => ref.read(adminConsoleServiceProvider).approvePost(item.id),
                 l10n.adminPostApproved,
               );
+              ref.read(analyticsProvider).logEvent(AnalyticsEvents.postApproved, parameters: {'risk': item.aiRisk});
             },
           ),
         ],

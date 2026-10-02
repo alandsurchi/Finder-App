@@ -103,7 +103,7 @@
   "legalPrivacy1Body2": "Posts: title, description, category, location text, date and photos you attach.",
   "legalPrivacy1Body3": "Messages: the text and photos you exchange with other members.",
   "legalPrivacy1Body4": "Identity verification (optional): photos of an identity document and a selfie, used only to grant the verified badge.",
-  "legalPrivacy1Body5": "Technical data: request logs (IP address, endpoint, time) kept for security.",
+  "legalPrivacy1Body5": "Technical data: request logs (IP address, endpoint, time) kept for security, plus anonymous crash reports and usage statistics (which screens are used, never the content of posts or messages).",
   "legalPrivacy1Body6": "Google sign-in: we receive your e-mail, name and profile picture from Google.",
   "legalPrivacy2Heading": "2. How we use it",
   "legalPrivacy2Body1": "To run the service: show posts, deliver messages and notifications, and let members contact each other. To keep the community safe: reports, blocks and identity verification. To send transactional e-mails such as verification codes and password resets. Product news is only sent if you opt in.",

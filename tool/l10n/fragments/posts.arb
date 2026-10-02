@@ -470,5 +470,26 @@
   "postSeeOriginal": "See original",
   "postSeeTranslation": "See translation",
   "postPostLostCta": "Post lost item",
-  "postPostFoundCta": "Post found item"
+  "postPostFoundCta": "Post found item",
+  "mapNearbyTitle": "Nearby",
+  "mapNearbyCount": "{count, plural, =0{No posts within {km} km} =1{1 post within {km} km} other{{count} posts within {km} km}}",
+  "@mapNearbyCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "mapRadius": "{km} km",
+  "@mapRadius": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "mapNearbyEmpty": "No posts around here yet. Try a larger radius."
 }

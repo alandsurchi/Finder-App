@@ -277,5 +277,9 @@
   "postSeeOriginal": "عرض النص الأصلي",
   "postSeeTranslation": "عرض الترجمة",
   "postPostLostCta": "نشر المفقود",
-  "postPostFoundCta": "نشر الموجود"
+  "postPostFoundCta": "نشر الموجود",
+  "mapNearbyTitle": "بالقرب مني",
+  "mapNearbyCount": "{count, plural, =0{لا منشورات ضمن {km} كم} =1{منشور واحد ضمن {km} كم} =2{منشوران ضمن {km} كم} few{{count} منشورات ضمن {km} كم} many{{count} منشورًا ضمن {km} كم} other{{count} منشور ضمن {km} كم}}",
+  "mapRadius": "{km} كم",
+  "mapNearbyEmpty": "لا توجد منشورات هنا بعد. جرّب نطاقًا أوسع."
 }

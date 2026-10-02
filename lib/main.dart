@@ -1,3 +1,6 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,6 +68,7 @@ Future<void> main() async {
   _lifecycle = attachAppLifecycle(container);
   // Phone notifications. A missing Firebase config only disables push.
   await container.read(pushServiceProvider).init();
+  _installCrashReporting();
   // Shared links (https://…/p/<id>, finder://post/<id>) open the post.
   await container.read(deepLinksProvider).init();
 
@@ -78,6 +82,22 @@ Future<void> main() async {
 
 /// Keeps the lifecycle listener alive for the whole process.
 AppLifecycleListener? _lifecycle;
+
+/// Uncaught Flutter and platform errors go to Crashlytics (phones only;
+/// skipped when Firebase did not initialise).
+void _installCrashReporting() {
+  if (kIsWeb || Firebase.apps.isEmpty) return;
+  try {
+    final crash = FirebaseCrashlytics.instance;
+    FlutterError.onError = crash.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      crash.recordError(error, stack, fatal: true);
+      return true;
+    };
+  } catch (e) {
+    debugPrint('Crash reporting unavailable: $e');
+  }
+}
 
 /// Everything that is scoped to the signed-in user. Reset whenever the
 /// session changes so no data leaks between accounts.

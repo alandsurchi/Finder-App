@@ -1057,7 +1057,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalPrivacy1Body5.
   ///
   /// In en, this message translates to:
-  /// **'Technical data: request logs (IP address, endpoint, time) kept for security.'**
+  /// **'Technical data: request logs (IP address, endpoint, time) kept for security, plus anonymous crash reports and usage statistics (which screens are used, never the content of posts or messages).'**
   String get legalPrivacy1Body5;
 
   /// No description provided for @legalPrivacy1Body6.
@@ -6237,6 +6237,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Post found item'**
   String get postPostFoundCta;
+
+  /// No description provided for @mapNearbyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get mapNearbyTitle;
+
+  /// No description provided for @mapNearbyCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No posts within {km} km} =1{1 post within {km} km} other{{count} posts within {km} km}}'**
+  String mapNearbyCount(int count, int km);
+
+  /// No description provided for @mapRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km'**
+  String mapRadius(int km);
+
+  /// No description provided for @mapNearbyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts around here yet. Try a larger radius.'**
+  String get mapNearbyEmpty;
 
   /// No description provided for @repoUnableLogin.
   ///
