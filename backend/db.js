@@ -273,6 +273,19 @@ async function initDb() {
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS translation_attempts INTEGER DEFAULT 0;');
       await pgPool.query('ALTER TABLE posts ADD COLUMN IF NOT EXISTS expired_at_ms BIGINT;');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status, created_at_ms DESC);');
+      // Chat receipts, presence, waveforms, forward, delete-for-me (round 4).
+      await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS waveform TEXT;');
+      await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS forwarded BOOLEAN DEFAULT FALSE;');
+      await pgPool.query('ALTER TABLE messages ADD COLUMN IF NOT EXISTS forward_of VARCHAR(255);');
+      await pgPool.query('ALTER TABLE chat_participants ADD COLUMN IF NOT EXISTS last_read_at_ms BIGINT;');
+      await pgPool.query('ALTER TABLE chat_participants ADD COLUMN IF NOT EXISTS last_delivered_at_ms BIGINT;');
+      await pgPool.query('ALTER TABLE chats ADD COLUMN IF NOT EXISTS last_message_id VARCHAR(255);');
+      await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_ms BIGINT;');
+      await pgPool.query(`CREATE TABLE IF NOT EXISTS message_hidden (
+        message_id VARCHAR(255) REFERENCES messages(id) ON DELETE CASCADE,
+        user_id VARCHAR(255) REFERENCES users(uid) ON DELETE CASCADE,
+        PRIMARY KEY (message_id, user_id)
+      );`);
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at_ms DESC);');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_owner ON posts(owner_id);');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, created_at_ms DESC);');
@@ -504,6 +517,21 @@ async function initDb() {
         sqliteDb.run('ALTER TABLE posts ADD COLUMN translation_attempts INTEGER DEFAULT 0', () => {});
         sqliteDb.run('ALTER TABLE posts ADD COLUMN expired_at_ms INTEGER', () => {});
         sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status, created_at_ms DESC)');
+        // Chat receipts, presence, waveforms, forward, delete-for-me (round 4).
+        sqliteDb.run('ALTER TABLE messages ADD COLUMN waveform TEXT', () => {});
+        sqliteDb.run('ALTER TABLE messages ADD COLUMN forwarded INTEGER DEFAULT 0', () => {});
+        sqliteDb.run('ALTER TABLE messages ADD COLUMN forward_of TEXT', () => {});
+        sqliteDb.run('ALTER TABLE chat_participants ADD COLUMN last_read_at_ms INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE chat_participants ADD COLUMN last_delivered_at_ms INTEGER', () => {});
+        sqliteDb.run('ALTER TABLE chats ADD COLUMN last_message_id TEXT', () => {});
+        sqliteDb.run('ALTER TABLE users ADD COLUMN last_seen_ms INTEGER', () => {});
+        sqliteDb.run(`
+          CREATE TABLE IF NOT EXISTS message_hidden (
+            message_id TEXT,
+            user_id TEXT,
+            PRIMARY KEY (message_id, user_id)
+          )
+        `);
         sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at_ms DESC)');
         sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_owner ON posts(owner_id)');
         sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, created_at_ms DESC)');

@@ -1,179 +1,221 @@
+// Realtime layer for chat: new messages, delivered / read receipts, typing
+// and presence. REST stays the source of truth; the socket only pushes
+// what the routes already stored, so a client without a socket (or with a
+// flaky one) keeps working by polling.
+//
+// Connect:  wss://<host>/ws?token=<jwt>   (or send {type:'auth', token} first)
+// Server → client: authenticated, presence.snapshot, presence, message.new,
+//   message.delivered, message.read, message.deleted, typing, error
+// Client → server: typing {chatId, isTyping}, delivered {chatId}, read {chatId}, ping
 const ws = require('ws');
 const jwt = require('jsonwebtoken');
 const db = require('./db');
-const crypto = require('crypto');
+const { jwtSecret: JWT_SECRET } = require('./config');
+const { truthy } = require('./lib/helpers');
+const chatState = require('./lib/chat_state');
 
-const JWT_SECRET = require('./config').jwtSecret;
+const HEARTBEAT_MS = 30 * 1000;
+const LAST_SEEN_WRITE_EVERY_MS = 60 * 1000;
 
-// Map of userId -> Set of active WebSocket connections
+/** userId → Set<WebSocket> of that user's live connections. */
 const clients = new Map();
+
+function send(socket, event) {
+  if (socket.readyState !== ws.OPEN) return;
+  try { socket.send(JSON.stringify(event)); } catch (_) { /* closing */ }
+}
+
+function sendToUser(userId, event) {
+  const set = clients.get(userId);
+  if (!set) return 0;
+  for (const s of set) send(s, event);
+  return set.size;
+}
+
+/** Sends to every participant of a chat (optionally skipping one user). */
+async function sendToChat(chatId, event, { except } = {}) {
+  const ids = await chatState.participantsOf(chatId).catch(() => []);
+  for (const id of ids) {
+    if (except && id === except) continue;
+    sendToUser(id, event);
+  }
+}
+
+function isOnline(userId) {
+  const set = clients.get(userId);
+  return !!set && set.size > 0;
+}
+
+/** { userId: { online, lastSeenMs } } for a list of users. */
+async function presenceOf(userIds) {
+  const out = {};
+  const ids = [...new Set(userIds.filter(Boolean))];
+  if (!ids.length) return out;
+  const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
+  const rows = await db.query(`SELECT uid, last_seen_ms FROM users WHERE uid IN (${placeholders})`, ids).catch(() => []);
+  const seen = new Map(rows.map(r => [r.uid, r.last_seen_ms ? parseInt(r.last_seen_ms) : null]));
+  for (const id of ids) {
+    out[id] = { online: isOnline(id), lastSeenMs: seen.get(id) ?? null };
+  }
+  return out;
+}
+
+async function touchLastSeen(userId) {
+  await db.exec('UPDATE users SET last_seen_ms = $1 WHERE uid = $2', [Date.now(), userId]).catch(() => {});
+}
+
+/** Everyone who shares a chat with the user. */
+async function peersOf(userId) {
+  const rows = await db.query(
+    `SELECT DISTINCT cp.user_id FROM chat_participants cp
+     JOIN chat_participants me ON me.chat_id = cp.chat_id AND me.user_id = $1
+     WHERE cp.user_id != $2`,
+    [userId, userId]
+  ).catch(() => []);
+  return rows.map(r => r.user_id);
+}
+
+async function broadcastPresence(userId, online) {
+  const lastSeenMs = online ? null : Date.now();
+  const event = { type: 'presence', userId, online, lastSeenMs };
+  for (const peer of await peersOf(userId)) sendToUser(peer, event);
+}
+
+async function authenticate(token) {
+  if (!token) return null;
+  let decoded;
+  try { decoded = jwt.verify(token, JWT_SECRET); } catch (_) { return null; }
+  const user = await db.queryOne('SELECT uid, is_banned FROM users WHERE uid = $1', [decoded.userId]).catch(() => null);
+  if (!user || truthy(user.is_banned)) return null;
+  return user.uid;
+}
 
 function initWebSocket(server) {
   const wss = new ws.Server({ noServer: true });
 
   server.on('upgrade', (request, socket, head) => {
-    wss.handleUpgrade(request, socket, head, (wsConnection) => {
-      wss.emit('connection', wsConnection, request);
+    const url = new URL(request.url, 'http://localhost');
+    if (url.pathname !== '/ws' && url.pathname !== '/') {
+      socket.destroy();
+      return;
+    }
+    wss.handleUpgrade(request, socket, head, (conn) => {
+      conn.queryToken = url.searchParams.get('token') || '';
+      wss.emit('connection', conn, request);
     });
   });
 
-  wss.on('connection', (wsConn) => {
-    console.log('New WebSocket connection established.');
-    let currentUserId = null;
+  // Dead-connection reaper: ping every 30 s, drop sockets that never pong.
+  const reaper = setInterval(() => {
+    for (const conn of wss.clients) {
+      if (conn.isAlive === false) { conn.terminate(); continue; }
+      conn.isAlive = false;
+      try { conn.ping(); } catch (_) { /* closing */ }
+    }
+  }, HEARTBEAT_MS);
+  reaper.unref();
+  wss.on('close', () => clearInterval(reaper));
 
-    wsConn.on('message', async (messageData) => {
+  wss.on('connection', (conn) => {
+    conn.isAlive = true;
+    let userId = null;
+    let lastSeenWrittenAt = 0;
+    const participantCache = new Map();
+
+    const register = async (uid) => {
+      userId = uid;
+      const first = !clients.has(uid);
+      if (first) clients.set(uid, new Set());
+      clients.get(uid).add(conn);
+      await touchLastSeen(uid);
+      lastSeenWrittenAt = Date.now();
+      send(conn, { type: 'authenticated', userId: uid });
+      const peers = await peersOf(uid);
+      const snapshot = await presenceOf(peers);
+      send(conn, { type: 'presence.snapshot', users: Object.entries(snapshot).map(([id, p]) => ({ userId: id, ...p })) });
+      if (first) await broadcastPresence(uid, true);
+    };
+
+    const canAct = async (chatId) => {
+      if (!userId || !chatId) return false;
+      if (participantCache.has(chatId)) return participantCache.get(chatId);
+      const ok = await chatState.isParticipant(chatId, userId);
+      participantCache.set(chatId, ok);
+      return ok;
+    };
+
+    conn.on('pong', async () => {
+      conn.isAlive = true;
+      if (userId && Date.now() - lastSeenWrittenAt > LAST_SEEN_WRITE_EVERY_MS) {
+        lastSeenWrittenAt = Date.now();
+        await touchLastSeen(userId);
+      }
+    });
+
+    // Token in the URL: authenticate straight away.
+    if (conn.queryToken) {
+      authenticate(conn.queryToken).then(uid => {
+        if (!uid) { send(conn, { type: 'error', message: 'Invalid token.' }); return conn.close(4401, 'unauthorized'); }
+        return register(uid);
+      }).catch(err => console.error('WS auth error:', err.message));
+    }
+
+    conn.on('message', async (raw) => {
+      let payload;
+      try { payload = JSON.parse(raw.toString()); } catch (_) {
+        return send(conn, { type: 'error', message: 'Invalid message payload format.' });
+      }
       try {
-        const payload = JSON.parse(messageData.toString());
-
-        if (payload.type === 'auth') {
-          const { token } = payload;
-          if (!token) {
-            wsConn.send(JSON.stringify({ type: 'error', message: 'Auth token missing.' }));
-            return wsConn.close();
+        switch (payload.type) {
+          case 'auth': {
+            if (userId) return;
+            const uid = await authenticate(payload.token);
+            if (!uid) { send(conn, { type: 'error', message: 'Invalid token.' }); return conn.close(4401, 'unauthorized'); }
+            return register(uid);
           }
-
-          try {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            currentUserId = decoded.userId;
-            
-            // Add connection to clients map
-            if (!clients.has(currentUserId)) {
-              clients.set(currentUserId, new Set());
-            }
-            clients.get(currentUserId).add(wsConn);
-            
-            console.log(`WebSocket client authenticated. User ID: ${currentUserId}`);
-            wsConn.send(JSON.stringify({ type: 'authenticated', userId: currentUserId }));
-          } catch (err) {
-            wsConn.send(JSON.stringify({ type: 'error', message: 'Invalid token.' }));
-            return wsConn.close();
+          case 'ping':
+            return send(conn, { type: 'pong', at: Date.now() });
+          case 'typing': {
+            const { chatId, isTyping } = payload;
+            if (!(await canAct(chatId))) return;
+            return sendToChat(chatId, { type: 'typing', chatId, userId, isTyping: !!isTyping }, { except: userId });
           }
-        } else if (payload.type === 'message') {
-          if (!currentUserId) {
-            return wsConn.send(JSON.stringify({ type: 'error', message: 'Not authenticated.' }));
+          case 'delivered': {
+            const { chatId } = payload;
+            if (!(await canAct(chatId))) return;
+            const at = await chatState.markChatDelivered(userId, chatId);
+            if (at) await sendToChat(chatId, { type: 'message.delivered', chatId, userId, deliveredAtMs: at }, { except: userId });
+            return;
           }
-
-          const { chatId, text, recipientId } = payload;
-          if (!chatId || !text || !recipientId) {
-            return wsConn.send(JSON.stringify({ type: 'error', message: 'chatId, text, and recipientId are required.' }));
+          case 'read': {
+            const { chatId } = payload;
+            if (!(await canAct(chatId))) return;
+            const at = await chatState.markChatRead(userId, chatId);
+            return sendToChat(chatId, { type: 'message.read', chatId, userId, readAtMs: at }, { except: userId });
           }
-
-          // Save message to database
-          const messageId = crypto.randomUUID();
-          const now = Date.now();
-
-          await db.exec(
-            `INSERT INTO messages (id, chat_id, sender_id, text, is_read, created_at_ms)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [messageId, chatId, currentUserId, text.trim(), false, now]
-          );
-
-          // Update chat last message metadata
-          await db.exec(
-            `UPDATE chats 
-             SET last_message_text = $1, last_sender_id = $2, updated_at_ms = $3
-             WHERE id = $4`,
-            [text.trim(), currentUserId, now, chatId]
-          );
-
-          // Increment unread count for recipient
-          await db.exec(
-            `UPDATE chat_participants 
-             SET unread_count = unread_count + 1 
-             WHERE chat_id = $1 AND user_id = $2`,
-            [chatId, recipientId]
-          );
-
-          const messageResponse = {
-            type: 'message',
-            id: messageId,
-            chatId,
-            senderId: currentUserId,
-            text: text.trim(),
-            createdAtMs: now,
-            isRead: false
-          };
-
-          // Send to sender (echo/confirmation)
-          wsConn.send(JSON.stringify(messageResponse));
-
-          // Send to recipient if online
-          if (clients.has(recipientId)) {
-            const recipientSockets = clients.get(recipientId);
-            recipientSockets.forEach(sock => {
-              if (sock.readyState === ws.OPEN) {
-                sock.send(JSON.stringify(messageResponse));
-              }
-            });
-          }
-
-          // Trigger database-based in-app notification for the recipient
-          try {
-            // Find sender display name
-            const sender = await db.queryOne('SELECT full_name, nick_name FROM users WHERE uid = $1', [currentUserId]);
-            const senderName = sender ? (sender.full_name || sender.nick_name) : 'Someone';
-
-            // Find chat metadata to get item/post title
-            const chat = await db.queryOne('SELECT item_name FROM chats WHERE id = $1', [chatId]);
-            const postTitle = chat ? chat.item_name : 'your post';
-
-            const notificationId = crypto.randomUUID();
-            await db.exec(
-              `INSERT INTO notifications (id, user_id, title, message, type, is_unread, created_at_ms)
-               VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-              [
-                notificationId,
-                recipientId,
-                `💬 New message from ${senderName}`,
-                `Regarding: "${postTitle}"`,
-                'newMessage',
-                true,
-                now
-              ]
-            );
-
-            // If recipient is online, notify them of the new notification
-            if (clients.has(recipientId)) {
-              const recipientSockets = clients.get(recipientId);
-              recipientSockets.forEach(sock => {
-                if (sock.readyState === ws.OPEN) {
-                  sock.send(JSON.stringify({
-                    type: 'notification',
-                    id: notificationId,
-                    title: `💬 New message from ${senderName}`,
-                    message: `Regarding: "${postTitle}"`,
-                    notificationType: 'newMessage',
-                    isUnread: true,
-                    createdAtMs: now
-                  }));
-                }
-              });
-            }
-          } catch (notifErr) {
-            console.error('WebSocket message notification failed:', notifErr);
-          }
+          default:
+            if (!userId) return send(conn, { type: 'error', message: 'Not authenticated.' });
         }
       } catch (err) {
-        console.error('WebSocket message parsing error:', err);
-        wsConn.send(JSON.stringify({ type: 'error', message: 'Invalid message payload format.' }));
+        console.error('WS handler error:', err.message);
       }
     });
 
-    wsConn.on('close', () => {
-      if (currentUserId && clients.has(currentUserId)) {
-        const userSockets = clients.get(currentUserId);
-        userSockets.delete(wsConn);
-        if (userSockets.size === 0) {
-          clients.delete(currentUserId);
+    conn.on('close', async () => {
+      if (!userId) return;
+      const set = clients.get(userId);
+      if (set) {
+        set.delete(conn);
+        if (set.size === 0) {
+          clients.delete(userId);
+          await touchLastSeen(userId);
+          await broadcastPresence(userId, false);
         }
-        console.log(`WebSocket client disconnected. User ID: ${currentUserId}`);
-      } else {
-        console.log('Unauthenticated WebSocket client disconnected.');
       }
     });
+
+    conn.on('error', () => {});
   });
 }
 
-module.exports = {
-  initWebSocket
-};
+module.exports = { initWebSocket, sendToUser, sendToChat, isOnline, presenceOf };

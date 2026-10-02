@@ -241,8 +241,21 @@ function shareUrlFor(id) {
   return base ? `${base}/p/${encodeURIComponent(id)}` : '';
 }
 
-function mapMessage(row) {
+function parseWaveform(raw) {
+  if (!raw) return null;
+  try { const v = JSON.parse(raw); return Array.isArray(v) ? v.map(n => Math.max(0, Math.min(100, Number(n) || 0))) : null; } catch (_) { return null; }
+}
+
+/**
+ * Shapes a message row for the API. `wm` are the peer's watermarks from
+ * chat_state.watermarksFor: a message is delivered / read when it was sent
+ * before the peer's last delivered / read time (WhatsApp semantics).
+ */
+function mapMessage(row, wm = {}) {
   const deleted = !!row.deleted_at_ms;
+  const createdAtMs = parseInt(row.created_at_ms);
+  const isRead = truthy(row.is_read) || (wm.peerReadAtMs != null && createdAtMs <= wm.peerReadAtMs);
+  const isDelivered = isRead || (wm.peerDeliveredAtMs != null && createdAtMs <= wm.peerDeliveredAtMs);
   return {
     id: row.id,
     chatId: row.chat_id,
@@ -260,8 +273,11 @@ function mapMessage(row) {
       deleted: !!row.r_deleted_at_ms,
     } : null,
     deleted,
-    createdAtMs: parseInt(row.created_at_ms),
-    isRead: truthy(row.is_read),
+    createdAtMs,
+    isRead,
+    isDelivered,
+    waveform: deleted ? null : parseWaveform(row.waveform),
+    forwarded: truthy(row.forwarded),
   };
 }
 

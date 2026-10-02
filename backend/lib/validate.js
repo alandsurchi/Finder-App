@@ -84,7 +84,11 @@ const schemas = {
     audioUrl: httpUrl(500).optional(),
     audioMs: z.number().int().min(1).max(600000).optional(),
     replyToId: z.string().trim().max(64).optional(),
-  }).refine(v => (v.text && v.text.length > 0) || (v.imageUrl && v.imageUrl.length > 0) || (v.audioUrl && v.audioUrl.length > 0), {
+    // Voice note amplitude buckets (0-100), drawn as the bubble's waveform.
+    waveform: z.array(z.number().int().min(0).max(100)).max(64).optional(),
+    // Copy another message (text/photo/voice) into this chat.
+    forwardOf: z.string().trim().max(64).optional(),
+  }).refine(v => (v.text && v.text.length > 0) || (v.imageUrl && v.imageUrl.length > 0) || (v.audioUrl && v.audioUrl.length > 0) || (v.forwardOf && v.forwardOf.length > 0), {
     message: 'Message cannot be empty.',
   }),
 
