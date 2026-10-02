@@ -13,8 +13,11 @@ Aland Agency project. Follow C:\Users\aland\Desktop\Aland Agency\Aland-HQ\rules\
 - Flutter install/run: `flutter pub get`, `flutter run`
 - Flutter test: `flutter test`
 - Backend install: `cd backend && npm install`
-- Backend run: unknown — ask Aland (check `backend/package.json` scripts before running)
-- build: unknown — ask Aland (Flutter build target and codemagic.yaml define release builds)
+- Backend run: `cd backend && npm start` (SQLite locally; seed demo accounts with `npm run seed`, password Demo1234!)
+- Backend tests: `cd backend && npm test` (node --test, throw-away SQLite via SQLITE_PATH)
+- App strings: `python tool/merge_l10n.py` after editing `tool/l10n/**` (never edit `lib/l10n/app_*.arb`)
+- Release APK: `flutter build apk --release --split-per-abi --target-platform android-arm64 --dart-define=API_URL=https://finder-app-production-7c49.up.railway.app` (JAVA_HOME = ~/.jdks/jdk-21.0.12.1+1), then adb install on both phones
+- Docs: `docs/LOCALIZATION.md`, `docs/MODERATION.md`, `docs/CHAT_REALTIME.md`, `docs/DEPLOYMENT.md`
 
 ## Key folders
 - `lib/` — app, core, data, features, models, providers, repositories, screens, services, theme, usecases, widgets

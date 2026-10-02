@@ -175,3 +175,21 @@ console works even if `ADMIN_EMAILS` cannot be edited. Two admin-only routes rep
    from TestFlight. Free-Apple-ID sideloads never receive push: the app then shows local alerts
    only while it is open.
 5. Set `APPLE_TEAM_ID` on the API and add `applinks:<host>` to the entitlements for universal links.
+
+### Round 4 (post review, AI, realtime chat) — environment and notes
+
+| Variable | Purpose |
+|---|---|
+| `GEMINI_API_KEY` | Google AI Studio key for translations (en/ar/ckb) and the moderation pre-check. Optional: an admin can also save it from the app (Admin console → AI assistant); it is stored in `PRIVATE_DIR/gemini-key.json`. |
+| `GEMINI_MODEL` | default `gemini-2.5-flash-lite` |
+| `AI_TIMEOUT_MS` | default 12000 |
+| `AI_DISABLED=true` | kill switch: posts still work, nothing is translated or scored |
+| `RATE_LIMIT_POSTS` / `RATE_LIMIT_MESSAGES` / `RATE_LIMIT_UPLOADS` | per-user caps (defaults 10 per day, 60 per minute, 30 per hour) |
+
+- `sharp` is a native dependency (`npm install` builds or downloads it; Railway's Node 20+ image is fine).
+  If it fails to load, uploads are stored unchanged and a line is logged.
+- The WebSocket lives on the same port under `/ws` and needs the proxy to pass `Upgrade` headers (Railway does).
+- Migrations are automatic on boot (`ALTER TABLE … ADD COLUMN IF NOT EXISTS`). Existing posts stay `active`;
+  the sweeper translates them lazily (20 per 5 minutes) once a key is present.
+- Health check: `GET /health`. Smoke scripts used during development live in the session scratchpad
+  (`smoke_a.py`, `smoke_d.js`, `smoke_f.js`); `npm test` runs the unit tests.
