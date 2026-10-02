@@ -148,6 +148,10 @@ db.initDb()
       }
     }
 
+    // Server-wide settings (AI provider key…) live in the database.
+    await require('./lib/settings').load();
+    await require('./lib/ai').init();
+
     // Translations, AI pre-checks and 90-day archiving run in the background.
     require('./lib/moderation').startSweeper();
 

@@ -1,115 +1,191 @@
-// Gemini (Google AI Studio) client for post translation and the moderation
-// pre-check. Every public function resolves to null on any failure so the
-// callers never block a user action on the AI: posting works without a key,
-// without network and when the model answers nonsense.
+// AI client for post translation and the moderation pre-check. Works with
+// any of four providers: Google AI Studio (Gemini), OpenAI, Anthropic, or a
+// custom OpenAI-compatible server (OpenRouter, Groq, DeepSeek, Mistral,
+// Ollama…). Every public function resolves to null on any failure so callers
+// never block a user action on the AI.
 //
-// Key lookup order: GEMINI_API_KEY env var, then the file an admin saved
-// through POST /admin/ai-key (config.privateDir/gemini-key.json).
+// Settings lookup order (sync, from the settings cache loaded at boot):
+//   1. `app_settings['ai']` saved by an admin through POST /admin/ai (sealed key)
+//   2. environment: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY /
+//      AI_API_KEY (+ AI_PROVIDER, AI_MODEL, AI_BASE_URL)
+//   3. the legacy `gemini-key.json` file, migrated into the database on boot.
 const fs = require('fs');
 const path = require('path');
 const { z } = require('zod');
 const config = require('../config');
+const settings = require('./settings');
 
-const KEY_FILE = path.join(config.privateDir, 'gemini-key.json');
-const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const LANGS = ['en', 'ar', 'ckb'];
+const SETTINGS_KEY = 'ai';
+const LEGACY_KEY_FILE = path.join(config.privateDir, 'gemini-key.json');
 
-let fileKey = null;
-try {
-  const parsed = JSON.parse(fs.readFileSync(KEY_FILE, 'utf8'));
-  if (parsed && typeof parsed.key === 'string') fileKey = parsed.key.trim();
-} catch (_) { /* no stored key */ }
+const PROVIDERS = {
+  google: { label: 'Google AI Studio', defaultModel: 'gemini-2.5-flash-lite', baseUrl: 'https://generativelanguage.googleapis.com/v1beta' },
+  openai: { label: 'OpenAI', defaultModel: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1' },
+  anthropic: { label: 'Anthropic', defaultModel: 'claude-haiku-4-5-20251001', baseUrl: 'https://api.anthropic.com/v1' },
+  custom: { label: 'OpenAI-compatible', defaultModel: '', baseUrl: '' },
+};
+const PROVIDER_IDS = Object.keys(PROVIDERS);
 
-function apiKey() {
-  return (process.env.GEMINI_API_KEY || '').trim() || fileKey || '';
+// ── Settings ───────────────────────────────────────────────────────────────
+
+function readLegacyFile() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(LEGACY_KEY_FILE, 'utf8'));
+    return parsed && typeof parsed.key === 'string' ? parsed.key.trim() : '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function normalize(input) {
+  const provider = PROVIDER_IDS.includes(input.provider) ? input.provider : 'google';
+  const def = PROVIDERS[provider];
+  const model = String(input.model || '').trim() || def.defaultModel;
+  const baseUrl = String(input.baseUrl || '').trim().replace(/\/+$/, '') || def.baseUrl;
+  return { provider, model, baseUrl, key: String(input.key || '').trim() };
+}
+
+function fromEnv() {
+  const env = process.env;
+  const model = (env.AI_MODEL || env.GEMINI_MODEL || '').trim();
+  const baseUrl = (env.AI_BASE_URL || '').trim();
+  const pick = (name, provider) => ((env[name] || '').trim()
+    ? normalize({ provider, key: env[name], model, baseUrl })
+    : null);
+  if ((env.AI_API_KEY || '').trim() && PROVIDER_IDS.includes(env.AI_PROVIDER)) return pick('AI_API_KEY', env.AI_PROVIDER);
+  return pick('GEMINI_API_KEY', 'google') || pick('OPENAI_API_KEY', 'openai') || pick('ANTHROPIC_API_KEY', 'anthropic');
+}
+
+/** The active settings and where they came from. Never null. */
+function current() {
+  const saved = settings.getJson(SETTINGS_KEY, ['key']);
+  if (saved && saved.key) return { ...normalize(saved), source: 'db' };
+  const env = fromEnv();
+  if (env) return { ...env, source: 'env' };
+  const legacy = readLegacyFile();
+  if (legacy) return { ...normalize({ provider: 'google', key: legacy }), source: 'file' };
+  return { ...normalize({ provider: 'google' }), key: '', source: 'none' };
+}
+
+/** Boot: move a legacy key file into the database so it survives redeploys. */
+async function init() {
+  if (settings.getJson(SETTINGS_KEY, ['key'])) return;
+  const legacy = readLegacyFile();
+  if (!legacy) return;
+  try {
+    await settings.setJson(SETTINGS_KEY, normalize({ provider: 'google', key: legacy }), ['key'], 'migration');
+    console.log('AI: migrated the Gemini key file into app_settings');
+  } catch (err) {
+    console.error('AI: could not migrate the key file:', err.message);
+  }
 }
 
 function aiEnabled() {
-  return !!apiKey() && config.gemini.enabled;
+  return !!current().key && config.ai.enabled;
 }
 
 /** Status for the admin console; never returns the key itself. */
 function aiInfo() {
-  const key = apiKey();
+  const s = current();
+  const meta = s.source === 'db' ? settings.meta(SETTINGS_KEY) : null;
   return {
-    configured: !!key,
+    configured: !!s.key,
     enabled: aiEnabled(),
-    source: (process.env.GEMINI_API_KEY || '').trim() ? 'env' : (fileKey ? 'file' : 'none'),
-    model: config.gemini.model,
-    keyHint: key ? `…${key.slice(-4)}` : '',
+    provider: s.provider,
+    providerLabel: PROVIDERS[s.provider].label,
+    model: s.model,
+    baseUrl: s.provider === 'custom' ? s.baseUrl : '',
+    source: s.source,
+    keyHint: s.key ? `…${s.key.slice(-4)}` : '',
+    updatedAtMs: meta ? meta.updatedAtMs : null,
+    updatedBy: meta ? meta.updatedBy : null,
+    providers: PROVIDER_IDS.map(id => ({ id, label: PROVIDERS[id].label, defaultModel: PROVIDERS[id].defaultModel })),
   };
 }
 
-/** Stores a key an admin pasted in the console. A quick test call validates it. */
-async function setApiKey(key) {
-  const clean = String(key || '').trim();
-  if (!/^[A-Za-z0-9_-]{20,200}$/.test(clean)) throw new Error('That does not look like a Google AI Studio key.');
-  const ok = await ping(clean);
-  if (!ok) throw new Error('Google AI Studio rejected the key.');
-  await fs.promises.mkdir(path.dirname(KEY_FILE), { recursive: true });
-  await fs.promises.writeFile(KEY_FILE, JSON.stringify({ key: clean, savedAtMs: Date.now() }), { mode: 0o600 });
-  fileKey = clean;
-  return true;
+/** Admin saved new settings: validate, test them once, store sealed. */
+async function setSettings(input, by = null) {
+  const s = normalize(input);
+  if (!/^[\x21-\x7E]{10,400}$/.test(s.key)) throw new Error('That does not look like an API key.');
+  if (!s.model) throw new Error('A model name is required.');
+  if (s.provider === 'custom' && !/^https?:\/\/\S+$/i.test(s.baseUrl)) throw new Error('A base URL is required for a custom provider.');
+  await verify(s);
+  await settings.setJson(SETTINGS_KEY, s, ['key'], by);
+  return aiInfo();
 }
 
-async function ping(key) {
+async function clearSettings() {
+  await settings.remove(SETTINGS_KEY);
+  return aiInfo();
+}
+
+/** One cheap request; throws a human-readable error when the key or model is wrong. */
+async function verify(s) {
+  const label = PROVIDERS[s.provider].label;
+  let res;
   try {
-    const res = await fetch(`${ENDPOINT}/${config.gemini.model}?key=${encodeURIComponent(key)}`, {
-      signal: AbortSignal.timeout(8000),
-    });
-    return res.ok;
+    if (s.provider === 'google') {
+      res = await fetch(`${s.baseUrl}/models/${encodeURIComponent(s.model)}`, {
+        headers: { 'x-goog-api-key': s.key },
+        signal: AbortSignal.timeout(8000),
+      });
+    } else if (s.provider === 'anthropic') {
+      res = await fetch(`${s.baseUrl}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': s.key, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: s.model, max_tokens: 1, messages: [{ role: 'user', content: 'ping' }] }),
+        signal: AbortSignal.timeout(10000),
+      });
+    } else {
+      const limit = s.provider === 'openai' ? { max_completion_tokens: 1 } : { max_tokens: 1 };
+      res = await fetch(`${s.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.key}` },
+        body: JSON.stringify({ model: s.model, messages: [{ role: 'user', content: 'ping' }], ...limit }),
+        signal: AbortSignal.timeout(10000),
+      });
+    }
   } catch (_) {
-    return false;
+    throw new Error(`Could not reach ${label}.`);
   }
+  if (res.ok) return true;
+  const text = await res.text().catch(() => '');
+  if (res.status === 401 || res.status === 403) throw new Error(`${label} rejected the key.`);
+  if (res.status === 404 || (/model/i.test(text) && /not (found|exist|supported)|unknown|invalid model/i.test(text))) {
+    throw new Error('Model not found.');
+  }
+  if (res.status === 400 && s.provider === 'google') throw new Error(`${label} rejected the key.`);
+  if (res.status === 429) return true; // quota exhausted, but the key and model are valid
+  throw new Error(`${label} responded ${res.status}.`);
 }
 
 // ── Low-level call ─────────────────────────────────────────────────────────
 
+const RETRY = { retry: true };
+
 /**
- * One generateContent call with JSON output. Retries once on 429/5xx/timeout.
- * Returns the parsed JSON (validated by `schema`) or null.
+ * One JSON-answer request to the active provider. Retries once on
+ * 429/5xx/timeout. Returns the parsed JSON (validated by `schema`) or null.
+ * `image` is `{buffer, mime}` or null.
  */
-async function generate({ parts, schema, maxOutputTokens, label }) {
-  const key = apiKey();
-  if (!key || !config.gemini.enabled) return null;
-  const url = `${ENDPOINT}/${config.gemini.model}:generateContent`;
-  const body = JSON.stringify({
-    contents: [{ role: 'user', parts }],
-    generationConfig: {
-      temperature: 0,
-      responseMimeType: 'application/json',
-      maxOutputTokens,
-    },
-  });
+async function generate({ text, image, schema, maxOutputTokens, label }) {
+  const s = current();
+  if (!s.key || !config.ai.enabled) return null;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), config.gemini.timeoutMs);
+    const timer = setTimeout(() => controller.abort(), config.ai.timeoutMs);
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body,
-        signal: controller.signal,
-      });
-      if (res.status === 429 || res.status >= 500) {
-        throw Object.assign(new Error(`Gemini responded ${res.status}`), { retry: true });
-      }
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        console.error(`AI ${label}: Gemini responded ${res.status} ${text.slice(0, 200)}`);
-        return null;
-      }
-      const json = await res.json();
-      const text = json?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-      const parsed = schema.safeParse(JSON.parse(stripFences(text)));
+      const answer = await callProvider(s, { text, image, maxOutputTokens, signal: controller.signal });
+      const parsed = schema.safeParse(JSON.parse(stripFences(answer)));
       if (!parsed.success) {
         console.error(`AI ${label}: unexpected answer shape: ${parsed.error.issues[0]?.message}`);
         return null;
       }
       return parsed.data;
     } catch (err) {
-      const retry = err.retry || err.name === 'AbortError';
+      const retry = err.retry || err.name === 'AbortError' || err.name === 'TimeoutError';
       if (retry && attempt === 0) {
         await new Promise(r => setTimeout(r, 1500));
         continue;
@@ -121,6 +197,75 @@ async function generate({ parts, schema, maxOutputTokens, label }) {
     }
   }
   return null;
+}
+
+function callProvider(s, req) {
+  if (s.provider === 'google') return callGoogle(s, req);
+  if (s.provider === 'anthropic') return callAnthropic(s, req);
+  return callOpenAi(s, req);
+}
+
+async function fail(res, s) {
+  const label = PROVIDERS[s.provider].label;
+  if (res.status === 429 || res.status >= 500) throw Object.assign(new Error(`${label} responded ${res.status}`), RETRY);
+  const text = await res.text().catch(() => '');
+  throw new Error(`${label} responded ${res.status} ${text.slice(0, 200)}`);
+}
+
+async function callGoogle(s, { text, image, maxOutputTokens, signal }) {
+  const parts = [{ text }];
+  if (image) parts.push({ inlineData: { mimeType: image.mime, data: image.buffer.toString('base64') } });
+  const res = await fetch(`${s.baseUrl}/models/${encodeURIComponent(s.model)}:generateContent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': s.key },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts }],
+      generationConfig: { temperature: 0, responseMimeType: 'application/json', maxOutputTokens },
+    }),
+    signal,
+  });
+  if (!res.ok) await fail(res, s);
+  const json = await res.json();
+  return json?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+}
+
+async function callOpenAi(s, { text, image, maxOutputTokens, signal }) {
+  const content = [{ type: 'text', text }];
+  if (image) content.push({ type: 'image_url', image_url: { url: `data:${image.mime};base64,${image.buffer.toString('base64')}` } });
+  const base = {
+    model: s.model,
+    messages: [{ role: 'user', content }],
+    // Newer OpenAI models reject max_tokens/temperature; compatible servers often lack the new names.
+    ...(s.provider === 'openai' ? { max_completion_tokens: maxOutputTokens } : { max_tokens: maxOutputTokens, temperature: 0 }),
+  };
+  const send = body => fetch(`${s.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.key}` },
+    body: JSON.stringify(body),
+    signal,
+  });
+  let res = await send({ ...base, response_format: { type: 'json_object' } });
+  // Some compatible servers reject response_format; the prompt already demands JSON.
+  if (res.status === 400 && s.provider === 'custom') res = await send(base);
+  if (!res.ok) await fail(res, s);
+  const json = await res.json();
+  const msg = json?.choices?.[0]?.message?.content;
+  return Array.isArray(msg) ? msg.map(p => p.text || '').join('') : (msg || '');
+}
+
+async function callAnthropic(s, { text, image, maxOutputTokens, signal }) {
+  const content = [];
+  if (image) content.push({ type: 'image', source: { type: 'base64', media_type: image.mime, data: image.buffer.toString('base64') } });
+  content.push({ type: 'text', text });
+  const res = await fetch(`${s.baseUrl}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': s.key, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: s.model, max_tokens: maxOutputTokens, temperature: 0, messages: [{ role: 'user', content }] }),
+    signal,
+  });
+  if (!res.ok) await fail(res, s);
+  const json = await res.json();
+  return (json?.content || []).map(p => p.text || '').join('');
 }
 
 function stripFences(text) {
@@ -151,7 +296,7 @@ async function translatePost({ title, description }) {
     label: 'translate',
     schema: translationSchema,
     maxOutputTokens: 2048,
-    parts: [{ text: `${TRANSLATE_PROMPT}\n\nTITLE: ${title}\nDESCRIPTION: ${description}` }],
+    text: `${TRANSLATE_PROMPT}\n\nTITLE: ${title}\nDESCRIPTION: ${description}`,
   });
   if (!result) return null;
   // Belt and braces: the source language keeps the exact original text.
@@ -182,20 +327,24 @@ Answer with JSON only: {"risk": 0-100, "reasons": ["..."]}`;
  * images are skipped and reported as a reason. Resolves { risk, reasons } or null.
  */
 async function moderatePost({ title, description, category, isLost, location, imageBuffer, imageMime }) {
-  const parts = [{
-    text: `${MODERATE_PROMPT}\n\nTYPE: ${isLost ? 'lost' : 'found'}\nCATEGORY: ${category}\nLOCATION: ${location || ''}\nTITLE: ${title}\nDESCRIPTION: ${description}`,
-  }];
+  let image = null;
   let imageSkipped = false;
   if (imageBuffer && imageMime && ['image/jpeg', 'image/png', 'image/webp'].includes(imageMime) && imageBuffer.length <= 4 * 1024 * 1024) {
-    parts.push({ inlineData: { mimeType: imageMime, data: imageBuffer.toString('base64') } });
+    image = { buffer: imageBuffer, mime: imageMime };
   } else if (imageBuffer || imageMime) {
     imageSkipped = true;
   }
-  const result = await generate({ label: 'moderate', schema: moderationSchema, maxOutputTokens: 256, parts });
+  const result = await generate({
+    label: 'moderate',
+    schema: moderationSchema,
+    maxOutputTokens: 256,
+    image,
+    text: `${MODERATE_PROMPT}\n\nTYPE: ${isLost ? 'lost' : 'found'}\nCATEGORY: ${category}\nLOCATION: ${location || ''}\nTITLE: ${title}\nDESCRIPTION: ${description}`,
+  });
   if (!result) return null;
   const reasons = result.reasons.map(r => r.trim()).filter(Boolean);
   if (imageSkipped) reasons.push('image_not_checked');
   return { risk: Math.round(result.risk), reasons: reasons.slice(0, 6) };
 }
 
-module.exports = { aiEnabled, aiInfo, setApiKey, translatePost, moderatePost, LANGS };
+module.exports = { init, aiEnabled, aiInfo, setSettings, clearSettings, translatePost, moderatePost, LANGS, PROVIDERS };

@@ -1,7 +1,7 @@
 # Post review, AI pre-check and translations
 
-Every new post waits for an admin. The AI (Google AI Studio, Gemini) runs
-first and only advises; a person decides.
+Every new post waits for an admin. The AI (any supported provider, see below)
+runs first and only advises; a person decides.
 
 ## Lifecycle
 
@@ -23,7 +23,8 @@ Matching (`lib/matching.js`) runs when a post is approved, not when it is create
 `POST /posts` answers 201 immediately, then `processNewPost(id)`:
 
 1. `translatePost` → `source_lang`, `title_en/ar/ckb`, `description_en/ar/ckb`,
-   `translation_status` (`done` | `failed` | `skipped` when no key).
+   `translation_status` (`done` | `failed` | `skipped` when no key; `skipped`
+   rows are picked up by the sweeper as soon as a key is saved).
 2. `moderatePost` (text + the post's own image read from `uploads/posts`) →
    `ai_risk` 0-100, `ai_reasons` JSON, `ai_checked_at_ms`.
 3. One notification per admin (`type: update`, `data.type: post_review`).
@@ -42,14 +43,33 @@ translation in that language when it exists and the original otherwise, plus
 `originalTitle`, `originalDescription`, `sourceLang`. Edit screens always edit
 the original. Old app builds send no header and get the original text.
 
-## Gemini key
+## AI provider and key
 
-- `GEMINI_API_KEY` env var, **or** paste it in the app: Admin console → AI
-  assistant (stored as `private/gemini-key.json`, verified with one request).
-- `GEMINI_MODEL` (default `gemini-2.5-flash-lite`), `AI_TIMEOUT_MS` (12000),
-  `AI_DISABLED=true` as a kill switch.
+Any of four providers works; the admin picks one in the app:
+
+| provider | default model | notes |
+|---|---|---|
+| Google AI Studio | `gemini-2.5-flash-lite` | cheapest; key from aistudio.google.com |
+| OpenAI | `gpt-4o-mini` | `max_completion_tokens`, JSON mode |
+| Anthropic | `claude-haiku-4-5-20251001` | Messages API, images as base64 blocks |
+| Custom (OpenAI-compatible) | none, required | base URL required: OpenRouter, Groq, DeepSeek, Mistral, Ollama… |
+
+- **In the app (recommended):** Admin console → AI assistant → provider, model,
+  key (and base URL for custom) → Save. The server verifies the key with one
+  request, stores the settings in `app_settings` (key sealed with AES-256-GCM
+  under `JWT_SECRET`, so a database dump does not reveal it) and immediately
+  translates and scores the backlog of posts (`sweepNow`, 50 per pass). The
+  settings survive redeploys and apply to every user at once. Only admins can
+  read or change them (`requireAdmin`); the key itself is never returned.
+- **Env fallback:** `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or
+  `AI_PROVIDER=custom` + `AI_API_KEY` + `AI_BASE_URL`; `AI_MODEL` overrides the
+  default model. Settings saved in the app take precedence.
+- `AI_TIMEOUT_MS` (12000), `AI_DISABLED=true` as a kill switch.
+- Routes: `GET /admin/ai` (status + `pendingTranslations`, `unscoredPending`),
+  `POST /admin/ai {provider, model?, key, baseUrl?}`, `DELETE /admin/ai`.
+  `GET/POST /admin/ai-key` remain as aliases for the previous app build.
 - Cost: at most two calls per new post (translation ≈ 2k output tokens, risk
-  check ≈ 256). Roughly a cent per post on the flash-lite model.
+  check ≈ 256). Roughly a cent per post on the cheapest models.
 
 ## Admin
 

@@ -127,7 +127,15 @@ const schemas = {
   adminFlag: z.object({ value: z.boolean() }),
   adminPostStatus: z.object({ status: z.enum(['active', 'resolved']) }),
   rejectPost: z.object({ reason: trimmed(300, 3) }),
-  adminAiKey: z.object({ key: trimmed(200, 20) }),
+  adminAiKey: z.object({ key: trimmed(400, 10) }),
+  adminAiSettings: z.object({
+    provider: z.enum(['google', 'openai', 'anthropic', 'custom']),
+    model: optionalTrimmed(80),
+    key: trimmed(400, 10),
+    baseUrl: httpUrl(300).optional(),
+  }).refine(v => v.provider !== 'custom' || (v.baseUrl && v.model), {
+    message: 'A base URL and a model name are required for a custom provider.',
+  }),
   adminResolveReport: z.object({ action: z.enum(['dismiss', 'remove_post']) }),
   pushToken: z.object({
     token: trimmed(4096, 20),

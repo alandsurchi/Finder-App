@@ -8,6 +8,7 @@ const { deleteUserData, deletePostData } = require('../lib/users');
 const { validate, schemas } = require('../lib/validate');
 const push = require('../lib/push');
 const ai = require('../lib/ai');
+const moderation = require('../lib/moderation');
 const matching = require('../lib/matching');
 const config = require('../config');
 const fs = require('fs');
@@ -393,20 +394,63 @@ router.post('/reports/:id/resolve', validate(schemas.adminResolveReport), async 
 });
 
 // ── Push key (when the hosting dashboard is not reachable) ───────────────────
-// GET /admin/ai-key → { configured, enabled, source, model, keyHint }
-router.get('/ai-key', (req, res) => res.json(ai.aiInfo()));
+// ── AI provider (translations + pre-check) ───────────────────────────────────
+async function aiStatus() {
+  const [pendingTranslations, unscoredPending] = await Promise.all([
+    moderation.pendingTranslationsCount(),
+    moderation.unscoredPendingCount(),
+  ]);
+  return { ...ai.aiInfo(), pendingTranslations, unscoredPending };
+}
 
-// POST /admin/ai-key { key } — Google AI Studio key for translations and the pre-check
-router.post('/ai-key', validate(schemas.adminAiKey), async (req, res) => {
+// GET /admin/ai → status (provider, model, source, keyHint, counts); never the key
+router.get('/ai', async (req, res) => {
   try {
-    await ai.setApiKey(req.body.key);
-    console.log(`[ADMIN] ${req.adminUser.email} installed the Gemini key`);
-    res.json(ai.aiInfo());
+    res.json(await aiStatus());
+  } catch (err) {
+    console.error('Admin AI status error:', err);
+    res.status(500).json({ message: 'Could not load the AI settings.' });
+  }
+});
+
+// POST /admin/ai { provider, model?, key, baseUrl? } — verified, stored sealed in
+// app_settings, then the backlog of untranslated posts is processed right away.
+router.post('/ai', validate(schemas.adminAiSettings), async (req, res) => {
+  try {
+    await ai.setSettings(req.body, req.adminUser.uid);
+    console.log(`[ADMIN] ${req.adminUser.email} saved AI settings (${req.body.provider})`);
+    moderation.sweepNow({ afterKeyChange: true }).catch(err => console.error('Sweep after key change:', err.message));
+    res.json(await aiStatus());
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
+// DELETE /admin/ai — remove the saved settings (env fallback, if any, stays)
+router.delete('/ai', async (req, res) => {
+  try {
+    await ai.clearSettings();
+    console.log(`[ADMIN] ${req.adminUser.email} removed the AI settings`);
+    res.json(await aiStatus());
+  } catch (err) {
+    console.error('Admin AI clear error:', err);
+    res.status(500).json({ message: 'Could not remove the AI settings.' });
+  }
+});
+
+// Aliases kept for the previous app build (Google key only).
+router.get('/ai-key', async (req, res) => res.json(await aiStatus()));
+router.post('/ai-key', validate(schemas.adminAiKey), async (req, res) => {
+  try {
+    await ai.setSettings({ provider: 'google', key: req.body.key }, req.adminUser.uid);
+    moderation.sweepNow({ afterKeyChange: true }).catch(() => {});
+    res.json(await aiStatus());
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// ── Push key (when the hosting dashboard is not reachable) ───────────────────
 // GET /admin/push-key → { configured, projectId, source }
 router.get('/push-key', (req, res) => res.json(push.pushInfo()));
 

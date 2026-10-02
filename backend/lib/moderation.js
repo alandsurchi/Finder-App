@@ -60,10 +60,9 @@ async function translate(post) {
 /** AI risk score for the admin queue. */
 async function moderate(post) {
   const now = Date.now();
-  if (!ai.aiEnabled()) {
-    await db.exec('UPDATE posts SET ai_checked_at_ms = $1 WHERE id = $2', [now, post.id]);
-    return null;
-  }
+  // No AI configured: leave ai_checked_at_ms NULL so the sweeper scores the
+  // post once an admin saves a key.
+  if (!ai.aiEnabled()) return null;
   const image = await readPostImage(post.image_url);
   const result = await ai.moderatePost({
     title: post.title,
@@ -137,7 +136,32 @@ async function expireOldPosts() {
 }
 
 let sweeping = false;
-async function sweep() {
+let queued = null;
+
+/** Posts whose translations are missing or failed (and still retryable). */
+async function pendingTranslationsCount() {
+  const row = await db.queryOne(
+    `SELECT COUNT(*) AS n FROM posts
+     WHERE (translation_status IS NULL OR translation_status <> 'done')
+       AND COALESCE(translation_attempts, 0) < $1
+       AND status IN ('pending', 'active', 'resolved')`,
+    [MAX_TRANSLATION_ATTEMPTS]
+  );
+  return Number(row?.n) || 0;
+}
+
+/** Posts waiting for an admin that never got an AI score. */
+async function unscoredPendingCount() {
+  const row = await db.queryOne(`SELECT COUNT(*) AS n FROM posts WHERE status = 'pending' AND ai_risk IS NULL`);
+  return Number(row?.n) || 0;
+}
+
+/**
+ * One pass. `batch` bounds the AI calls per pass; `notify` wakes the admins
+ * for posts scored late (off after a key change: they were already told);
+ * `minAgeMs` skips posts whose own pipeline may still be running.
+ */
+async function sweep({ batch = 20, notify: wakeAdmins = true, minAgeMs = 2 * 60 * 1000 } = {}) {
   if (sweeping) return;
   sweeping = true;
   try {
@@ -148,18 +172,19 @@ async function sweep() {
          WHERE (translation_status IS NULL OR translation_status IN ('pending', 'failed', 'skipped'))
            AND COALESCE(translation_attempts, 0) < $1
            AND status IN ('pending', 'active', 'resolved')
-         ORDER BY created_at_ms DESC LIMIT 20`,
-        [MAX_TRANSLATION_ATTEMPTS]
+         ORDER BY created_at_ms DESC LIMIT $2`,
+        [MAX_TRANSLATION_ATTEMPTS, batch]
       );
       for (const post of todo) await translate(post).catch(() => {});
-      // Pending posts that never got their AI score (server restarted mid-way).
+      // Pending posts that never got their AI score (no key at the time, or a
+      // restart mid-way).
       const unchecked = await db.query(
-        `SELECT * FROM posts WHERE status = 'pending' AND ai_checked_at_ms IS NULL AND created_at_ms < $1 LIMIT 20`,
-        [Date.now() - 2 * 60 * 1000]
+        `SELECT * FROM posts WHERE status = 'pending' AND ai_risk IS NULL AND ai_checked_at_ms IS NULL AND created_at_ms < $1 LIMIT $2`,
+        [Date.now() - minAgeMs, batch]
       );
       for (const post of unchecked) {
         const result = await moderate(post).catch(() => null);
-        await notifyAdmins(post, result ? result.risk : null);
+        if (wakeAdmins) await notifyAdmins(post, result ? result.risk : null);
       }
     }
     await expireOldPosts();
@@ -170,9 +195,31 @@ async function sweep() {
   }
 }
 
+/**
+ * Run a pass right now (after an admin saved AI settings). Failed rows get
+ * their attempts back (the old key may have been the problem) and the pass
+ * is bigger, so a backlog clears within minutes instead of hours.
+ */
+async function sweepNow({ afterKeyChange = false } = {}) {
+  if (afterKeyChange) {
+    await db.exec(`UPDATE posts SET translation_attempts = 0 WHERE translation_status IN ('failed', 'skipped')`);
+    await db.exec(`UPDATE posts SET ai_checked_at_ms = NULL WHERE status = 'pending' AND ai_risk IS NULL`);
+  }
+  // Posts created while no AI was configured finished their pipeline at once,
+  // so nothing is in flight: score them regardless of age.
+  const opts = afterKeyChange ? { batch: 50, notify: false, minAgeMs: 0 } : { batch: 20 };
+  if (sweeping) { queued = opts; return; }
+  await sweep(opts);
+  while (queued) {
+    const next = queued;
+    queued = null;
+    await sweep(next);
+  }
+}
+
 function startSweeper() {
   setTimeout(() => sweep().catch(() => {}), 20 * 1000).unref();
   setInterval(() => sweep().catch(() => {}), SWEEP_EVERY_MS).unref();
 }
 
-module.exports = { processNewPost, retranslate, expireOldPosts, sweep, startSweeper, readPostImage };
+module.exports = { processNewPost, retranslate, expireOldPosts, sweep, sweepNow, startSweeper, readPostImage, pendingTranslationsCount, unscoredPendingCount };

@@ -72,10 +72,12 @@ const config = {
     passwordReset: parseInt(process.env.RATE_LIMIT_RESET, 10) || 5,
   },
   supportEmail: process.env.SUPPORT_EMAIL || 'support@finder.app',
-  // Google AI Studio (Gemini) for post translation and the moderation pre-check.
-  // The key can also be saved from the admin console (POST /admin/ai-key).
-  gemini: {
-    model: (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite').trim(),
+  // AI for post translation and the moderation pre-check. Admins normally
+  // save the provider, model and key from the app (POST /admin/ai, stored in
+  // app_settings); the env vars are the fallback. See docs/MODERATION.md.
+  ai: {
+    model: (process.env.AI_MODEL || process.env.GEMINI_MODEL || '').trim(),
+    baseUrl: (process.env.AI_BASE_URL || '').trim(),
     timeoutMs: parseInt(process.env.AI_TIMEOUT_MS, 10) || 12000,
     enabled: process.env.AI_DISABLED !== 'true',
   },

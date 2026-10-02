@@ -289,6 +289,12 @@ async function initDb() {
         user_id VARCHAR(255) REFERENCES users(uid) ON DELETE CASCADE,
         PRIMARY KEY (message_id, user_id)
       );`);
+      await pgPool.query(`CREATE TABLE IF NOT EXISTS app_settings (
+        key VARCHAR(64) PRIMARY KEY,
+        value TEXT,
+        updated_at_ms BIGINT,
+        updated_by VARCHAR(255)
+      )`);
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at_ms DESC);');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_posts_owner ON posts(owner_id);');
       await pgPool.query('CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, created_at_ms DESC);');
@@ -533,6 +539,14 @@ async function initDb() {
             message_id TEXT,
             user_id TEXT,
             PRIMARY KEY (message_id, user_id)
+          )
+        `);
+        sqliteDb.run(`
+          CREATE TABLE IF NOT EXISTS app_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT,
+            updated_at_ms INTEGER,
+            updated_by TEXT
           )
         `);
         sqliteDb.run('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at_ms DESC)');

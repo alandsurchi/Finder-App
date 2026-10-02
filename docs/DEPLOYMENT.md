@@ -180,8 +180,9 @@ console works even if `ADMIN_EMAILS` cannot be edited. Two admin-only routes rep
 
 | Variable | Purpose |
 |---|---|
-| `GEMINI_API_KEY` | Google AI Studio key for translations (en/ar/ckb) and the moderation pre-check. Optional: an admin can also save it from the app (Admin console → AI assistant); it is stored in `PRIVATE_DIR/gemini-key.json`. |
-| `GEMINI_MODEL` | default `gemini-2.5-flash-lite` |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Fallback AI key for translations (en/ar/ckb) and the moderation pre-check. Normally not needed: an admin saves provider, model and key from the app (Admin console → AI assistant); they are stored encrypted in the `app_settings` table and survive redeploys. See `docs/MODERATION.md`. |
+| `AI_PROVIDER=custom` + `AI_API_KEY` + `AI_BASE_URL` | Fallback for any OpenAI-compatible server. |
+| `AI_MODEL` | overrides the provider default (`gemini-2.5-flash-lite`, `gpt-4o-mini`, `claude-haiku-4-5-20251001`) |
 | `AI_TIMEOUT_MS` | default 12000 |
 | `AI_DISABLED=true` | kill switch: posts still work, nothing is translated or scored |
 | `RATE_LIMIT_POSTS` / `RATE_LIMIT_MESSAGES` / `RATE_LIMIT_UPLOADS` | per-user caps (defaults 10 per day, 60 per minute, 30 per hour) |
