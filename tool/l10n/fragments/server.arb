@@ -135,6 +135,12 @@
   "serverCouldNotApproveThePost": "Could not approve the post.",
   "serverCouldNotRejectThePost": "Could not reject the post.",
   "serverThatStatusIsNotPublic": "That status is not public.",
-  "serverNotAGoogleKey": "That does not look like a Google AI Studio key.",
-  "serverGoogleRejectedTheKey": "Google AI Studio rejected the key."
+  "serverNotAnApiKey": "That does not look like an API key.",
+  "serverProviderRejectedTheKey": "The provider rejected the key.",
+  "serverModelNotFound": "Model not found.",
+  "serverModelNameRequired": "A model name is required.",
+  "serverBaseUrlRequired": "A base URL and a model name are required for a custom provider.",
+  "serverCouldNotReachProvider": "Could not reach the AI provider.",
+  "serverCouldNotLoadAiSettings": "Could not load the AI settings.",
+  "serverCouldNotRemoveAiSettings": "Could not remove the AI settings."
 }

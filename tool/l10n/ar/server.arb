@@ -128,6 +128,12 @@
   "serverCouldNotApproveThePost": "تعذّرت الموافقة على المنشور.",
   "serverCouldNotRejectThePost": "تعذّر رفض المنشور.",
   "serverThatStatusIsNotPublic": "هذه الحالة غير متاحة للعامة.",
-  "serverNotAGoogleKey": "لا يبدو هذا مفتاح Google AI Studio.",
-  "serverGoogleRejectedTheKey": "رفض Google AI Studio المفتاح."
+  "serverNotAnApiKey": "لا يبدو هذا مفتاح API.",
+  "serverProviderRejectedTheKey": "رفض المزوّد المفتاح.",
+  "serverModelNotFound": "النموذج غير موجود.",
+  "serverModelNameRequired": "اسم النموذج مطلوب.",
+  "serverBaseUrlRequired": "الرابط الأساسي واسم النموذج مطلوبان للمزوّد المخصص.",
+  "serverCouldNotReachProvider": "تعذّر الوصول إلى مزوّد الذكاء الاصطناعي.",
+  "serverCouldNotLoadAiSettings": "تعذّر تحميل إعدادات الذكاء الاصطناعي.",
+  "serverCouldNotRemoveAiSettings": "تعذّرت إزالة إعدادات الذكاء الاصطناعي."
 }

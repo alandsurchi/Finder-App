@@ -484,37 +484,31 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get authLegalAgreeSuffix => '.';
 
   @override
-  String get onboardLostTitle => 'شتێکت ون کردووە؟';
+  String get onboardLostTitle =>
+      'شتێکت ون کردووە؟ لە یەک خولەکدا بڵاوی بکەرەوە';
 
   @override
   String get onboardLostDescription =>
-      'لە چەند چرکەیەکدا شتە ونبووەکانت ڕاپۆرت بکە. Finder شتە دۆزراوەکان دەستبەجێ دەگەیەنێتە خاوەنەکانیان.';
+      'وێنەیەک و شوێن و کاتی ونبوونەکە زیاد بکە. Finder پیشانی خەڵکی نزیکت دەدات و دەستبەجێ ئاگادارت دەکاتەوە کە شتێک لێکچوو.';
 
   @override
-  String get onboardFoundTitle => 'شتێکت دۆزیوەتەوە؟';
+  String get onboardFoundTitle =>
+      'شتێکت دۆزیوەتەوە؟ یارمەتی بدە بگەڕێتەوە ماڵەوە';
 
   @override
   String get onboardFoundDescription =>
-      'شتە دۆزراوەکان بڵاو بکەرەوە و یارمەتی بدە بگەڕێنەوە بۆ خاوەنە ڕاستەقینەکانیان. هەر چاکەیەک بەنرخە.';
+      'ئەوەی دۆزیوتەتەوە بڵاوی بکەرەوە. کەسێک هەموو پۆستێک پێداچوونەوەی بۆ دەکات، و ئەپەکە بە زمانی خۆیان لەگەڵ ئەوانەی دەگەڕێن لێکی دەدات.';
 
   @override
-  String get onboardConnectTitle => 'پەیوەندی بکە و\nگفتوگۆ بکە';
+  String get onboardConnectTitle =>
+      'گفتوگۆ بکە، دڵنیا ببەوە، بە سەلامەتی بیگەڕێنەوە';
 
   @override
   String get onboardConnectDescription =>
-      'گفتوگۆ بکە، وردەکاری هاوبەش بکە و شتەکان بە سەلامەتی بگەڕێنەوە. متمانە لە کۆمەڵگەدا دروست بکە.';
+      'لەناو ئەپەکە نامە بنێرە، پرسیاری وردەکارییەک بکە کە تەنها خاوەنەکە دەیزانێت، و لە شوێنێکی گشتی یەکتر ببینن. بەشی یارمەتی و پشتیوانی هەموو هەنگاوەکانت پێ دەڵێت.';
 
   @override
-  String get onboardGetStarted => 'دەست پێبکە';
-
-  @override
-  String get onboardSkipForNow => 'ئێستا تێپەڕێنە';
-
-  @override
-  String get onboardRewardSample => 'پاداشت 50\$';
-
-  @override
-  String get onboardTrustSecured => 'متمانە دڵنیاکراوە';
+  String get onboardGetStarted => 'دەست پێ بکە';
 
   @override
   String get legalOpenWebVersion => 'کردنەوەی وەشانی وێب';
@@ -1255,29 +1249,112 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get adminAiTitle => 'یاریدەدەری AI';
 
   @override
-  String get adminAiSubtitle => 'کلیلی Gemini بۆ وەرگێڕان و پێش‌پشکنین';
-
-  @override
-  String adminAiConfigured(String model) {
-    return 'ڕێکخراوە · $model';
-  }
+  String get adminAiSubtitle =>
+      'دابینکەر، مۆدێل و کلیل بۆ وەرگێڕان و پێش‌پشکنین';
 
   @override
   String get adminAiNotConfigured =>
       'ڕێک نەخراوە. پۆستەکان وەرناگێڕدرێن و پێش‌پشکنین ناکرێن.';
 
   @override
-  String get adminAiKeyLabel => 'کلیلی Google AI Studio';
+  String get adminAiKeyLabel => 'کلیلی API';
 
   @override
-  String get adminAiKeyHint => 'کلیلەکە لە aistudio.google.com بلکێنە';
-
-  @override
-  String get adminAiKeySaved => 'کلیلی AI پاشەکەوت کرا و پشتڕاستکرایەوە.';
+  String get adminAiKeyHint => 'کلیلەکە لە داشبۆردی دابینکەرەکە بلکێنە';
 
   @override
   String get adminAiKeyBody =>
-      'کلیلەکە تەنها لەسەر ڕاژەکار هەڵدەگیرێت. هەر پۆستێکی نوێ نزیکەی یەک سەنت تێدەچێت بۆ وەرگێڕان و پشکنینی مەترسی.';
+      'کلیلەکە یەک جار پشتڕاست دەکرێتەوە، بە شێوەی کۆدکراو لەسەر ڕاژەکار هەڵدەگیرێت و جارێکی تر پیشان نادرێت. دەستبەجێ بۆ هەموو بەکارهێنەران کار دەکات. هەر پۆستێکی نوێ نزیکەی یەک سەنت تێدەچێت لەسەر هەرزانترین مۆدێلەکان.';
+
+  @override
+  String get adminAiProvider => 'دابینکەر';
+
+  @override
+  String get adminAiModelLabel => 'مۆدێل';
+
+  @override
+  String get adminAiModelHint => 'بنەڕەتییەکە بهێڵەوە ئەگەر دڵنیا نیت';
+
+  @override
+  String get adminAiBaseUrlLabel => 'لینکی بنەڕەتی';
+
+  @override
+  String get adminAiBaseUrlHint => 'https://openrouter.ai/api/v1';
+
+  @override
+  String get adminAiKeyHintReplace =>
+      'کلیلێکی نوێ بلکێنە بۆ گۆڕینی پاشەکەوتکراوەکە';
+
+  @override
+  String get adminAiSourceDb => 'لە ئەپەکەوە پاشەکەوت کراوە';
+
+  @override
+  String get adminAiSourceEnv => 'لەسەر ڕاژەکار دانراوە';
+
+  @override
+  String get adminAiSourceNone => 'دانەنراوە';
+
+  @override
+  String adminAiBacklog(int translations, int scores) {
+    return '$translations پۆست چاوەڕێی وەرگێڕانن · $scores چاوەڕێی نمرەی مەترسین';
+  }
+
+  @override
+  String adminAiSaved(int count) {
+    return 'کلیلەکە پشتڕاستکرایەوە. $count پۆست بۆ هەمووان وەردەگێڕدرێن…';
+  }
+
+  @override
+  String get adminAiRemove => 'لابردنی کلیل';
+
+  @override
+  String get adminAiRemoveBody =>
+      'پۆستە نوێیەکان وەرناگێڕدرێن و پێش‌پشکنین ناکرێن هەتا کلیلێک دووبارە پاشەکەوت دەکرێت.';
+
+  @override
+  String get adminAiRemoved => 'ڕێکخستنەکانی AI لابران.';
+
+  @override
+  String get onboardStepReport => 'هەنگاوی 1 · ڕاپۆرت';
+
+  @override
+  String get onboardStepMatch => 'هەنگاوی 2 · لێکچوون';
+
+  @override
+  String get onboardStepReturn => 'هەنگاوی 3 · گەڕاندنەوە';
+
+  @override
+  String get onboardHaveAccount => 'پێشتر هەژمارم هەیە';
+
+  @override
+  String get onboardSampleLost => 'ونبوو';
+
+  @override
+  String get onboardSampleFound => 'دۆزراوە';
+
+  @override
+  String get onboardSamplePlace => 'هەولێر · فامیلی مۆڵ';
+
+  @override
+  String get onboardSampleMinute => 'لە ١ خولەکدا بڵاوکرایەوە';
+
+  @override
+  String get onboardSampleMatch => '٩٢٪ لێکچوون';
+
+  @override
+  String get onboardSampleReviewed => 'پێداچوونەوە کراوە';
+
+  @override
+  String get onboardSampleAsk => 'لە پشتەوە چی هەڵکۆڵراوە؟';
+
+  @override
+  String get onboardSampleAnswer => 'پیتەکانی ناوم، ئ.س 😊';
+
+  @override
+  String get onboardSampleVerified => 'خاوەن دڵنیاکراوەتەوە';
+
+  @override
+  String get onboardSampleMeet => 'لە شوێنی گشتی یەکتر ببینن';
 
   @override
   String get chatConversationTitle => 'گفتوگۆ';
@@ -2606,6 +2683,225 @@ class AppLocalizationsCkb extends AppLocalizations {
 
   @override
   String get chatOpenPhoto => 'کردنەوەی وێنە';
+
+  @override
+  String get welcomeTitle => 'بەخێربێیت بۆ Finder';
+
+  @override
+  String get welcomeSubtitle =>
+      'ونبوو و دۆزراوەکانی شارەکەت: کەسانێک پێداچوونەوەی بۆ دەکەن، بۆت لێک دەدرێت، بە زمانی خۆت.';
+
+  @override
+  String get welcomeStep1Title => 'بڵاوی بکەرەوە';
+
+  @override
+  String get welcomeStep1Body =>
+      'ونبوو یان دۆزراوە، وێنەیەک و شوێنەکە زیاد بکە. چاودێرێک پێش بڵاوبوونەوە پشکنینی دەکات.';
+
+  @override
+  String get welcomeStep2Title => 'لێکچوون وەربگرە';
+
+  @override
+  String get welcomeStep2Body =>
+      'ئاگادارت دەکەینەوە کاتێک پۆستێک لەگەڵ هی تۆ لێک دەچێت، و هەموو پۆستەکان بە زمانی ئەپەکەت پیشان دەدەین.';
+
+  @override
+  String get welcomeStep3Title => 'بە سەلامەتی بیگەڕێنەوە';
+
+  @override
+  String get welcomeStep3Body =>
+      'لێرە گفتوگۆ بکە، پرسیاری وردەکارییەک بکە کە تەنها خاوەنەکە دەیزانێت، و لە شوێنێکی گشتی یەکتر ببینن.';
+
+  @override
+  String get welcomeHelpHint =>
+      'ڕێنمایی هەنگاو بە هەنگاو، لەوانە چۆن دڵنیا بیتەوە کە لەگەڵ خاوەنە ڕاستەقینەکە قسە دەکەیت، لە پرۆفایل ← یارمەتی و پشتیوانی دەدۆزیتەوە.';
+
+  @override
+  String get welcomeGotIt => 'تێگەیشتم';
+
+  @override
+  String get welcomeOpenHelp => 'یارمەتی و پشتیوانی بکەرەوە';
+
+  @override
+  String get helpTileSubtitle => 'ڕێنمایی، ئامۆژگاری سەلامەتی و پەیوەندی';
+
+  @override
+  String get helpGuideTitle => 'Finder چۆن کار دەکات';
+
+  @override
+  String get helpGuideStartTitle => 'دەستپێکردن';
+
+  @override
+  String get helpGuideStartSubtitle =>
+      'زمان، پرۆفایل، ئاگادارکردنەوە، نیشانەکان';
+
+  @override
+  String get helpGuideStart1 =>
+      'زمانەکەت لە ئایکۆنی وەرگێڕان لە شاشەی چوونەژوورەوە یان لە پرۆفایل هەڵبژێرە. هەموو پۆستەکان بەو زمانە پیشان دەدرێن.';
+
+  @override
+  String get helpGuideStart2 =>
+      'پرۆفایلەکەت بە ناوی ڕاستەقینە و وێنەیەک تەواو بکە: خەڵک زیاتر ئامادەن شتێک بگەڕێننەوە بۆ کەسێک کە دەیناسنەوە.';
+
+  @override
+  String get helpGuideStart3 =>
+      'ڕێگە بە ئاگادارکردنەوەکان بدە تا دەستبەجێ لە لێکچوون و نامەکان ئاگادار بیت.';
+
+  @override
+  String get helpGuideStart4 =>
+      'نیشانەکان: «چاوەڕوان» واتە چاودێرێک هێشتا پۆستەکە دەپشکنێت، «بڵاوکراوە» واتە هەمووان دەیبینن، «گەڕێنراوەتەوە» واتە شتەکە گەڕاوەتەوە بۆ خاوەنەکەی.';
+
+  @override
+  String get helpGuideLostTitle => 'بڵاوکردنەوەی شتێکی ونبوو';
+
+  @override
+  String get helpGuideLostSubtitle => 'چی بنووسیت و چی لای خۆت بهێڵیتەوە';
+
+  @override
+  String get helpGuideLost1 =>
+      'وێنەیەکی ڕوونی شتەکە یان هەمان مۆدێل زیاد بکە تا خەڵک بە یەک چاوپێکەوتن بیناسنەوە.';
+
+  @override
+  String get helpGuideLost2 =>
+      'شوێنی ورد و کاتی دوا جار کە لەلات بوو بنووسە. خەڵکی نزیک یەکەم جار پۆستەکەت دەبینن.';
+
+  @override
+  String get helpGuideLost3 =>
+      'وەسفی بکە، بەڵام یەک دوو وردەکاری لای خۆت بهێڵەوە (خراشێک، ناوەڕۆکەکەی، هەڵکۆڵینێک). بەکاریان دەهێنیت بۆ دڵنیابوون کە دۆزەرەوەکە بەڕاستی هەیەتی.';
+
+  @override
+  String get helpGuideLost4 =>
+      'پاداشت ئارەزوومەندانەیە. هەرگیز هیچ پارەیەک مەدە پێش ئەوەی شتەکە لە دەستی خۆتدا بێت.';
+
+  @override
+  String get helpGuideLost5 =>
+      'پۆستەکەت «چاوەڕوان» پیشان دەدرێت هەتا چاودێرێک پەسەندی دەکات، زۆربەی جار لە چەند کاتژمێرێکدا. ئاگادارکردنەوەت پێ دەگات کاتێک بڵاو دەبێتەوە و هەر کاتێک پۆستێکی دۆزراوە لێک دەچێت.';
+
+  @override
+  String get helpGuideFoundTitle => 'بڵاوکردنەوەی شتێکی دۆزراوە';
+
+  @override
+  String get helpGuideFoundSubtitle => 'خاوەنەکە بپارێزە لە کاتی گەڕاندا بۆی';
+
+  @override
+  String get helpGuideFound1 =>
+      'وێنەی شتەکە بگرە، بەڵام هەر شتێکی کەسی بشارەوە: ناوەکان، ژمارەی ناسنامە، کارتی بانک، ناونیشان، شاشەی مۆبایل.';
+
+  @override
+  String get helpGuideFound2 =>
+      'ژمارەی زنجیرەیی، IMEI یان ناوەڕۆکی جزدان و جانتا بڵاو مەکەرەوە. بۆ پشکنینی داواکارییەکان بیانهێڵەوە.';
+
+  @override
+  String get helpGuideFound3 =>
+      'بڵێ لە کوێ و کەی دۆزیوتەتەوە و ئێستا نزیکەی لە کوێیە. پێویست ناکات ناونیشانی ماڵەکەت بڵێیت.';
+
+  @override
+  String get helpGuideFound4 =>
+      'بەڵگەنامە، پاسپۆرت، مۆبایل، کارتی بانک و پارە: هەروەها بیاندە بە پۆلیس یان مێزی ونبووەکانی شوێنەکە، و لە پۆستەکەدا ئەوە بنووسە.';
+
+  @override
+  String get helpGuideFound5 =>
+      'دوای پەسەندکردن، ئەپەکە پۆستەکەت لەگەڵ ئەوانەی دەگەڕێن لێک دەدات و بە زمانی خۆیان ئاگاداریان دەکاتەوە.';
+
+  @override
+  String get helpGuideMatchTitle => 'کاتێک لێکچوون یان نامەیەکت پێ دەگات';
+
+  @override
+  String get helpGuideMatchSubtitle => 'دواتر چی بکەیت';
+
+  @override
+  String get helpGuideMatch1 =>
+      'پۆستە لێکچووەکە بکەرەوە و وێنە و شوێن و کاتەکە لەگەڵ هی خۆت بەراورد بکە.';
+
+  @override
+  String get helpGuideMatch2 =>
+      'لەناو گفتوگۆی ئەپەکە وەڵام بدەرەوە. ژمارەی مۆبایل و ناونیشانەکەت تایبەت بهێڵەوە هەتا یەکتر دەبینن.';
+
+  @override
+  String get helpGuideMatch3 =>
+      'ئەگەر تۆ شتەکەت دۆزیوەتەوە، پێش ڕازیبوون بە بینین، داوای وردەکارییەک لە داواکارەکە بکە کە لە پۆستەکەدا نییە.';
+
+  @override
+  String get helpGuideMatch4 =>
+      'شتە ڕاستەکە نییە؟ بە ڕێزەوە بڵێ. کەسێک کە فشارت لێ دەکات، داوای پارە دەکات یان پاڵت پێوە دەنێت بچیتە ئەپێکی تر نیشانەی مەترسییە: بلۆکی بکە و ڕاپۆرتی بکە.';
+
+  @override
+  String get helpGuideVerifyTitle => 'دڵنیابوون لەوەی خاوەنە ڕاستەقینەکەیە';
+
+  @override
+  String get helpGuideVerifySubtitle => 'پشکنینی سادە کە داواکاری درۆ ڕادەگرێت';
+
+  @override
+  String get helpGuideVerify1 =>
+      'پرسیاری شتێک بکە کە تەنها خاوەنەکە دەیزانێت: چی لەناویدایە، خراش یان ستیکەرێک، وێنەی شاشەی قفڵ، هەڵکۆڵینێک، ڕەنگی وردی قایشەکە.';
+
+  @override
+  String get helpGuideVerify2 =>
+      'داوای وێنەیەکی شتەکە لە پێش ونبوونی بکە، یان پسوولە، سندوقەکە، یان ژمارەی زنجیرەیی کە بتوانیت بەراوردی بکەیت.';
+
+  @override
+  String get helpGuideVerify3 =>
+      'بۆ مۆبایل: خاوەنەکە دەتوانێت پەیوەندی بە ژمارەکەوە بکات یان لەبەردەمت قفڵەکەی بکاتەوە. بۆ کلیل: دەتوانێت ناوی ئۆتۆمبێلەکە بڵێت یان دەرگاکە بکاتەوە.';
+
+  @override
+  String get helpGuideVerify4 =>
+      'بۆ بەڵگەنامە و کارتی بانک، تەنها بیدە بەو کەسەی ناوی لەسەرە لەگەڵ ناسنامەیەکی لێکچوو، یان بە فەرمانگەی دەرکەر یان پۆلیس.';
+
+  @override
+  String get helpGuideVerify5 =>
+      'هەرگیز پێشەکی مەنێرە، پارە مەگوازەوە یان زانیاری بانکیت هاوبەش مەکە بۆ «ئازادکردنی» شتێک. Finder هەرگیز داوای پارەدان ناکات.';
+
+  @override
+  String get helpGuideVerify6 =>
+      'هێشتا دڵنیا نیت؟ داوا بکە لە بنکەی پۆلیس یەکتر ببینن، یان گفتوگۆکە ڕاپۆرت بکە و با چاودێرێک سەیری بکات.';
+
+  @override
+  String get helpGuideMeetTitle => 'بینینی سەلامەت';
+
+  @override
+  String get helpGuideMeetSubtitle => 'ڕادەستکردنەکە';
+
+  @override
+  String get helpGuideMeet1 =>
+      'لە شوێنێکی گشتی قەرەباڵغ و بە ڕۆژ یەکتر ببینن: مۆڵ، کافێ، بنکەی پۆلیس یان مێزی ونبووەکان.';
+
+  @override
+  String get helpGuideMeet2 =>
+      'هاوڕێیەک لەگەڵ خۆت ببە یان بە کەسێک بڵێ بۆ کوێ دەچیت و کەی چاوەڕوانی گەڕانەوەت دەکرێت.';
+
+  @override
+  String get helpGuideMeet3 =>
+      'بۆ ڕادەستکردن سواری ئۆتۆمبێل مەبە و مەچۆ بۆ ماڵێکی تایبەت.';
+
+  @override
+  String get helpGuideMeet4 =>
+      'پاداشت تەنها دوای وەرگرتنی شتەکە بدە، و تەنها ئەگەر خۆت پێشنیارت کردبێت. کەس ناتوانێت داوای بکات.';
+
+  @override
+  String get helpGuideMeet5 =>
+      'دواتر، پۆستەکە وەک «گەڕێنراوەتەوە» نیشانە بکە تا ئاگادارکردنەوەکە بوەستێت و ئەوانی تر لەگەڵت ئاهەنگ بگێڕن.';
+
+  @override
+  String get helpGuideReportTitle => 'ڕاپۆرتکردنی کێشەیەک';
+
+  @override
+  String get helpGuideReportSubtitle => 'پۆستەکان، کەسەکان، هەڵەکان';
+
+  @override
+  String get helpGuideReport1 =>
+      'پۆستێک لە مێنیوەکەیەوە ڕاپۆرت بکە و هۆکارێک هەڵبژێرە. چاودێرێک پێداچوونەوەی بۆ دەکات و دەتوانێت لایببات یان ئاگاداری نووسەرەکە بکاتەوە.';
+
+  @override
+  String get helpGuideReport2 =>
+      'بەکارهێنەرێک لە پرۆفایلەکەی یان لە گفتوگۆکە بلۆک بکە بۆ وەستاندنی نامەکانی. پێی ناوترێت.';
+
+  @override
+  String get helpGuideReport3 =>
+      'هەموو پۆستێکی نوێ لەلایەن چاودێرێکەوە دەپشکنرێت، لەگەڵ پێش‌پشکنینی AI بۆ فێڵ، ڕیکلام و وێنەی نەشیاو. پۆستە پەسەندکراوەکانیش هێشتا دەتوانرێت ڕاپۆرت بکرێن.';
+
+  @override
+  String get helpGuideReport4 =>
+      'شتێک کار ناکات؟ «ڕاپۆرتی کێشە» لە خوارەوە بەکاربهێنە. بۆ کێشەی سەلامەتی بەپەلە: سەرەتا پەیوەندی بە پۆلیسەوە بکە.';
 
   @override
   String get navPost => 'پۆست';
@@ -4145,10 +4441,29 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get serverThatStatusIsNotPublic => 'ئەو دۆخە گشتی نییە.';
 
   @override
-  String get serverNotAGoogleKey =>
-      'ئەمە وەک کلیلی Google AI Studio دیار نییە.';
+  String get serverNotAnApiKey => 'ئەمە وەک کلیلی API دیار نییە.';
 
   @override
-  String get serverGoogleRejectedTheKey =>
-      'Google AI Studio کلیلەکەی ڕەتکردەوە.';
+  String get serverProviderRejectedTheKey => 'دابینکەرەکە کلیلەکەی ڕەتکردەوە.';
+
+  @override
+  String get serverModelNotFound => 'مۆدێلەکە نەدۆزرایەوە.';
+
+  @override
+  String get serverModelNameRequired => 'ناوی مۆدێل پێویستە.';
+
+  @override
+  String get serverBaseUrlRequired =>
+      'لینکی بنەڕەتی و ناوی مۆدێل بۆ دابینکەری تایبەت پێویستن.';
+
+  @override
+  String get serverCouldNotReachProvider => 'نەتوانرا بگاتە دابینکەری AI.';
+
+  @override
+  String get serverCouldNotLoadAiSettings =>
+      'نەتوانرا ڕێکخستنەکانی AI باربکرێن.';
+
+  @override
+  String get serverCouldNotRemoveAiSettings =>
+      'نەتوانرا ڕێکخستنەکانی AI لاببرێن.';
 }

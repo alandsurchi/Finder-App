@@ -75,16 +75,13 @@
   "authLegalAgreePrefix": "By creating an account you agree to the ",
   "authLegalAgreeAnd": " and the ",
   "authLegalAgreeSuffix": ".",
-  "onboardLostTitle": "Lost Something?",
-  "onboardLostDescription": "Report your missing essentials in seconds. Finder connects found items with their owners instantly.",
-  "onboardFoundTitle": "Found Something?",
-  "onboardFoundDescription": "Post found items and help return them to their rightful owners. Every good deed counts.",
-  "onboardConnectTitle": "Connect &\nCommunicate",
-  "onboardConnectDescription": "Chat, share details, and return items safely. Build trust within the community.",
-  "onboardGetStarted": "Get Started",
-  "onboardSkipForNow": "Skip for now",
-  "onboardRewardSample": "REWARD $50",
-  "onboardTrustSecured": "TRUST SECURED",
+  "onboardLostTitle": "Lost something? Post it in a minute",
+  "onboardLostDescription": "Add a photo, where and when you lost it. Finder shows it to people nearby and alerts you the moment something matches.",
+  "onboardFoundTitle": "Found something? Help it get home",
+  "onboardFoundDescription": "Post what you found. A person reviews every post, and the app matches it with people searching, in their own language.",
+  "onboardConnectTitle": "Chat, verify, hand it back safely",
+  "onboardConnectDescription": "Message inside the app, ask for a detail only the owner knows, and meet in a public place. Help & Support walks you through every step.",
+  "onboardGetStarted": "Get started",
   "legalOpenWebVersion": "Open web version",
   "legalCouldNotOpen": "Could not open {url}",
   "@legalCouldNotOpen": {
@@ -473,18 +470,54 @@
   "adminStatusRejected": "rejected",
   "adminStatusExpired": "archived",
   "adminAiTitle": "AI assistant",
-  "adminAiSubtitle": "Gemini key for translations and the pre-check",
-  "adminAiConfigured": "Configured · {model}",
-  "@adminAiConfigured": {
+  "adminAiSubtitle": "Provider, model and key for translations and the pre-check",
+  "adminAiNotConfigured": "Not configured. Posts are not translated or pre-checked.",
+  "adminAiKeyLabel": "API key",
+  "adminAiKeyHint": "Paste the key from the provider's dashboard",
+  "adminAiKeyBody": "The key is verified once, stored encrypted on the server and never shown again. It works for every user right away. Each new post costs roughly one cent on the cheapest models.",
+  "adminAiProvider": "Provider",
+  "adminAiModelLabel": "Model",
+  "adminAiModelHint": "Leave the default unless you know better",
+  "adminAiBaseUrlLabel": "Base URL",
+  "adminAiBaseUrlHint": "https://openrouter.ai/api/v1",
+  "adminAiKeyHintReplace": "Paste a new key to replace the saved one",
+  "adminAiSourceDb": "Saved from the app",
+  "adminAiSourceEnv": "Set on the server",
+  "adminAiSourceNone": "Not set",
+  "adminAiBacklog": "{translations} posts waiting for translation · {scores} waiting for a risk score",
+  "@adminAiBacklog": {
     "placeholders": {
-      "model": {
-        "type": "String"
+      "translations": {
+        "type": "int"
+      },
+      "scores": {
+        "type": "int"
       }
     }
   },
-  "adminAiNotConfigured": "Not configured. Posts are not translated or pre-checked.",
-  "adminAiKeyLabel": "Google AI Studio key",
-  "adminAiKeyHint": "Paste the key from aistudio.google.com",
-  "adminAiKeySaved": "AI key saved and verified.",
-  "adminAiKeyBody": "The key is stored on the server only. Each new post costs roughly one cent for the translation and the risk check."
+  "adminAiSaved": "Key verified. Translating {count} posts for everyone…",
+  "@adminAiSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminAiRemove": "Remove key",
+  "adminAiRemoveBody": "New posts will stop being translated and pre-checked until a key is saved again.",
+  "adminAiRemoved": "AI settings removed.",
+  "onboardStepReport": "Step 1 · Report",
+  "onboardStepMatch": "Step 2 · Match",
+  "onboardStepReturn": "Step 3 · Return",
+  "onboardHaveAccount": "I already have an account",
+  "onboardSampleLost": "LOST",
+  "onboardSampleFound": "FOUND",
+  "onboardSamplePlace": "Erbil · Family Mall",
+  "onboardSampleMinute": "Posted in 1 min",
+  "onboardSampleMatch": "92% match",
+  "onboardSampleReviewed": "Reviewed",
+  "onboardSampleAsk": "What's engraved on the back?",
+  "onboardSampleAnswer": "My initials, A.S. 😊",
+  "onboardSampleVerified": "Owner verified",
+  "onboardSampleMeet": "Meet in public"
 }

@@ -481,37 +481,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authLegalAgreeSuffix => '.';
 
   @override
-  String get onboardLostTitle => 'Lost Something?';
+  String get onboardLostTitle => 'Lost something? Post it in a minute';
 
   @override
   String get onboardLostDescription =>
-      'Report your missing essentials in seconds. Finder connects found items with their owners instantly.';
+      'Add a photo, where and when you lost it. Finder shows it to people nearby and alerts you the moment something matches.';
 
   @override
-  String get onboardFoundTitle => 'Found Something?';
+  String get onboardFoundTitle => 'Found something? Help it get home';
 
   @override
   String get onboardFoundDescription =>
-      'Post found items and help return them to their rightful owners. Every good deed counts.';
+      'Post what you found. A person reviews every post, and the app matches it with people searching, in their own language.';
 
   @override
-  String get onboardConnectTitle => 'Connect &\nCommunicate';
+  String get onboardConnectTitle => 'Chat, verify, hand it back safely';
 
   @override
   String get onboardConnectDescription =>
-      'Chat, share details, and return items safely. Build trust within the community.';
+      'Message inside the app, ask for a detail only the owner knows, and meet in a public place. Help & Support walks you through every step.';
 
   @override
-  String get onboardGetStarted => 'Get Started';
-
-  @override
-  String get onboardSkipForNow => 'Skip for now';
-
-  @override
-  String get onboardRewardSample => 'REWARD \$50';
-
-  @override
-  String get onboardTrustSecured => 'TRUST SECURED';
+  String get onboardGetStarted => 'Get started';
 
   @override
   String get legalOpenWebVersion => 'Open web version';
@@ -1249,29 +1240,112 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminAiTitle => 'AI assistant';
 
   @override
-  String get adminAiSubtitle => 'Gemini key for translations and the pre-check';
-
-  @override
-  String adminAiConfigured(String model) {
-    return 'Configured · $model';
-  }
+  String get adminAiSubtitle =>
+      'Provider, model and key for translations and the pre-check';
 
   @override
   String get adminAiNotConfigured =>
       'Not configured. Posts are not translated or pre-checked.';
 
   @override
-  String get adminAiKeyLabel => 'Google AI Studio key';
+  String get adminAiKeyLabel => 'API key';
 
   @override
-  String get adminAiKeyHint => 'Paste the key from aistudio.google.com';
-
-  @override
-  String get adminAiKeySaved => 'AI key saved and verified.';
+  String get adminAiKeyHint => 'Paste the key from the provider\'s dashboard';
 
   @override
   String get adminAiKeyBody =>
-      'The key is stored on the server only. Each new post costs roughly one cent for the translation and the risk check.';
+      'The key is verified once, stored encrypted on the server and never shown again. It works for every user right away. Each new post costs roughly one cent on the cheapest models.';
+
+  @override
+  String get adminAiProvider => 'Provider';
+
+  @override
+  String get adminAiModelLabel => 'Model';
+
+  @override
+  String get adminAiModelHint => 'Leave the default unless you know better';
+
+  @override
+  String get adminAiBaseUrlLabel => 'Base URL';
+
+  @override
+  String get adminAiBaseUrlHint => 'https://openrouter.ai/api/v1';
+
+  @override
+  String get adminAiKeyHintReplace =>
+      'Paste a new key to replace the saved one';
+
+  @override
+  String get adminAiSourceDb => 'Saved from the app';
+
+  @override
+  String get adminAiSourceEnv => 'Set on the server';
+
+  @override
+  String get adminAiSourceNone => 'Not set';
+
+  @override
+  String adminAiBacklog(int translations, int scores) {
+    return '$translations posts waiting for translation · $scores waiting for a risk score';
+  }
+
+  @override
+  String adminAiSaved(int count) {
+    return 'Key verified. Translating $count posts for everyone…';
+  }
+
+  @override
+  String get adminAiRemove => 'Remove key';
+
+  @override
+  String get adminAiRemoveBody =>
+      'New posts will stop being translated and pre-checked until a key is saved again.';
+
+  @override
+  String get adminAiRemoved => 'AI settings removed.';
+
+  @override
+  String get onboardStepReport => 'Step 1 · Report';
+
+  @override
+  String get onboardStepMatch => 'Step 2 · Match';
+
+  @override
+  String get onboardStepReturn => 'Step 3 · Return';
+
+  @override
+  String get onboardHaveAccount => 'I already have an account';
+
+  @override
+  String get onboardSampleLost => 'LOST';
+
+  @override
+  String get onboardSampleFound => 'FOUND';
+
+  @override
+  String get onboardSamplePlace => 'Erbil · Family Mall';
+
+  @override
+  String get onboardSampleMinute => 'Posted in 1 min';
+
+  @override
+  String get onboardSampleMatch => '92% match';
+
+  @override
+  String get onboardSampleReviewed => 'Reviewed';
+
+  @override
+  String get onboardSampleAsk => 'What\'s engraved on the back?';
+
+  @override
+  String get onboardSampleAnswer => 'My initials, A.S. 😊';
+
+  @override
+  String get onboardSampleVerified => 'Owner verified';
+
+  @override
+  String get onboardSampleMeet => 'Meet in public';
 
   @override
   String get chatConversationTitle => 'Conversation';
@@ -2595,6 +2669,226 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatOpenPhoto => 'Open photo';
+
+  @override
+  String get welcomeTitle => 'Welcome to Finder';
+
+  @override
+  String get welcomeSubtitle =>
+      'Lost-and-found for your city: reviewed by people, matched for you, in your language.';
+
+  @override
+  String get welcomeStep1Title => 'Post it';
+
+  @override
+  String get welcomeStep1Body =>
+      'Lost or found, add a photo and the place. A moderator checks it before it goes live.';
+
+  @override
+  String get welcomeStep2Title => 'Get matched';
+
+  @override
+  String get welcomeStep2Body =>
+      'We alert you when a post matches yours and show every post in your app language.';
+
+  @override
+  String get welcomeStep3Title => 'Return it safely';
+
+  @override
+  String get welcomeStep3Body =>
+      'Chat here, ask for a detail only the owner knows, and meet in a public place.';
+
+  @override
+  String get welcomeHelpHint =>
+      'Step-by-step guides, including how to make sure you are talking to the real owner, are in Profile → Help & Support.';
+
+  @override
+  String get welcomeGotIt => 'Got it';
+
+  @override
+  String get welcomeOpenHelp => 'Open Help & Support';
+
+  @override
+  String get helpTileSubtitle => 'Guides, safety tips and contact';
+
+  @override
+  String get helpGuideTitle => 'How Finder works';
+
+  @override
+  String get helpGuideStartTitle => 'Getting started';
+
+  @override
+  String get helpGuideStartSubtitle =>
+      'Language, profile, notifications, badges';
+
+  @override
+  String get helpGuideStart1 =>
+      'Pick your language from the globe icon on the sign-in screen or in Profile. Every post is shown in that language.';
+
+  @override
+  String get helpGuideStart2 =>
+      'Complete your profile with a real name and a photo: people are more likely to return an item to someone they can recognise.';
+
+  @override
+  String get helpGuideStart3 =>
+      'Allow notifications so you hear about matches and messages right away.';
+
+  @override
+  String get helpGuideStart4 =>
+      'Badges: Pending means a moderator is still checking the post, Live means everyone can see it, Returned means the item is back with its owner.';
+
+  @override
+  String get helpGuideLostTitle => 'Posting a lost item';
+
+  @override
+  String get helpGuideLostSubtitle => 'What to include, what to keep back';
+
+  @override
+  String get helpGuideLost1 =>
+      'Add a clear photo of the item, or of the same model, so people recognise it at a glance.';
+
+  @override
+  String get helpGuideLost2 =>
+      'Give the exact place and the time you last had it. Nearby people see your post first.';
+
+  @override
+  String get helpGuideLost3 =>
+      'Describe it, but keep one or two details to yourself (a scratch, the contents, an engraving). You will use them to check that a finder really has it.';
+
+  @override
+  String get helpGuideLost4 =>
+      'A reward is optional. Never pay anything before the item is in your hands.';
+
+  @override
+  String get helpGuideLost5 =>
+      'Your post shows Pending until a moderator approves it, usually within a few hours. You get a notification when it is live and whenever a found post matches.';
+
+  @override
+  String get helpGuideFoundTitle => 'Posting a found item';
+
+  @override
+  String get helpGuideFoundSubtitle =>
+      'Protect the owner while you look for them';
+
+  @override
+  String get helpGuideFound1 =>
+      'Photograph the item, but hide anything personal: names, ID numbers, bank cards, addresses, phone screens.';
+
+  @override
+  String get helpGuideFound2 =>
+      'Do not post serial numbers, IMEI or the contents of a wallet or bag. Keep them to check claims.';
+
+  @override
+  String get helpGuideFound3 =>
+      'Say where and when you found it and roughly where it is now. You do not have to share your home address.';
+
+  @override
+  String get helpGuideFound4 =>
+      'Documents, passports, phones, bank cards and money: hand them to the police or the venue\'s lost-property desk as well, and say so in the post.';
+
+  @override
+  String get helpGuideFound5 =>
+      'Once approved, the app matches your post with people searching for it and alerts them, in their own language.';
+
+  @override
+  String get helpGuideMatchTitle => 'When you get a match or a message';
+
+  @override
+  String get helpGuideMatchSubtitle => 'What to do next';
+
+  @override
+  String get helpGuideMatch1 =>
+      'Open the matching post and compare the photo, place and time with yours.';
+
+  @override
+  String get helpGuideMatch2 =>
+      'Reply inside the app chat. Keep your phone number and address private until you have met.';
+
+  @override
+  String get helpGuideMatch3 =>
+      'If you found the item, ask the claimant for a detail that is not in the post before you agree to meet.';
+
+  @override
+  String get helpGuideMatch4 =>
+      'Not the right item? Just say so politely. Someone who pressures you, asks for money or pushes to move to another app is a red flag: block and report them.';
+
+  @override
+  String get helpGuideVerifyTitle => 'Making sure it is the real owner';
+
+  @override
+  String get helpGuideVerifySubtitle => 'Simple checks that stop false claims';
+
+  @override
+  String get helpGuideVerify1 =>
+      'Ask for something only the owner would know: what is inside, a scratch or sticker, the lock-screen photo, an engraving, the exact colour of a strap.';
+
+  @override
+  String get helpGuideVerify2 =>
+      'Ask for a photo of the item from before it was lost, or a receipt, the box, or a serial number you can compare.';
+
+  @override
+  String get helpGuideVerify3 =>
+      'For phones: the owner can call the number or unlock it in front of you. For keys: they can name the car or open the door.';
+
+  @override
+  String get helpGuideVerify4 =>
+      'For documents and bank cards, hand them over only to the person named on them, with a matching ID, or to the issuing office or police.';
+
+  @override
+  String get helpGuideVerify5 =>
+      'Never send a deposit, transfer money or share bank details to \"release\" an item. Finder never asks for payments.';
+
+  @override
+  String get helpGuideVerify6 =>
+      'Still unsure? Ask to meet at a police station, or report the conversation and let a moderator look at it.';
+
+  @override
+  String get helpGuideMeetTitle => 'Meeting safely';
+
+  @override
+  String get helpGuideMeetSubtitle => 'The hand-over';
+
+  @override
+  String get helpGuideMeet1 =>
+      'Meet in a busy public place in daylight: a mall, a café, a police station or a lost-property desk.';
+
+  @override
+  String get helpGuideMeet2 =>
+      'Bring a friend or tell someone where you are going and when you expect to be back.';
+
+  @override
+  String get helpGuideMeet3 =>
+      'Do not get into a car or go to a private home for a hand-over.';
+
+  @override
+  String get helpGuideMeet4 =>
+      'Give a reward only after you have the item, and only if you offered one. Nobody can demand it.';
+
+  @override
+  String get helpGuideMeet5 =>
+      'Afterwards, mark the post as Returned so the alert stops and others can celebrate with you.';
+
+  @override
+  String get helpGuideReportTitle => 'Reporting a problem';
+
+  @override
+  String get helpGuideReportSubtitle => 'Posts, people, bugs';
+
+  @override
+  String get helpGuideReport1 =>
+      'Report a post from its menu and pick a reason. A moderator reviews it and can remove it or warn the author.';
+
+  @override
+  String get helpGuideReport2 =>
+      'Block a user from their profile or the chat to stop their messages. They are not told.';
+
+  @override
+  String get helpGuideReport3 =>
+      'Every new post is checked by a moderator, with an AI pre-check for scams, ads and inappropriate images. Approved posts can still be reported.';
+
+  @override
+  String get helpGuideReport4 =>
+      'Something broken? Use \"Report an issue\" below. Urgent safety matters: contact the police first.';
 
   @override
   String get navPost => 'Post';
@@ -4104,9 +4398,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverThatStatusIsNotPublic => 'That status is not public.';
 
   @override
-  String get serverNotAGoogleKey =>
-      'That does not look like a Google AI Studio key.';
+  String get serverNotAnApiKey => 'That does not look like an API key.';
 
   @override
-  String get serverGoogleRejectedTheKey => 'Google AI Studio rejected the key.';
+  String get serverProviderRejectedTheKey => 'The provider rejected the key.';
+
+  @override
+  String get serverModelNotFound => 'Model not found.';
+
+  @override
+  String get serverModelNameRequired => 'A model name is required.';
+
+  @override
+  String get serverBaseUrlRequired =>
+      'A base URL and a model name are required for a custom provider.';
+
+  @override
+  String get serverCouldNotReachProvider => 'Could not reach the AI provider.';
+
+  @override
+  String get serverCouldNotLoadAiSettings => 'Could not load the AI settings.';
+
+  @override
+  String get serverCouldNotRemoveAiSettings =>
+      'Could not remove the AI settings.';
 }

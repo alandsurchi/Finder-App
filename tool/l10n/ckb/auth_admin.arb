@@ -68,16 +68,13 @@
   "authLegalAgreePrefix": "بە دروستکردنی هەژمار ڕازی دەبیت بە ",
   "authLegalAgreeAnd": " و ",
   "authLegalAgreeSuffix": ".",
-  "onboardLostTitle": "شتێکت ون کردووە؟",
-  "onboardLostDescription": "لە چەند چرکەیەکدا شتە ونبووەکانت ڕاپۆرت بکە. Finder شتە دۆزراوەکان دەستبەجێ دەگەیەنێتە خاوەنەکانیان.",
-  "onboardFoundTitle": "شتێکت دۆزیوەتەوە؟",
-  "onboardFoundDescription": "شتە دۆزراوەکان بڵاو بکەرەوە و یارمەتی بدە بگەڕێنەوە بۆ خاوەنە ڕاستەقینەکانیان. هەر چاکەیەک بەنرخە.",
-  "onboardConnectTitle": "پەیوەندی بکە و\nگفتوگۆ بکە",
-  "onboardConnectDescription": "گفتوگۆ بکە، وردەکاری هاوبەش بکە و شتەکان بە سەلامەتی بگەڕێنەوە. متمانە لە کۆمەڵگەدا دروست بکە.",
-  "onboardGetStarted": "دەست پێبکە",
-  "onboardSkipForNow": "ئێستا تێپەڕێنە",
-  "onboardRewardSample": "پاداشت 50$",
-  "onboardTrustSecured": "متمانە دڵنیاکراوە",
+  "onboardLostTitle": "شتێکت ون کردووە؟ لە یەک خولەکدا بڵاوی بکەرەوە",
+  "onboardLostDescription": "وێنەیەک و شوێن و کاتی ونبوونەکە زیاد بکە. Finder پیشانی خەڵکی نزیکت دەدات و دەستبەجێ ئاگادارت دەکاتەوە کە شتێک لێکچوو.",
+  "onboardFoundTitle": "شتێکت دۆزیوەتەوە؟ یارمەتی بدە بگەڕێتەوە ماڵەوە",
+  "onboardFoundDescription": "ئەوەی دۆزیوتەتەوە بڵاوی بکەرەوە. کەسێک هەموو پۆستێک پێداچوونەوەی بۆ دەکات، و ئەپەکە بە زمانی خۆیان لەگەڵ ئەوانەی دەگەڕێن لێکی دەدات.",
+  "onboardConnectTitle": "گفتوگۆ بکە، دڵنیا ببەوە، بە سەلامەتی بیگەڕێنەوە",
+  "onboardConnectDescription": "لەناو ئەپەکە نامە بنێرە، پرسیاری وردەکارییەک بکە کە تەنها خاوەنەکە دەیزانێت، و لە شوێنێکی گشتی یەکتر ببینن. بەشی یارمەتی و پشتیوانی هەموو هەنگاوەکانت پێ دەڵێت.",
+  "onboardGetStarted": "دەست پێ بکە",
   "legalOpenWebVersion": "کردنەوەی وەشانی وێب",
   "legalCouldNotOpen": "نەتوانرا {url} بکرێتەوە",
   "legalPrivacyTitle": "سیاسەتی تایبەتێتی",
@@ -286,11 +283,54 @@
   "adminStatusRejected": "ڕەتکراوە",
   "adminStatusExpired": "ئەرشیفکراو",
   "adminAiTitle": "یاریدەدەری AI",
-  "adminAiSubtitle": "کلیلی Gemini بۆ وەرگێڕان و پێش‌پشکنین",
-  "adminAiConfigured": "ڕێکخراوە · {model}",
+  "adminAiSubtitle": "دابینکەر، مۆدێل و کلیل بۆ وەرگێڕان و پێش‌پشکنین",
   "adminAiNotConfigured": "ڕێک نەخراوە. پۆستەکان وەرناگێڕدرێن و پێش‌پشکنین ناکرێن.",
-  "adminAiKeyLabel": "کلیلی Google AI Studio",
-  "adminAiKeyHint": "کلیلەکە لە aistudio.google.com بلکێنە",
-  "adminAiKeySaved": "کلیلی AI پاشەکەوت کرا و پشتڕاستکرایەوە.",
-  "adminAiKeyBody": "کلیلەکە تەنها لەسەر ڕاژەکار هەڵدەگیرێت. هەر پۆستێکی نوێ نزیکەی یەک سەنت تێدەچێت بۆ وەرگێڕان و پشکنینی مەترسی."
+  "adminAiKeyLabel": "کلیلی API",
+  "adminAiKeyHint": "کلیلەکە لە داشبۆردی دابینکەرەکە بلکێنە",
+  "adminAiKeyBody": "کلیلەکە یەک جار پشتڕاست دەکرێتەوە، بە شێوەی کۆدکراو لەسەر ڕاژەکار هەڵدەگیرێت و جارێکی تر پیشان نادرێت. دەستبەجێ بۆ هەموو بەکارهێنەران کار دەکات. هەر پۆستێکی نوێ نزیکەی یەک سەنت تێدەچێت لەسەر هەرزانترین مۆدێلەکان.",
+  "adminAiProvider": "دابینکەر",
+  "adminAiModelLabel": "مۆدێل",
+  "adminAiModelHint": "بنەڕەتییەکە بهێڵەوە ئەگەر دڵنیا نیت",
+  "adminAiBaseUrlLabel": "لینکی بنەڕەتی",
+  "adminAiBaseUrlHint": "https://openrouter.ai/api/v1",
+  "adminAiKeyHintReplace": "کلیلێکی نوێ بلکێنە بۆ گۆڕینی پاشەکەوتکراوەکە",
+  "adminAiSourceDb": "لە ئەپەکەوە پاشەکەوت کراوە",
+  "adminAiSourceEnv": "لەسەر ڕاژەکار دانراوە",
+  "adminAiSourceNone": "دانەنراوە",
+  "adminAiBacklog": "{translations} پۆست چاوەڕێی وەرگێڕانن · {scores} چاوەڕێی نمرەی مەترسین",
+  "@adminAiBacklog": {
+    "placeholders": {
+      "translations": {
+        "type": "int"
+      },
+      "scores": {
+        "type": "int"
+      }
+    }
+  },
+  "adminAiSaved": "کلیلەکە پشتڕاستکرایەوە. {count} پۆست بۆ هەمووان وەردەگێڕدرێن…",
+  "@adminAiSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminAiRemove": "لابردنی کلیل",
+  "adminAiRemoveBody": "پۆستە نوێیەکان وەرناگێڕدرێن و پێش‌پشکنین ناکرێن هەتا کلیلێک دووبارە پاشەکەوت دەکرێت.",
+  "adminAiRemoved": "ڕێکخستنەکانی AI لابران.",
+  "onboardStepReport": "هەنگاوی 1 · ڕاپۆرت",
+  "onboardStepMatch": "هەنگاوی 2 · لێکچوون",
+  "onboardStepReturn": "هەنگاوی 3 · گەڕاندنەوە",
+  "onboardHaveAccount": "پێشتر هەژمارم هەیە",
+  "onboardSampleLost": "ونبوو",
+  "onboardSampleFound": "دۆزراوە",
+  "onboardSamplePlace": "هەولێر · فامیلی مۆڵ",
+  "onboardSampleMinute": "لە ١ خولەکدا بڵاوکرایەوە",
+  "onboardSampleMatch": "٩٢٪ لێکچوون",
+  "onboardSampleReviewed": "پێداچوونەوە کراوە",
+  "onboardSampleAsk": "لە پشتەوە چی هەڵکۆڵراوە؟",
+  "onboardSampleAnswer": "پیتەکانی ناوم، ئ.س 😊",
+  "onboardSampleVerified": "خاوەن دڵنیاکراوەتەوە",
+  "onboardSampleMeet": "لە شوێنی گشتی یەکتر ببینن"
 }

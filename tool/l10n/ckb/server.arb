@@ -128,6 +128,12 @@
   "serverCouldNotApproveThePost": "پۆستەکە پەسەند نەکرا.",
   "serverCouldNotRejectThePost": "پۆستەکە ڕەت نەکرایەوە.",
   "serverThatStatusIsNotPublic": "ئەو دۆخە گشتی نییە.",
-  "serverNotAGoogleKey": "ئەمە وەک کلیلی Google AI Studio دیار نییە.",
-  "serverGoogleRejectedTheKey": "Google AI Studio کلیلەکەی ڕەتکردەوە."
+  "serverNotAnApiKey": "ئەمە وەک کلیلی API دیار نییە.",
+  "serverProviderRejectedTheKey": "دابینکەرەکە کلیلەکەی ڕەتکردەوە.",
+  "serverModelNotFound": "مۆدێلەکە نەدۆزرایەوە.",
+  "serverModelNameRequired": "ناوی مۆدێل پێویستە.",
+  "serverBaseUrlRequired": "لینکی بنەڕەتی و ناوی مۆدێل بۆ دابینکەری تایبەت پێویستن.",
+  "serverCouldNotReachProvider": "نەتوانرا بگاتە دابینکەری AI.",
+  "serverCouldNotLoadAiSettings": "نەتوانرا ڕێکخستنەکانی AI باربکرێن.",
+  "serverCouldNotRemoveAiSettings": "نەتوانرا ڕێکخستنەکانی AI لاببرێن."
 }

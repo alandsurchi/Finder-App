@@ -931,62 +931,44 @@ abstract class AppLocalizations {
   /// No description provided for @onboardLostTitle.
   ///
   /// In en, this message translates to:
-  /// **'Lost Something?'**
+  /// **'Lost something? Post it in a minute'**
   String get onboardLostTitle;
 
   /// No description provided for @onboardLostDescription.
   ///
   /// In en, this message translates to:
-  /// **'Report your missing essentials in seconds. Finder connects found items with their owners instantly.'**
+  /// **'Add a photo, where and when you lost it. Finder shows it to people nearby and alerts you the moment something matches.'**
   String get onboardLostDescription;
 
   /// No description provided for @onboardFoundTitle.
   ///
   /// In en, this message translates to:
-  /// **'Found Something?'**
+  /// **'Found something? Help it get home'**
   String get onboardFoundTitle;
 
   /// No description provided for @onboardFoundDescription.
   ///
   /// In en, this message translates to:
-  /// **'Post found items and help return them to their rightful owners. Every good deed counts.'**
+  /// **'Post what you found. A person reviews every post, and the app matches it with people searching, in their own language.'**
   String get onboardFoundDescription;
 
   /// No description provided for @onboardConnectTitle.
   ///
   /// In en, this message translates to:
-  /// **'Connect &\nCommunicate'**
+  /// **'Chat, verify, hand it back safely'**
   String get onboardConnectTitle;
 
   /// No description provided for @onboardConnectDescription.
   ///
   /// In en, this message translates to:
-  /// **'Chat, share details, and return items safely. Build trust within the community.'**
+  /// **'Message inside the app, ask for a detail only the owner knows, and meet in a public place. Help & Support walks you through every step.'**
   String get onboardConnectDescription;
 
   /// No description provided for @onboardGetStarted.
   ///
   /// In en, this message translates to:
-  /// **'Get Started'**
+  /// **'Get started'**
   String get onboardGetStarted;
-
-  /// No description provided for @onboardSkipForNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Skip for now'**
-  String get onboardSkipForNow;
-
-  /// No description provided for @onboardRewardSample.
-  ///
-  /// In en, this message translates to:
-  /// **'REWARD \$50'**
-  String get onboardRewardSample;
-
-  /// No description provided for @onboardTrustSecured.
-  ///
-  /// In en, this message translates to:
-  /// **'TRUST SECURED'**
-  String get onboardTrustSecured;
 
   /// No description provided for @legalOpenWebVersion.
   ///
@@ -2239,14 +2221,8 @@ abstract class AppLocalizations {
   /// No description provided for @adminAiSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Gemini key for translations and the pre-check'**
+  /// **'Provider, model and key for translations and the pre-check'**
   String get adminAiSubtitle;
-
-  /// No description provided for @adminAiConfigured.
-  ///
-  /// In en, this message translates to:
-  /// **'Configured · {model}'**
-  String adminAiConfigured(String model);
 
   /// No description provided for @adminAiNotConfigured.
   ///
@@ -2257,26 +2233,188 @@ abstract class AppLocalizations {
   /// No description provided for @adminAiKeyLabel.
   ///
   /// In en, this message translates to:
-  /// **'Google AI Studio key'**
+  /// **'API key'**
   String get adminAiKeyLabel;
 
   /// No description provided for @adminAiKeyHint.
   ///
   /// In en, this message translates to:
-  /// **'Paste the key from aistudio.google.com'**
+  /// **'Paste the key from the provider\'s dashboard'**
   String get adminAiKeyHint;
-
-  /// No description provided for @adminAiKeySaved.
-  ///
-  /// In en, this message translates to:
-  /// **'AI key saved and verified.'**
-  String get adminAiKeySaved;
 
   /// No description provided for @adminAiKeyBody.
   ///
   /// In en, this message translates to:
-  /// **'The key is stored on the server only. Each new post costs roughly one cent for the translation and the risk check.'**
+  /// **'The key is verified once, stored encrypted on the server and never shown again. It works for every user right away. Each new post costs roughly one cent on the cheapest models.'**
   String get adminAiKeyBody;
+
+  /// No description provided for @adminAiProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get adminAiProvider;
+
+  /// No description provided for @adminAiModelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get adminAiModelLabel;
+
+  /// No description provided for @adminAiModelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the default unless you know better'**
+  String get adminAiModelHint;
+
+  /// No description provided for @adminAiBaseUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL'**
+  String get adminAiBaseUrlLabel;
+
+  /// No description provided for @adminAiBaseUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://openrouter.ai/api/v1'**
+  String get adminAiBaseUrlHint;
+
+  /// No description provided for @adminAiKeyHintReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a new key to replace the saved one'**
+  String get adminAiKeyHintReplace;
+
+  /// No description provided for @adminAiSourceDb.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved from the app'**
+  String get adminAiSourceDb;
+
+  /// No description provided for @adminAiSourceEnv.
+  ///
+  /// In en, this message translates to:
+  /// **'Set on the server'**
+  String get adminAiSourceEnv;
+
+  /// No description provided for @adminAiSourceNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get adminAiSourceNone;
+
+  /// No description provided for @adminAiBacklog.
+  ///
+  /// In en, this message translates to:
+  /// **'{translations} posts waiting for translation · {scores} waiting for a risk score'**
+  String adminAiBacklog(int translations, int scores);
+
+  /// No description provided for @adminAiSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Key verified. Translating {count} posts for everyone…'**
+  String adminAiSaved(int count);
+
+  /// No description provided for @adminAiRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove key'**
+  String get adminAiRemove;
+
+  /// No description provided for @adminAiRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New posts will stop being translated and pre-checked until a key is saved again.'**
+  String get adminAiRemoveBody;
+
+  /// No description provided for @adminAiRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'AI settings removed.'**
+  String get adminAiRemoved;
+
+  /// No description provided for @onboardStepReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 1 · Report'**
+  String get onboardStepReport;
+
+  /// No description provided for @onboardStepMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 2 · Match'**
+  String get onboardStepMatch;
+
+  /// No description provided for @onboardStepReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 3 · Return'**
+  String get onboardStepReturn;
+
+  /// No description provided for @onboardHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'I already have an account'**
+  String get onboardHaveAccount;
+
+  /// No description provided for @onboardSampleLost.
+  ///
+  /// In en, this message translates to:
+  /// **'LOST'**
+  String get onboardSampleLost;
+
+  /// No description provided for @onboardSampleFound.
+  ///
+  /// In en, this message translates to:
+  /// **'FOUND'**
+  String get onboardSampleFound;
+
+  /// No description provided for @onboardSamplePlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Erbil · Family Mall'**
+  String get onboardSamplePlace;
+
+  /// No description provided for @onboardSampleMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted in 1 min'**
+  String get onboardSampleMinute;
+
+  /// No description provided for @onboardSampleMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'92% match'**
+  String get onboardSampleMatch;
+
+  /// No description provided for @onboardSampleReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed'**
+  String get onboardSampleReviewed;
+
+  /// No description provided for @onboardSampleAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s engraved on the back?'**
+  String get onboardSampleAsk;
+
+  /// No description provided for @onboardSampleAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'My initials, A.S. 😊'**
+  String get onboardSampleAnswer;
+
+  /// No description provided for @onboardSampleVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner verified'**
+  String get onboardSampleVerified;
+
+  /// No description provided for @onboardSampleMeet.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet in public'**
+  String get onboardSampleMeet;
 
   /// No description provided for @chatConversationTitle.
   ///
@@ -4569,6 +4707,366 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open photo'**
   String get chatOpenPhoto;
+
+  /// No description provided for @welcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Finder'**
+  String get welcomeTitle;
+
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost-and-found for your city: reviewed by people, matched for you, in your language.'**
+  String get welcomeSubtitle;
+
+  /// No description provided for @welcomeStep1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Post it'**
+  String get welcomeStep1Title;
+
+  /// No description provided for @welcomeStep1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost or found, add a photo and the place. A moderator checks it before it goes live.'**
+  String get welcomeStep1Body;
+
+  /// No description provided for @welcomeStep2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Get matched'**
+  String get welcomeStep2Title;
+
+  /// No description provided for @welcomeStep2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We alert you when a post matches yours and show every post in your app language.'**
+  String get welcomeStep2Body;
+
+  /// No description provided for @welcomeStep3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Return it safely'**
+  String get welcomeStep3Title;
+
+  /// No description provided for @welcomeStep3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat here, ask for a detail only the owner knows, and meet in a public place.'**
+  String get welcomeStep3Body;
+
+  /// No description provided for @welcomeHelpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Step-by-step guides, including how to make sure you are talking to the real owner, are in Profile → Help & Support.'**
+  String get welcomeHelpHint;
+
+  /// No description provided for @welcomeGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get welcomeGotIt;
+
+  /// No description provided for @welcomeOpenHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Help & Support'**
+  String get welcomeOpenHelp;
+
+  /// No description provided for @helpTileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guides, safety tips and contact'**
+  String get helpTileSubtitle;
+
+  /// No description provided for @helpGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How Finder works'**
+  String get helpGuideTitle;
+
+  /// No description provided for @helpGuideStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting started'**
+  String get helpGuideStartTitle;
+
+  /// No description provided for @helpGuideStartSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Language, profile, notifications, badges'**
+  String get helpGuideStartSubtitle;
+
+  /// No description provided for @helpGuideStart1.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your language from the globe icon on the sign-in screen or in Profile. Every post is shown in that language.'**
+  String get helpGuideStart1;
+
+  /// No description provided for @helpGuideStart2.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile with a real name and a photo: people are more likely to return an item to someone they can recognise.'**
+  String get helpGuideStart2;
+
+  /// No description provided for @helpGuideStart3.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications so you hear about matches and messages right away.'**
+  String get helpGuideStart3;
+
+  /// No description provided for @helpGuideStart4.
+  ///
+  /// In en, this message translates to:
+  /// **'Badges: Pending means a moderator is still checking the post, Live means everyone can see it, Returned means the item is back with its owner.'**
+  String get helpGuideStart4;
+
+  /// No description provided for @helpGuideLostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting a lost item'**
+  String get helpGuideLostTitle;
+
+  /// No description provided for @helpGuideLostSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What to include, what to keep back'**
+  String get helpGuideLostSubtitle;
+
+  /// No description provided for @helpGuideLost1.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a clear photo of the item, or of the same model, so people recognise it at a glance.'**
+  String get helpGuideLost1;
+
+  /// No description provided for @helpGuideLost2.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the exact place and the time you last had it. Nearby people see your post first.'**
+  String get helpGuideLost2;
+
+  /// No description provided for @helpGuideLost3.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe it, but keep one or two details to yourself (a scratch, the contents, an engraving). You will use them to check that a finder really has it.'**
+  String get helpGuideLost3;
+
+  /// No description provided for @helpGuideLost4.
+  ///
+  /// In en, this message translates to:
+  /// **'A reward is optional. Never pay anything before the item is in your hands.'**
+  String get helpGuideLost4;
+
+  /// No description provided for @helpGuideLost5.
+  ///
+  /// In en, this message translates to:
+  /// **'Your post shows Pending until a moderator approves it, usually within a few hours. You get a notification when it is live and whenever a found post matches.'**
+  String get helpGuideLost5;
+
+  /// No description provided for @helpGuideFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting a found item'**
+  String get helpGuideFoundTitle;
+
+  /// No description provided for @helpGuideFoundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect the owner while you look for them'**
+  String get helpGuideFoundSubtitle;
+
+  /// No description provided for @helpGuideFound1.
+  ///
+  /// In en, this message translates to:
+  /// **'Photograph the item, but hide anything personal: names, ID numbers, bank cards, addresses, phone screens.'**
+  String get helpGuideFound1;
+
+  /// No description provided for @helpGuideFound2.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not post serial numbers, IMEI or the contents of a wallet or bag. Keep them to check claims.'**
+  String get helpGuideFound2;
+
+  /// No description provided for @helpGuideFound3.
+  ///
+  /// In en, this message translates to:
+  /// **'Say where and when you found it and roughly where it is now. You do not have to share your home address.'**
+  String get helpGuideFound3;
+
+  /// No description provided for @helpGuideFound4.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents, passports, phones, bank cards and money: hand them to the police or the venue\'s lost-property desk as well, and say so in the post.'**
+  String get helpGuideFound4;
+
+  /// No description provided for @helpGuideFound5.
+  ///
+  /// In en, this message translates to:
+  /// **'Once approved, the app matches your post with people searching for it and alerts them, in their own language.'**
+  String get helpGuideFound5;
+
+  /// No description provided for @helpGuideMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When you get a match or a message'**
+  String get helpGuideMatchTitle;
+
+  /// No description provided for @helpGuideMatchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What to do next'**
+  String get helpGuideMatchSubtitle;
+
+  /// No description provided for @helpGuideMatch1.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the matching post and compare the photo, place and time with yours.'**
+  String get helpGuideMatch1;
+
+  /// No description provided for @helpGuideMatch2.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply inside the app chat. Keep your phone number and address private until you have met.'**
+  String get helpGuideMatch2;
+
+  /// No description provided for @helpGuideMatch3.
+  ///
+  /// In en, this message translates to:
+  /// **'If you found the item, ask the claimant for a detail that is not in the post before you agree to meet.'**
+  String get helpGuideMatch3;
+
+  /// No description provided for @helpGuideMatch4.
+  ///
+  /// In en, this message translates to:
+  /// **'Not the right item? Just say so politely. Someone who pressures you, asks for money or pushes to move to another app is a red flag: block and report them.'**
+  String get helpGuideMatch4;
+
+  /// No description provided for @helpGuideVerifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Making sure it is the real owner'**
+  String get helpGuideVerifyTitle;
+
+  /// No description provided for @helpGuideVerifySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple checks that stop false claims'**
+  String get helpGuideVerifySubtitle;
+
+  /// No description provided for @helpGuideVerify1.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for something only the owner would know: what is inside, a scratch or sticker, the lock-screen photo, an engraving, the exact colour of a strap.'**
+  String get helpGuideVerify1;
+
+  /// No description provided for @helpGuideVerify2.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for a photo of the item from before it was lost, or a receipt, the box, or a serial number you can compare.'**
+  String get helpGuideVerify2;
+
+  /// No description provided for @helpGuideVerify3.
+  ///
+  /// In en, this message translates to:
+  /// **'For phones: the owner can call the number or unlock it in front of you. For keys: they can name the car or open the door.'**
+  String get helpGuideVerify3;
+
+  /// No description provided for @helpGuideVerify4.
+  ///
+  /// In en, this message translates to:
+  /// **'For documents and bank cards, hand them over only to the person named on them, with a matching ID, or to the issuing office or police.'**
+  String get helpGuideVerify4;
+
+  /// No description provided for @helpGuideVerify5.
+  ///
+  /// In en, this message translates to:
+  /// **'Never send a deposit, transfer money or share bank details to \"release\" an item. Finder never asks for payments.'**
+  String get helpGuideVerify5;
+
+  /// No description provided for @helpGuideVerify6.
+  ///
+  /// In en, this message translates to:
+  /// **'Still unsure? Ask to meet at a police station, or report the conversation and let a moderator look at it.'**
+  String get helpGuideVerify6;
+
+  /// No description provided for @helpGuideMeetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting safely'**
+  String get helpGuideMeetTitle;
+
+  /// No description provided for @helpGuideMeetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The hand-over'**
+  String get helpGuideMeetSubtitle;
+
+  /// No description provided for @helpGuideMeet1.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet in a busy public place in daylight: a mall, a café, a police station or a lost-property desk.'**
+  String get helpGuideMeet1;
+
+  /// No description provided for @helpGuideMeet2.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring a friend or tell someone where you are going and when you expect to be back.'**
+  String get helpGuideMeet2;
+
+  /// No description provided for @helpGuideMeet3.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not get into a car or go to a private home for a hand-over.'**
+  String get helpGuideMeet3;
+
+  /// No description provided for @helpGuideMeet4.
+  ///
+  /// In en, this message translates to:
+  /// **'Give a reward only after you have the item, and only if you offered one. Nobody can demand it.'**
+  String get helpGuideMeet4;
+
+  /// No description provided for @helpGuideMeet5.
+  ///
+  /// In en, this message translates to:
+  /// **'Afterwards, mark the post as Returned so the alert stops and others can celebrate with you.'**
+  String get helpGuideMeet5;
+
+  /// No description provided for @helpGuideReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporting a problem'**
+  String get helpGuideReportTitle;
+
+  /// No description provided for @helpGuideReportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts, people, bugs'**
+  String get helpGuideReportSubtitle;
+
+  /// No description provided for @helpGuideReport1.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a post from its menu and pick a reason. A moderator reviews it and can remove it or warn the author.'**
+  String get helpGuideReport1;
+
+  /// No description provided for @helpGuideReport2.
+  ///
+  /// In en, this message translates to:
+  /// **'Block a user from their profile or the chat to stop their messages. They are not told.'**
+  String get helpGuideReport2;
+
+  /// No description provided for @helpGuideReport3.
+  ///
+  /// In en, this message translates to:
+  /// **'Every new post is checked by a moderator, with an AI pre-check for scams, ads and inappropriate images. Approved posts can still be reported.'**
+  String get helpGuideReport3;
+
+  /// No description provided for @helpGuideReport4.
+  ///
+  /// In en, this message translates to:
+  /// **'Something broken? Use \"Report an issue\" below. Urgent safety matters: contact the police first.'**
+  String get helpGuideReport4;
 
   /// No description provided for @navPost.
   ///
@@ -7276,17 +7774,53 @@ abstract class AppLocalizations {
   /// **'That status is not public.'**
   String get serverThatStatusIsNotPublic;
 
-  /// No description provided for @serverNotAGoogleKey.
+  /// No description provided for @serverNotAnApiKey.
   ///
   /// In en, this message translates to:
-  /// **'That does not look like a Google AI Studio key.'**
-  String get serverNotAGoogleKey;
+  /// **'That does not look like an API key.'**
+  String get serverNotAnApiKey;
 
-  /// No description provided for @serverGoogleRejectedTheKey.
+  /// No description provided for @serverProviderRejectedTheKey.
   ///
   /// In en, this message translates to:
-  /// **'Google AI Studio rejected the key.'**
-  String get serverGoogleRejectedTheKey;
+  /// **'The provider rejected the key.'**
+  String get serverProviderRejectedTheKey;
+
+  /// No description provided for @serverModelNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Model not found.'**
+  String get serverModelNotFound;
+
+  /// No description provided for @serverModelNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A model name is required.'**
+  String get serverModelNameRequired;
+
+  /// No description provided for @serverBaseUrlRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A base URL and a model name are required for a custom provider.'**
+  String get serverBaseUrlRequired;
+
+  /// No description provided for @serverCouldNotReachProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the AI provider.'**
+  String get serverCouldNotReachProvider;
+
+  /// No description provided for @serverCouldNotLoadAiSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the AI settings.'**
+  String get serverCouldNotLoadAiSettings;
+
+  /// No description provided for @serverCouldNotRemoveAiSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove the AI settings.'**
+  String get serverCouldNotRemoveAiSettings;
 }
 
 class _AppLocalizationsDelegate

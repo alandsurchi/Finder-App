@@ -13,6 +13,32 @@ class _Faq {
   const _Faq(this.question, this.answer);
 }
 
+/// A step-by-step guide ("How Finder works").
+class _Guide {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<String> steps;
+  const _Guide(this.icon, this.title, this.subtitle, this.steps);
+}
+
+List<_Guide> _guides(AppLocalizations l) => [
+      _Guide(Icons.rocket_launch_outlined, l.helpGuideStartTitle, l.helpGuideStartSubtitle,
+          [l.helpGuideStart1, l.helpGuideStart2, l.helpGuideStart3, l.helpGuideStart4]),
+      _Guide(Icons.search_off_rounded, l.helpGuideLostTitle, l.helpGuideLostSubtitle,
+          [l.helpGuideLost1, l.helpGuideLost2, l.helpGuideLost3, l.helpGuideLost4, l.helpGuideLost5]),
+      _Guide(Icons.inventory_2_outlined, l.helpGuideFoundTitle, l.helpGuideFoundSubtitle,
+          [l.helpGuideFound1, l.helpGuideFound2, l.helpGuideFound3, l.helpGuideFound4, l.helpGuideFound5]),
+      _Guide(Icons.notifications_active_outlined, l.helpGuideMatchTitle, l.helpGuideMatchSubtitle,
+          [l.helpGuideMatch1, l.helpGuideMatch2, l.helpGuideMatch3, l.helpGuideMatch4]),
+      _Guide(Icons.verified_user_outlined, l.helpGuideVerifyTitle, l.helpGuideVerifySubtitle,
+          [l.helpGuideVerify1, l.helpGuideVerify2, l.helpGuideVerify3, l.helpGuideVerify4, l.helpGuideVerify5, l.helpGuideVerify6]),
+      _Guide(Icons.storefront_outlined, l.helpGuideMeetTitle, l.helpGuideMeetSubtitle,
+          [l.helpGuideMeet1, l.helpGuideMeet2, l.helpGuideMeet3, l.helpGuideMeet4, l.helpGuideMeet5]),
+      _Guide(Icons.flag_outlined, l.helpGuideReportTitle, l.helpGuideReportSubtitle,
+          [l.helpGuideReport1, l.helpGuideReport2, l.helpGuideReport3, l.helpGuideReport4]),
+    ];
+
 class _Topic {
   final IconData icon;
   final String title;
@@ -62,6 +88,18 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     super.dispose();
   }
 
+  List<_Guide> _guideMatches(List<_Guide> guides) {
+    final q = _query.trim().toLowerCase();
+    if (q.length < 2) return const [];
+    return [
+      for (final g in guides)
+        if (g.title.toLowerCase().contains(q) ||
+            g.subtitle.toLowerCase().contains(q) ||
+            g.steps.any((s) => s.toLowerCase().contains(q)))
+          g,
+    ];
+  }
+
   List<_Faq> _matchesIn(List<_Topic> topics) {
     final q = _query.trim().toLowerCase();
     if (q.length < 2) return const [];
@@ -78,7 +116,9 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     final topics = _topics(l10n);
+    final guides = _guides(l10n);
     final matches = _matchesIn(topics);
+    final guideMatches = _guideMatches(guides);
     final searching = _query.trim().length >= 2;
 
     return Scaffold(
@@ -136,7 +176,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                       if (searching)
                         StaggeredEntrance(
                           index: 3,
-                          child: matches.isEmpty
+                          child: matches.isEmpty && guideMatches.isEmpty
                               ? SurfaceCard(
                                   tone: SurfaceTone.low,
                                   child: Text(
@@ -145,8 +185,15 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                   ),
                                 )
                               : SettingsGroup(
-                                  title: l10n.helpAnswersCount(matches.length),
+                                  title: l10n.helpAnswersCount(matches.length + guideMatches.length),
                                   children: [
+                                    for (final g in guideMatches)
+                                      SettingsTile(
+                                        icon: g.icon,
+                                        title: g.title,
+                                        subtitle: g.subtitle,
+                                        onTap: () => _showGuide(g),
+                                      ),
                                     for (final f in matches)
                                       SettingsTile(
                                         icon: Icons.help_outline_rounded,
@@ -156,9 +203,25 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                                   ],
                                 ),
                         )
-                      else
+                      else ...[
                         StaggeredEntrance(
                           index: 3,
+                          child: SettingsGroup(
+                            title: l10n.helpGuideTitle,
+                            children: [
+                              for (final g in guides)
+                                SettingsTile(
+                                  icon: g.icon,
+                                  title: g.title,
+                                  subtitle: g.subtitle,
+                                  onTap: () => _showGuide(g),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: BeaconSpace.xl),
+                        StaggeredEntrance(
+                          index: 4,
                           child: SettingsGroup(
                             title: l10n.helpBrowseByTopic,
                             children: [
@@ -172,6 +235,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
                             ],
                           ),
                         ),
+                      ],
 
                       StaggeredEntrance(
                         index: 4,
@@ -298,6 +362,51 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       if (!mounted) return;
       ActionFeedback.showInfo(context, context.l10n.helpNoEmailApp(_kSupportEmail));
     }
+  }
+
+  void _showGuide(_Guide guide) {
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    AppBottomSheet.show<void>(
+      context,
+      builder: (sheetCtx) => AppBottomSheet(
+        title: guide.title,
+        subtitle: guide.subtitle,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < guide.steps.length; i++) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: t.primaryContainer, shape: BoxShape.circle),
+                    child: Text('${i + 1}', style: text.labelLarge?.copyWith(color: t.onPrimaryContainer)),
+                  ),
+                  const SizedBox(width: BeaconSpace.md),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(guide.steps[i], style: text.bodyMedium?.copyWith(height: 1.45)),
+                    ),
+                  ),
+                ],
+              ),
+              if (i < guide.steps.length - 1) const SizedBox(height: BeaconSpace.md),
+            ],
+            const SizedBox(height: BeaconSpace.xl),
+            AppButton.tonal(
+              label: context.l10n.helpGotIt,
+              onPressed: () => Navigator.pop(sheetCtx),
+            ),
+            const SizedBox(height: BeaconSpace.lg),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showTopic(_Topic topic) {

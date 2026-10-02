@@ -478,6 +478,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               SettingsTile(
                 icon: Icons.help_outline_rounded,
                 title: l10n.helpTitle,
+                subtitle: l10n.helpTileSubtitle,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const HelpSupportScreen()),

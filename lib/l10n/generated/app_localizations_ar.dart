@@ -478,37 +478,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authLegalAgreeSuffix => '.';
 
   @override
-  String get onboardLostTitle => 'فقدت شيئًا؟';
+  String get onboardLostTitle => 'فقدت شيئًا؟ انشره في دقيقة';
 
   @override
   String get onboardLostDescription =>
-      'أبلغ عن أغراضك المفقودة في ثوانٍ. يربط Finder الأغراض الموجودة بأصحابها فورًا.';
+      'أضف صورة ومكان وزمان فقدانه. يعرضه Finder على القريبين منك وينبّهك فور ظهور تطابق.';
 
   @override
-  String get onboardFoundTitle => 'وجدت شيئًا؟';
+  String get onboardFoundTitle => 'وجدت شيئًا؟ ساعده يعود إلى بيته';
 
   @override
   String get onboardFoundDescription =>
-      'انشر الأغراض التي وجدتها وساعد في إعادتها إلى أصحابها. كل عمل طيب له قيمة.';
+      'انشر ما وجدته. يراجع شخص كل منشور، ويطابقه التطبيق مع من يبحثون عنه بلغتهم.';
 
   @override
-  String get onboardConnectTitle => 'تواصل\nوتحاور';
+  String get onboardConnectTitle => 'تحدّث، تحقّق، وأعده بأمان';
 
   @override
   String get onboardConnectDescription =>
-      'تحدث، شارك التفاصيل، وأعد الأغراض بأمان. ابنِ الثقة داخل المجتمع.';
+      'راسل داخل التطبيق، واسأل عن تفصيل لا يعرفه إلا المالك، والتقِ في مكان عام. يشرح لك قسم المساعدة والدعم كل خطوة.';
 
   @override
   String get onboardGetStarted => 'ابدأ الآن';
-
-  @override
-  String get onboardSkipForNow => 'التخطي الآن';
-
-  @override
-  String get onboardRewardSample => 'مكافأة 50\$';
-
-  @override
-  String get onboardTrustSecured => 'ثقة مضمونة';
 
   @override
   String get legalOpenWebVersion => 'فتح نسخة الويب';
@@ -1249,29 +1240,111 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminAiTitle => 'مساعد الذكاء الاصطناعي';
 
   @override
-  String get adminAiSubtitle => 'مفتاح Gemini للترجمة والفحص المسبق';
-
-  @override
-  String adminAiConfigured(String model) {
-    return 'مُفعّل · $model';
-  }
+  String get adminAiSubtitle =>
+      'المزوّد والنموذج والمفتاح للترجمة والفحص المسبق';
 
   @override
   String get adminAiNotConfigured =>
       'غير مُفعّل. لا تتم ترجمة المنشورات أو فحصها مسبقًا.';
 
   @override
-  String get adminAiKeyLabel => 'مفتاح Google AI Studio';
+  String get adminAiKeyLabel => 'مفتاح API';
 
   @override
-  String get adminAiKeyHint => 'الصق المفتاح من aistudio.google.com';
-
-  @override
-  String get adminAiKeySaved => 'تم حفظ مفتاح الذكاء الاصطناعي والتحقق منه.';
+  String get adminAiKeyHint => 'الصق المفتاح من لوحة تحكم المزوّد';
 
   @override
   String get adminAiKeyBody =>
-      'يُخزَّن المفتاح على الخادم فقط. يكلّف كل منشور جديد نحو سنت واحد للترجمة وفحص الخطر.';
+      'يُتحقَّق من المفتاح مرة واحدة ويُخزَّن مشفّرًا على الخادم ولا يُعرض مجددًا. يعمل لجميع المستخدمين فورًا. يكلّف كل منشور جديد نحو سنت واحد على أرخص النماذج.';
+
+  @override
+  String get adminAiProvider => 'المزوّد';
+
+  @override
+  String get adminAiModelLabel => 'النموذج';
+
+  @override
+  String get adminAiModelHint => 'اترك الافتراضي ما لم تكن متأكدًا';
+
+  @override
+  String get adminAiBaseUrlLabel => 'الرابط الأساسي';
+
+  @override
+  String get adminAiBaseUrlHint => 'https://openrouter.ai/api/v1';
+
+  @override
+  String get adminAiKeyHintReplace => 'الصق مفتاحًا جديدًا لاستبدال المحفوظ';
+
+  @override
+  String get adminAiSourceDb => 'محفوظ من التطبيق';
+
+  @override
+  String get adminAiSourceEnv => 'مضبوط على الخادم';
+
+  @override
+  String get adminAiSourceNone => 'غير مضبوط';
+
+  @override
+  String adminAiBacklog(int translations, int scores) {
+    return '$translations منشورًا بانتظار الترجمة · $scores بانتظار تقييم الخطر';
+  }
+
+  @override
+  String adminAiSaved(int count) {
+    return 'تم التحقق من المفتاح. تجري ترجمة $count منشورًا للجميع…';
+  }
+
+  @override
+  String get adminAiRemove => 'إزالة المفتاح';
+
+  @override
+  String get adminAiRemoveBody =>
+      'ستتوقف ترجمة المنشورات الجديدة وفحصها المسبق حتى يُحفظ مفتاح من جديد.';
+
+  @override
+  String get adminAiRemoved => 'تمت إزالة إعدادات الذكاء الاصطناعي.';
+
+  @override
+  String get onboardStepReport => 'الخطوة 1 · أبلغ';
+
+  @override
+  String get onboardStepMatch => 'الخطوة 2 · طابق';
+
+  @override
+  String get onboardStepReturn => 'الخطوة 3 · أعد';
+
+  @override
+  String get onboardHaveAccount => 'لديّ حساب بالفعل';
+
+  @override
+  String get onboardSampleLost => 'مفقود';
+
+  @override
+  String get onboardSampleFound => 'موجود';
+
+  @override
+  String get onboardSamplePlace => 'أربيل · فاملي مول';
+
+  @override
+  String get onboardSampleMinute => 'نُشر خلال دقيقة';
+
+  @override
+  String get onboardSampleMatch => 'تطابق 92%';
+
+  @override
+  String get onboardSampleReviewed => 'تمت المراجعة';
+
+  @override
+  String get onboardSampleAsk => 'ما المنقوش على الخلف؟';
+
+  @override
+  String get onboardSampleAnswer => 'الحرفان الأولان من اسمي، أ.س 😊';
+
+  @override
+  String get onboardSampleVerified => 'تم التحقق من المالك';
+
+  @override
+  String get onboardSampleMeet => 'اللقاء في مكان عام';
 
   @override
   String get chatConversationTitle => 'المحادثة';
@@ -2599,6 +2672,225 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chatOpenPhoto => 'فتح الصورة';
+
+  @override
+  String get welcomeTitle => 'أهلًا بك في Finder';
+
+  @override
+  String get welcomeSubtitle =>
+      'المفقودات والموجودات في مدينتك: يراجعها أشخاص، وتُطابَق لك، وبلغتك.';
+
+  @override
+  String get welcomeStep1Title => 'انشره';
+
+  @override
+  String get welcomeStep1Body =>
+      'مفقود أو موجود، أضف صورة والمكان. يفحصه مشرف قبل أن يظهر للجميع.';
+
+  @override
+  String get welcomeStep2Title => 'احصل على تطابق';
+
+  @override
+  String get welcomeStep2Body =>
+      'ننبّهك عندما يطابق منشور منشورك، ونعرض كل المنشورات بلغة تطبيقك.';
+
+  @override
+  String get welcomeStep3Title => 'أعده بأمان';
+
+  @override
+  String get welcomeStep3Body =>
+      'تحدّث هنا، واسأل عن تفصيل لا يعرفه إلا المالك، والتقِ في مكان عام.';
+
+  @override
+  String get welcomeHelpHint =>
+      'تجد أدلة خطوة بخطوة، بما فيها كيفية التأكد من أنك تتحدث مع المالك الحقيقي، في الملف الشخصي ← المساعدة والدعم.';
+
+  @override
+  String get welcomeGotIt => 'فهمت';
+
+  @override
+  String get welcomeOpenHelp => 'افتح المساعدة والدعم';
+
+  @override
+  String get helpTileSubtitle => 'أدلة ونصائح أمان وتواصل';
+
+  @override
+  String get helpGuideTitle => 'كيف يعمل Finder';
+
+  @override
+  String get helpGuideStartTitle => 'البداية';
+
+  @override
+  String get helpGuideStartSubtitle =>
+      'اللغة والملف الشخصي والإشعارات والشارات';
+
+  @override
+  String get helpGuideStart1 =>
+      'اختر لغتك من أيقونة الترجمة في شاشة تسجيل الدخول أو في الملف الشخصي. تُعرض كل المنشورات بتلك اللغة.';
+
+  @override
+  String get helpGuideStart2 =>
+      'أكمل ملفك الشخصي باسم حقيقي وصورة: الناس أكثر استعدادًا لإعادة غرض إلى شخص يمكنهم التعرف عليه.';
+
+  @override
+  String get helpGuideStart3 =>
+      'اسمح بالإشعارات لتعرف بالتطابقات والرسائل فورًا.';
+
+  @override
+  String get helpGuideStart4 =>
+      'الشارات: «قيد المراجعة» تعني أن مشرفًا ما زال يفحص المنشور، «منشور» تعني أن الجميع يراه، «أُعيد» تعني أن الغرض عاد إلى مالكه.';
+
+  @override
+  String get helpGuideLostTitle => 'نشر غرض مفقود';
+
+  @override
+  String get helpGuideLostSubtitle => 'ماذا تذكر وماذا تحتفظ به';
+
+  @override
+  String get helpGuideLost1 =>
+      'أضف صورة واضحة للغرض أو للطراز نفسه ليتعرف عليه الناس بنظرة واحدة.';
+
+  @override
+  String get helpGuideLost2 =>
+      'حدّد المكان بدقة ووقت آخر مرة كان معك. يرى القريبون منشورك أولًا.';
+
+  @override
+  String get helpGuideLost3 =>
+      'صفه، لكن احتفظ بتفصيل أو اثنين لنفسك (خدش، المحتويات، نقش). ستستخدمها للتأكد من أن من وجده يملكه فعلًا.';
+
+  @override
+  String get helpGuideLost4 =>
+      'المكافأة اختيارية. لا تدفع شيئًا أبدًا قبل أن يكون الغرض في يدك.';
+
+  @override
+  String get helpGuideLost5 =>
+      'يظهر منشورك «قيد المراجعة» حتى يوافق عليه مشرف، عادةً خلال ساعات. تصلك إشعارات عند نشره وكلما طابقه منشور موجودات.';
+
+  @override
+  String get helpGuideFoundTitle => 'نشر غرض موجود';
+
+  @override
+  String get helpGuideFoundSubtitle => 'احمِ المالك بينما تبحث عنه';
+
+  @override
+  String get helpGuideFound1 =>
+      'صوّر الغرض، لكن أخفِ أي شيء شخصي: الأسماء وأرقام الهوية والبطاقات المصرفية والعناوين وشاشات الهواتف.';
+
+  @override
+  String get helpGuideFound2 =>
+      'لا تنشر الأرقام التسلسلية أو IMEI أو محتويات المحفظة أو الحقيبة. احتفظ بها للتحقق من المطالبات.';
+
+  @override
+  String get helpGuideFound3 =>
+      'اذكر أين ومتى وجدته وأين هو الآن تقريبًا. لست مضطرًا لمشاركة عنوان منزلك.';
+
+  @override
+  String get helpGuideFound4 =>
+      'المستندات وجوازات السفر والهواتف والبطاقات المصرفية والنقود: سلّمها أيضًا إلى الشرطة أو مكتب المفقودات في المكان، واذكر ذلك في المنشور.';
+
+  @override
+  String get helpGuideFound5 =>
+      'بعد الموافقة، يطابق التطبيق منشورك مع من يبحثون عنه وينبّههم بلغتهم.';
+
+  @override
+  String get helpGuideMatchTitle => 'عند وصول تطابق أو رسالة';
+
+  @override
+  String get helpGuideMatchSubtitle => 'ما الخطوة التالية';
+
+  @override
+  String get helpGuideMatch1 =>
+      'افتح المنشور المطابق وقارن الصورة والمكان والوقت مع منشورك.';
+
+  @override
+  String get helpGuideMatch2 =>
+      'ردّ داخل محادثة التطبيق. أبقِ رقم هاتفك وعنوانك خاصّين حتى تلتقيا.';
+
+  @override
+  String get helpGuideMatch3 =>
+      'إذا كنت من وجد الغرض، اطلب من المدّعي تفصيلًا غير مذكور في المنشور قبل الموافقة على اللقاء.';
+
+  @override
+  String get helpGuideMatch4 =>
+      'ليس الغرض الصحيح؟ قل ذلك بلطف. من يضغط عليك أو يطلب مالًا أو يدفعك للانتقال إلى تطبيق آخر فهذه علامة خطر: احظره وأبلغ عنه.';
+
+  @override
+  String get helpGuideVerifyTitle => 'التأكد من أنه المالك الحقيقي';
+
+  @override
+  String get helpGuideVerifySubtitle => 'فحوصات بسيطة توقف الادعاءات الكاذبة';
+
+  @override
+  String get helpGuideVerify1 =>
+      'اسأل عن شيء لا يعرفه إلا المالك: ما بداخله، خدش أو ملصق، صورة شاشة القفل، نقش، اللون الدقيق للحزام.';
+
+  @override
+  String get helpGuideVerify2 =>
+      'اطلب صورة للغرض من قبل فقدانه، أو إيصالًا أو العلبة أو رقمًا تسلسليًا يمكنك مقارنته.';
+
+  @override
+  String get helpGuideVerify3 =>
+      'للهواتف: يمكن للمالك الاتصال بالرقم أو فتح القفل أمامك. للمفاتيح: يمكنه ذكر السيارة أو فتح الباب.';
+
+  @override
+  String get helpGuideVerify4 =>
+      'للمستندات والبطاقات المصرفية، سلّمها فقط إلى الشخص المذكور اسمه عليها مع هوية مطابقة، أو إلى الجهة المصدرة أو الشرطة.';
+
+  @override
+  String get helpGuideVerify5 =>
+      'لا ترسل عربونًا أو تحوّل مالًا أو تشارك بياناتك المصرفية «لتحرير» غرض. لا يطلب Finder أي مدفوعات أبدًا.';
+
+  @override
+  String get helpGuideVerify6 =>
+      'ما زلت غير متأكد؟ اطلب اللقاء في مركز شرطة، أو أبلغ عن المحادثة ودع مشرفًا يطّلع عليها.';
+
+  @override
+  String get helpGuideMeetTitle => 'اللقاء بأمان';
+
+  @override
+  String get helpGuideMeetSubtitle => 'التسليم';
+
+  @override
+  String get helpGuideMeet1 =>
+      'التقِ في مكان عام مزدحم ونهارًا: مول أو مقهى أو مركز شرطة أو مكتب مفقودات.';
+
+  @override
+  String get helpGuideMeet2 =>
+      'اصطحب صديقًا أو أخبر أحدًا إلى أين تذهب ومتى تتوقع العودة.';
+
+  @override
+  String get helpGuideMeet3 =>
+      'لا تركب سيارة ولا تذهب إلى منزل خاص من أجل التسليم.';
+
+  @override
+  String get helpGuideMeet4 =>
+      'قدّم المكافأة فقط بعد استلام الغرض، وفقط إن كنت قد عرضتها. لا يحق لأحد المطالبة بها.';
+
+  @override
+  String get helpGuideMeet5 =>
+      'بعد ذلك، علّم المنشور بأنه «أُعيد» ليتوقف التنبيه ويحتفل الآخرون معك.';
+
+  @override
+  String get helpGuideReportTitle => 'الإبلاغ عن مشكلة';
+
+  @override
+  String get helpGuideReportSubtitle => 'المنشورات والأشخاص والأعطال';
+
+  @override
+  String get helpGuideReport1 =>
+      'أبلغ عن منشور من قائمته واختر سببًا. يراجعه مشرف ويمكنه إزالته أو تحذير صاحبه.';
+
+  @override
+  String get helpGuideReport2 =>
+      'احظر مستخدمًا من ملفه الشخصي أو من المحادثة لإيقاف رسائله. لن يُخبر بذلك.';
+
+  @override
+  String get helpGuideReport3 =>
+      'يفحص مشرف كل منشور جديد، مع فحص مسبق بالذكاء الاصطناعي للاحتيال والإعلانات والصور غير اللائقة. ويظل بالإمكان الإبلاغ عن المنشورات الموافق عليها.';
+
+  @override
+  String get helpGuideReport4 =>
+      'شيء لا يعمل؟ استخدم «الإبلاغ عن مشكلة» أدناه. في حالات الأمان الطارئة: اتصل بالشرطة أولًا.';
 
   @override
   String get navPost => 'نشر';
@@ -4108,8 +4400,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get serverThatStatusIsNotPublic => 'هذه الحالة غير متاحة للعامة.';
 
   @override
-  String get serverNotAGoogleKey => 'لا يبدو هذا مفتاح Google AI Studio.';
+  String get serverNotAnApiKey => 'لا يبدو هذا مفتاح API.';
 
   @override
-  String get serverGoogleRejectedTheKey => 'رفض Google AI Studio المفتاح.';
+  String get serverProviderRejectedTheKey => 'رفض المزوّد المفتاح.';
+
+  @override
+  String get serverModelNotFound => 'النموذج غير موجود.';
+
+  @override
+  String get serverModelNameRequired => 'اسم النموذج مطلوب.';
+
+  @override
+  String get serverBaseUrlRequired =>
+      'الرابط الأساسي واسم النموذج مطلوبان للمزوّد المخصص.';
+
+  @override
+  String get serverCouldNotReachProvider =>
+      'تعذّر الوصول إلى مزوّد الذكاء الاصطناعي.';
+
+  @override
+  String get serverCouldNotLoadAiSettings =>
+      'تعذّر تحميل إعدادات الذكاء الاصطناعي.';
+
+  @override
+  String get serverCouldNotRemoveAiSettings =>
+      'تعذّرت إزالة إعدادات الذكاء الاصطناعي.';
 }

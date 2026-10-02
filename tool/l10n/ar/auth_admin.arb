@@ -68,16 +68,13 @@
   "authLegalAgreePrefix": "بإنشاء حساب فإنك توافق على ",
   "authLegalAgreeAnd": " و",
   "authLegalAgreeSuffix": ".",
-  "onboardLostTitle": "فقدت شيئًا؟",
-  "onboardLostDescription": "أبلغ عن أغراضك المفقودة في ثوانٍ. يربط Finder الأغراض الموجودة بأصحابها فورًا.",
-  "onboardFoundTitle": "وجدت شيئًا؟",
-  "onboardFoundDescription": "انشر الأغراض التي وجدتها وساعد في إعادتها إلى أصحابها. كل عمل طيب له قيمة.",
-  "onboardConnectTitle": "تواصل\nوتحاور",
-  "onboardConnectDescription": "تحدث، شارك التفاصيل، وأعد الأغراض بأمان. ابنِ الثقة داخل المجتمع.",
+  "onboardLostTitle": "فقدت شيئًا؟ انشره في دقيقة",
+  "onboardLostDescription": "أضف صورة ومكان وزمان فقدانه. يعرضه Finder على القريبين منك وينبّهك فور ظهور تطابق.",
+  "onboardFoundTitle": "وجدت شيئًا؟ ساعده يعود إلى بيته",
+  "onboardFoundDescription": "انشر ما وجدته. يراجع شخص كل منشور، ويطابقه التطبيق مع من يبحثون عنه بلغتهم.",
+  "onboardConnectTitle": "تحدّث، تحقّق، وأعده بأمان",
+  "onboardConnectDescription": "راسل داخل التطبيق، واسأل عن تفصيل لا يعرفه إلا المالك، والتقِ في مكان عام. يشرح لك قسم المساعدة والدعم كل خطوة.",
   "onboardGetStarted": "ابدأ الآن",
-  "onboardSkipForNow": "التخطي الآن",
-  "onboardRewardSample": "مكافأة 50$",
-  "onboardTrustSecured": "ثقة مضمونة",
   "legalOpenWebVersion": "فتح نسخة الويب",
   "legalCouldNotOpen": "تعذّر فتح {url}",
   "legalPrivacyTitle": "سياسة الخصوصية",
@@ -286,11 +283,54 @@
   "adminStatusRejected": "مرفوض",
   "adminStatusExpired": "مؤرشف",
   "adminAiTitle": "مساعد الذكاء الاصطناعي",
-  "adminAiSubtitle": "مفتاح Gemini للترجمة والفحص المسبق",
-  "adminAiConfigured": "مُفعّل · {model}",
+  "adminAiSubtitle": "المزوّد والنموذج والمفتاح للترجمة والفحص المسبق",
   "adminAiNotConfigured": "غير مُفعّل. لا تتم ترجمة المنشورات أو فحصها مسبقًا.",
-  "adminAiKeyLabel": "مفتاح Google AI Studio",
-  "adminAiKeyHint": "الصق المفتاح من aistudio.google.com",
-  "adminAiKeySaved": "تم حفظ مفتاح الذكاء الاصطناعي والتحقق منه.",
-  "adminAiKeyBody": "يُخزَّن المفتاح على الخادم فقط. يكلّف كل منشور جديد نحو سنت واحد للترجمة وفحص الخطر."
+  "adminAiKeyLabel": "مفتاح API",
+  "adminAiKeyHint": "الصق المفتاح من لوحة تحكم المزوّد",
+  "adminAiKeyBody": "يُتحقَّق من المفتاح مرة واحدة ويُخزَّن مشفّرًا على الخادم ولا يُعرض مجددًا. يعمل لجميع المستخدمين فورًا. يكلّف كل منشور جديد نحو سنت واحد على أرخص النماذج.",
+  "adminAiProvider": "المزوّد",
+  "adminAiModelLabel": "النموذج",
+  "adminAiModelHint": "اترك الافتراضي ما لم تكن متأكدًا",
+  "adminAiBaseUrlLabel": "الرابط الأساسي",
+  "adminAiBaseUrlHint": "https://openrouter.ai/api/v1",
+  "adminAiKeyHintReplace": "الصق مفتاحًا جديدًا لاستبدال المحفوظ",
+  "adminAiSourceDb": "محفوظ من التطبيق",
+  "adminAiSourceEnv": "مضبوط على الخادم",
+  "adminAiSourceNone": "غير مضبوط",
+  "adminAiBacklog": "{translations} منشورًا بانتظار الترجمة · {scores} بانتظار تقييم الخطر",
+  "@adminAiBacklog": {
+    "placeholders": {
+      "translations": {
+        "type": "int"
+      },
+      "scores": {
+        "type": "int"
+      }
+    }
+  },
+  "adminAiSaved": "تم التحقق من المفتاح. تجري ترجمة {count} منشورًا للجميع…",
+  "@adminAiSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminAiRemove": "إزالة المفتاح",
+  "adminAiRemoveBody": "ستتوقف ترجمة المنشورات الجديدة وفحصها المسبق حتى يُحفظ مفتاح من جديد.",
+  "adminAiRemoved": "تمت إزالة إعدادات الذكاء الاصطناعي.",
+  "onboardStepReport": "الخطوة 1 · أبلغ",
+  "onboardStepMatch": "الخطوة 2 · طابق",
+  "onboardStepReturn": "الخطوة 3 · أعد",
+  "onboardHaveAccount": "لديّ حساب بالفعل",
+  "onboardSampleLost": "مفقود",
+  "onboardSampleFound": "موجود",
+  "onboardSamplePlace": "أربيل · فاملي مول",
+  "onboardSampleMinute": "نُشر خلال دقيقة",
+  "onboardSampleMatch": "تطابق 92%",
+  "onboardSampleReviewed": "تمت المراجعة",
+  "onboardSampleAsk": "ما المنقوش على الخلف؟",
+  "onboardSampleAnswer": "الحرفان الأولان من اسمي، أ.س 😊",
+  "onboardSampleVerified": "تم التحقق من المالك",
+  "onboardSampleMeet": "اللقاء في مكان عام"
 }
