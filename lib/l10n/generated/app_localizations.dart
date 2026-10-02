@@ -2416,6 +2416,42 @@ abstract class AppLocalizations {
   /// **'Meet in public'**
   String get onboardSampleMeet;
 
+  /// No description provided for @adminFilterExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get adminFilterExpired;
+
+  /// No description provided for @adminTakeDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject & take down'**
+  String get adminTakeDown;
+
+  /// No description provided for @adminTakeDownSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hides it from everyone; the owner gets your reason'**
+  String get adminTakeDownSubtitle;
+
+  /// No description provided for @adminApproveAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve and publish'**
+  String get adminApproveAgain;
+
+  /// No description provided for @adminApproveAgainSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes the post live again'**
+  String get adminApproveAgainSubtitle;
+
+  /// No description provided for @adminPostTakenDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Post taken down.'**
+  String get adminPostTakenDown;
+
   /// No description provided for @chatConversationTitle.
   ///
   /// In en, this message translates to:

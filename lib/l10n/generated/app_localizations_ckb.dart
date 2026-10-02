@@ -1357,6 +1357,25 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get onboardSampleMeet => 'لە شوێنی گشتی یەکتر ببینن';
 
   @override
+  String get adminFilterExpired => 'ئەرشیفکراو';
+
+  @override
+  String get adminTakeDown => 'ڕەتکردنەوە و لابردن';
+
+  @override
+  String get adminTakeDownSubtitle =>
+      'لە هەمووان دەیشارێتەوە؛ هۆکارەکەت دەگاتە خاوەنەکەی';
+
+  @override
+  String get adminApproveAgain => 'پەسەندکردن و بڵاوکردنەوە';
+
+  @override
+  String get adminApproveAgainSubtitle => 'پۆستەکە دووبارە بڵاو دەکاتەوە';
+
+  @override
+  String get adminPostTakenDown => 'پۆستەکە لابرا.';
+
+  @override
   String get chatConversationTitle => 'گفتوگۆ';
 
   @override

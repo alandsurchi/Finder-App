@@ -14,7 +14,6 @@ import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
-import 'package:finder/widgets/ui/identity_marks.dart';
 import 'package:finder/widgets/ui/ui.dart';
 
 /// Admin: the approval queue first, then every post with moderation actions.
@@ -27,7 +26,7 @@ class AdminPostsScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
-  static const _statuses = ['pending', 'all', 'active', 'resolved', 'rejected', 'reported'];
+  static const _statuses = ['pending', 'all', 'active', 'resolved', 'rejected', 'expired', 'reported'];
   final _search = TextEditingController();
   Timer? _debounce;
   late int _tab = _statuses.indexOf(widget.initialStatus).clamp(0, _statuses.length - 1);
@@ -78,22 +77,20 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                     onChanged: _onQuery,
                   ),
                   const SizedBox(height: BeaconSpace.md),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SegmentedPills(
-                      options: [
-                        pendingCount == null || pendingCount == 0
-                            ? l10n.adminFilterPending
-                            : l10n.adminFilterPendingCount(pendingCount),
-                        l10n.adminFilterAll,
-                        l10n.adminFilterOpen,
-                        l10n.commonReturned,
-                        l10n.adminFilterRejected,
-                        l10n.adminFilterReported,
-                      ],
-                      selectedIndex: _tab,
-                      onChanged: (i) => setState(() => _tab = i),
-                    ),
+                  _StatusFilters(
+                    labels: [
+                      pendingCount == null || pendingCount == 0
+                          ? l10n.adminFilterPending
+                          : l10n.adminFilterPendingCount(pendingCount),
+                      l10n.adminFilterAll,
+                      l10n.adminFilterOpen,
+                      l10n.commonReturned,
+                      l10n.adminFilterRejected,
+                      l10n.adminFilterExpired,
+                      l10n.adminFilterReported,
+                    ],
+                    selected: _tab,
+                    onChanged: (i) => setState(() => _tab = i),
                   ),
                 ],
               ),
@@ -252,19 +249,40 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
             const SizedBox(height: BeaconSpace.lg),
             _RiskMeter(risk: item.aiRisk, reasons: item.aiReasons),
             const SizedBox(height: BeaconSpace.md),
-            AppButton.ghost(
-              label: l10n.adminOpenThePost,
+            SheetOption(
               icon: Icons.open_in_new_rounded,
-              expand: false,
-              onPressed: () {
+              label: l10n.adminOpenThePost,
+              onTap: () {
                 Navigator.pop(sheetCtx);
                 Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: item);
               },
+            ),
+            SheetOption(
+              icon: Icons.delete_outline_rounded,
+              label: l10n.adminRemoveThePost,
+              subtitle: l10n.adminRemovePostOwnerNotified,
+              destructive: true,
+              onTap: () => _delete(sheetCtx, item),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _delete(BuildContext sheetCtx, ItemModel item) async {
+    final l10n = context.l10n;
+    Navigator.pop(sheetCtx);
+    final reason = await _askReason();
+    if (reason == null || !mounted) return;
+    try {
+      await ref.read(adminConsoleServiceProvider).deletePost(item.id, reason: reason);
+      if (!mounted) return;
+      ActionFeedback.showSuccess(context, l10n.adminPostRemoved);
+      _refresh();
+    } catch (e) {
+      if (mounted) ActionFeedback.showError(context, describeError(e));
+    }
   }
 
   Future<String?> _askRejectReason() {
@@ -347,24 +365,39 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                   item.isActive ? l10n.commonMarkedAsReturned : l10n.adminPostReopened,
                 ),
               ),
+            if (item.isRejected)
+              SheetOption(
+                icon: Icons.check_circle_outline_rounded,
+                label: l10n.adminApproveAgain,
+                subtitle: l10n.adminApproveAgainSubtitle,
+                onTap: () => _run(
+                  sheetCtx,
+                  () => ref.read(adminConsoleServiceProvider).approvePost(item.id),
+                  l10n.adminPostApproved,
+                ),
+              )
+            else
+              SheetOption(
+                icon: Icons.block_rounded,
+                label: l10n.adminTakeDown,
+                subtitle: l10n.adminTakeDownSubtitle,
+                destructive: true,
+                onTap: () async {
+                  Navigator.pop(sheetCtx);
+                  final reason = await _askRejectReason();
+                  if (reason == null || reason.isEmpty || !mounted) return;
+                  await _act(
+                    () => ref.read(adminConsoleServiceProvider).rejectPost(item.id, reason),
+                    l10n.adminPostTakenDown,
+                  );
+                },
+              ),
             SheetOption(
               icon: Icons.delete_outline_rounded,
               label: l10n.adminRemoveThePost,
               subtitle: l10n.adminRemovePostOwnerNotified,
               destructive: true,
-              onTap: () async {
-                Navigator.pop(sheetCtx);
-                final reason = await _askReason();
-                if (reason == null || !mounted) return;
-                try {
-                  await ref.read(adminConsoleServiceProvider).deletePost(item.id, reason: reason);
-                  if (!mounted) return;
-                  ActionFeedback.showSuccess(context, l10n.adminPostRemoved);
-                  _refresh();
-                } catch (e) {
-                  if (mounted) ActionFeedback.showError(context, describeError(e));
-                }
-              },
+              onTap: () => _delete(sheetCtx, item),
             ),
             const SizedBox(height: BeaconSpace.lg),
           ],
@@ -494,6 +527,36 @@ class _RiskMeter extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Status filters: one row of pills that scrolls sideways, each sized to its
+/// label, with a gap between them (the equal-width segmented control squashed
+/// seven labels together).
+class _StatusFilters extends StatelessWidget {
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+  const _StatusFilters({required this.labels, required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        itemCount: labels.length,
+        separatorBuilder: (_, __) => const SizedBox(width: BeaconSpace.sm),
+        itemBuilder: (context, i) => Center(
+          child: AppChoiceChip(
+            label: labels[i],
+            selected: i == selected,
+            onTap: () => onChanged(i),
+          ),
+        ),
       ),
     );
   }

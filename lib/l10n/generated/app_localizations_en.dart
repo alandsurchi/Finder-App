@@ -1348,6 +1348,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardSampleMeet => 'Meet in public';
 
   @override
+  String get adminFilterExpired => 'Archived';
+
+  @override
+  String get adminTakeDown => 'Reject & take down';
+
+  @override
+  String get adminTakeDownSubtitle =>
+      'Hides it from everyone; the owner gets your reason';
+
+  @override
+  String get adminApproveAgain => 'Approve and publish';
+
+  @override
+  String get adminApproveAgainSubtitle => 'Makes the post live again';
+
+  @override
+  String get adminPostTakenDown => 'Post taken down.';
+
+  @override
   String get chatConversationTitle => 'Conversation';
 
   @override
