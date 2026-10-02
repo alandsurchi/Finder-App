@@ -1,3 +1,4 @@
+import 'package:finder/screens/admin/admin_posts_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/router/root_navigator.dart';
@@ -45,6 +46,12 @@ Future<void> openNotificationTarget(
 
   if (type == 'verification') {
     nav.pushNamed(AppRoutes.getVerified);
+    return;
+  }
+
+  if (type == 'post_review') {
+    // Admin: a post is waiting for approval; open the queue.
+    nav.push(MaterialPageRoute(builder: (_) => const AdminPostsScreen(initialStatus: 'pending')));
     return;
   }
 

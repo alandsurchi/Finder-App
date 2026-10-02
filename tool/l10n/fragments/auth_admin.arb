@@ -1,6 +1,5 @@
 {
   "@@locale": "en",
-
   "authLoginTitle": "Welcome back",
   "authLoginSubtitle": "Log in to continue finding what matters.",
   "authEmailLabel": "Email",
@@ -15,7 +14,6 @@
   "authSignUp": "Sign up",
   "authInvalidEmail": "Enter a valid email address.",
   "authPasswordMin6": "Password must be at least 6 characters.",
-
   "authSignupTitle": "Create your account",
   "authSignupSubtitle": "Report and track lost & found items with the community.",
   "authEmailAddressLabel": "Email address",
@@ -31,7 +29,6 @@
   "authSignUpWithGoogle": "Sign up with Google",
   "authHaveAccountPrompt": "Already have an account?",
   "authLogIn": "Log in",
-
   "authForgotInvalidEmail": "Please enter a valid email address",
   "authForgotCodeSent": "Verification code sent! Check your inbox or console logs.",
   "authForgotCodeResent": "New verification code sent! Check your inbox or console logs.",
@@ -43,7 +40,13 @@
   "authForgotSubtitle": "Enter your email address and we will send you a 6-digit verification code.",
   "authForgotCheckInboxTitle": "Check your inbox",
   "authForgotCheckInboxSubtitle": "Enter the 6-digit verification code sent to {email}.",
-  "@authForgotCheckInboxSubtitle": {"placeholders": {"email": {"type": "String"}}},
+  "@authForgotCheckInboxSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
   "authForgotNewPasswordTitle": "Set a new password",
   "authForgotNewPasswordSubtitle": "Create a secure new password for your account.",
   "authForgotSendCode": "Send verification code",
@@ -59,14 +62,12 @@
   "authConfirmPasswordHint": "Retype new password",
   "authResetPassword": "Reset password",
   "authStartOver": "Start over / change email",
-
   "authVerifyEnterCode": "Please enter the 6-digit verification code.",
   "authVerifiedWelcome": "Account verified. Welcome to Finder!",
   "authVerifyCodeResent": "A new verification code has been sent to your email.",
   "authVerifyTitle": "Verify your email",
   "authVerifySubtitle": "We sent a 6-digit verification code to your registered email address. Enter it below to activate your account.",
   "authVerifyAccount": "Verify account",
-
   "authGoogleCancelled": "Google sign-in was cancelled by the user.",
   "authGoogleTokenFailed": "Failed to retrieve Google ID token.",
   "authSessionExpired": "Your session has expired. Please sign in again.",
@@ -74,7 +75,6 @@
   "authLegalAgreePrefix": "By creating an account you agree to the ",
   "authLegalAgreeAnd": " and the ",
   "authLegalAgreeSuffix": ".",
-
   "onboardLostTitle": "Lost Something?",
   "onboardLostDescription": "Report your missing essentials in seconds. Finder connects found items with their owners instantly.",
   "onboardFoundTitle": "Found Something?",
@@ -85,10 +85,15 @@
   "onboardSkipForNow": "Skip for now",
   "onboardRewardSample": "REWARD $50",
   "onboardTrustSecured": "TRUST SECURED",
-
   "legalOpenWebVersion": "Open web version",
   "legalCouldNotOpen": "Could not open {url}",
-  "@legalCouldNotOpen": {"placeholders": {"url": {"type": "String"}}},
+  "@legalCouldNotOpen": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "legalPrivacyTitle": "Privacy Policy",
   "legalTermsTitle": "Terms of Service",
   "legalUpdated": "Last updated 13 September 2026",
@@ -139,7 +144,6 @@
   "legalTerms9Body": "You can delete your account at any time from Privacy & safety. We can terminate accounts that violate these terms.",
   "legalTerms10Heading": "10. Contact",
   "legalTerms10Body": "Questions about these terms: support@finder.app",
-
   "adminConsoleTitle": "Admin console",
   "adminConsoleSubtitle": "Users, posts, reports and verification",
   "adminModeration": "Moderation",
@@ -156,7 +160,6 @@
   "adminStatToVerify": "To verify",
   "adminSuspendedLabel": "Suspended",
   "adminStatMessages24h": "Messages 24h",
-
   "adminPostsSubtitle": "Everything on the feed",
   "adminPostsSearchHint": "Title, description, owner",
   "adminFilterAll": "All",
@@ -169,7 +172,16 @@
   "adminFilterRejected": "Rejected",
   "adminNoPostsHere": "No posts here",
   "adminPostSheetSubtitle": "by {owner} · {status}",
-  "@adminPostSheetSubtitle": {"placeholders": {"owner": {"type": "String"}, "status": {"type": "String"}}},
+  "@adminPostSheetSubtitle": {
+    "placeholders": {
+      "owner": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
   "adminStatusReturned": "returned",
   "adminStatusOpen": "open",
   "adminOpenThePost": "Open the post",
@@ -182,25 +194,50 @@
   "adminRemovePostReasonSubtitle": "A short reason is sent to the owner.",
   "adminReasonOptionalLabel": "Reason (optional)",
   "adminReasonPostHint": "e.g. Not a lost or found item",
-
   "adminNoOpenReports": "No open reports",
   "adminNothingHandledYet": "Nothing handled yet",
   "adminBadgeOpen": "OPEN",
   "adminBadgeHandled": "HANDLED",
   "adminNoReasonGiven": "No reason given",
   "adminQuotedReason": "\"{reason}\"",
-  "@adminQuotedReason": {"placeholders": {"reason": {"type": "String"}}},
+  "@adminQuotedReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "adminReportedBy": "Reported by {name} · {time}",
-  "@adminReportedBy": {"placeholders": {"name": {"type": "String"}, "time": {"type": "String"}}},
+  "@adminReportedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "adminPostBySuffix": " · post by {name}",
-  "@adminPostBySuffix": {"placeholders": {"name": {"type": "String"}}},
+  "@adminPostBySuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminDismissReport": "Dismiss the report",
   "adminPostStaysUp": "The post stays up",
   "adminRemovePostSettles": "Settles every report on it; the owner is notified",
   "adminRemovePostConfirmBody": "\"{title}\" and its chats are deleted. This cannot be undone.",
-  "@adminRemovePostConfirmBody": {"placeholders": {"title": {"type": "String"}}},
+  "@adminRemovePostConfirmBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "adminReportDismissed": "Report dismissed.",
-
   "adminUsersSubtitle": "Accounts on Finder",
   "adminUsersSearchHint": "Name, nickname or e-mail",
   "adminNoAccountsMatch": "No accounts match",
@@ -216,22 +253,46 @@
   "adminFullAccess": "Full access to users, posts and reports",
   "adminRemoveAdminRoleTitle": "Remove admin role?",
   "adminMakeAdminTitle": "Make {name} an administrator?",
-  "@adminMakeAdminTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@adminMakeAdminTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminRemoveAdminBody": "{name} will no longer be able to moderate Finder.",
-  "@adminRemoveAdminBody": {"placeholders": {"name": {"type": "String"}}},
+  "@adminRemoveAdminBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminMakeAdminBody": "Administrators can suspend or delete any account and remove any post.",
   "adminRemoveRole": "Remove role",
   "adminMakeAdmin": "Make admin",
   "adminRoleRemoved": "Admin role removed.",
   "adminNowAdmin": "{name} is now an admin.",
-  "@adminNowAdmin": {"placeholders": {"name": {"type": "String"}}},
+  "@adminNowAdmin": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminLiftSuspension": "Lift suspension",
   "adminSuspendAccount": "Suspend account",
   "adminCanSignInAgain": "They can sign in again",
   "adminSignedOutCannotSignIn": "They are signed out and cannot sign in",
   "adminLiftSuspensionTitle": "Lift the suspension?",
   "adminSuspendTitle": "Suspend {name}?",
-  "@adminSuspendTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@adminSuspendTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminLiftBody": "The account works normally again.",
   "adminSuspendBody": "Their posts stay visible. They lose access until you lift the suspension.",
   "adminLift": "Lift",
@@ -241,19 +302,48 @@
   "adminDeleteAccount": "Delete account",
   "adminDeleteAccountSubtitle": "Removes the account, its posts and chats. Cannot be undone.",
   "adminDeleteTitle": "Delete {name}?",
-  "@adminDeleteTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@adminDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminDeleteBody": "Everything they posted and every chat they were in is erased permanently.",
   "adminAccountDeleted": "Account deleted.",
   "adminYouSuffix": "{name} (you)",
-  "@adminYouSuffix": {"placeholders": {"name": {"type": "String"}}},
+  "@adminYouSuffix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminPostsCount": "{count, plural, =1{1 post} other{{count} posts}}",
-  "@adminPostsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@adminPostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminReportsCount": "{count, plural, =1{1 report} other{{count} reports}}",
-  "@adminReportsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@adminReportsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminJoined": "joined {time}",
-  "@adminJoined": {"placeholders": {"time": {"type": "String"}}},
+  "@adminJoined": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "adminBadgeSuspended": "SUSPENDED",
-
   "adminQueueTitle": "Review queue",
   "adminQueueSubtitle": "Identity verification requests",
   "adminNothingToReview": "Nothing to review",
@@ -265,13 +355,36 @@
   "adminDocDriversLicense": "Driver's license",
   "adminDocPassport": "Passport",
   "adminDocDocument": "Document",
-
   "adminSubmitted": "{doc} · submitted {time}",
-  "@adminSubmitted": {"placeholders": {"doc": {"type": "String"}, "time": {"type": "String"}}},
+  "@adminSubmitted": {
+    "placeholders": {
+      "doc": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "adminReviewedStatus": "{status, select, approved{approved {time}} rejected{rejected {time}} other{{status} {time}}}",
-  "@adminReviewedStatus": {"placeholders": {"status": {"type": "String"}, "time": {"type": "String"}}},
+  "@adminReviewedStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "adminReasonPrefix": "Reason: {reason}",
-  "@adminReasonPrefix": {"placeholders": {"reason": {"type": "String"}}},
+  "@adminReasonPrefix": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "adminDocumentSection": "Document",
   "adminStep1": "Step 1",
   "adminLiveSelfie": "Live selfie",
@@ -282,23 +395,96 @@
   "adminSelfieCaption": "Selfie taken with the front camera",
   "adminReviewGuidance": "Compare the face on the document with the selfie, check the name matches the account, and that the document is not expired or edited.",
   "adminTapToZoom": "{caption} · tap to zoom",
-  "@adminTapToZoom": {"placeholders": {"caption": {"type": "String"}}},
+  "@adminTapToZoom": {
+    "placeholders": {
+      "caption": {
+        "type": "String"
+      }
+    }
+  },
   "adminReject": "Reject",
   "adminApprove": "Approve",
   "adminApproveTitle": "Approve this identity?",
   "adminApproveBody": "{name} gets the verified badge and a notification.",
-  "@adminApproveBody": {"placeholders": {"name": {"type": "String"}}},
+  "@adminApproveBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminIdentityApproved": "Identity approved.",
   "adminRejectRequestTitle": "Reject request",
   "adminRejectReasonSubtitle": "The reason is sent to {name} so they can fix it.",
-  "@adminRejectReasonSubtitle": {"placeholders": {"name": {"type": "String"}}},
+  "@adminRejectReasonSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "adminReasonLabel": "Reason",
   "adminRejectReasonHint": "e.g. The selfie is too dark to compare with the document.",
   "adminRequestRejected": "Request rejected.",
-
   "stateErrorTitle": "Something went wrong",
   "stateLoading": "Loading",
   "uiShowPassword": "Show password",
   "uiHidePassword": "Hide password",
-  "uiCouldNotLoad": "Could not load"
+  "uiCouldNotLoad": "Could not load",
+  "adminStatToApprove": "To approve",
+  "adminStatRejected": "Rejected",
+  "adminFilterPendingCount": "Pending ({count})",
+  "@adminFilterPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminNothingToApprove": "Nothing to approve",
+  "adminNothingToApproveBody": "New posts show up here before anyone else can see them.",
+  "adminReviewTitle": "Review this post",
+  "adminRiskLabel": "AI risk {score}",
+  "@adminRiskLabel": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "adminRiskUnavailable": "AI check unavailable",
+  "adminRiskLow": "Looks fine",
+  "adminRiskMedium": "Check carefully",
+  "adminRiskHigh": "Likely reject",
+  "adminOriginalText": "Original ({lang})",
+  "@adminOriginalText": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRejectPostTitle": "Reject this post?",
+  "adminRejectPostSubtitle": "The reason is sent to the owner so they can fix it and resubmit.",
+  "adminRejectPostHint": "e.g. The photo does not show the item.",
+  "adminPostApproved": "Post approved. It is live now.",
+  "adminPostRejected": "Post rejected. The owner has been told.",
+  "adminStatusPending": "pending",
+  "adminStatusRejected": "rejected",
+  "adminStatusExpired": "archived",
+  "adminAiTitle": "AI assistant",
+  "adminAiSubtitle": "Gemini key for translations and the pre-check",
+  "adminAiConfigured": "Configured · {model}",
+  "@adminAiConfigured": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "adminAiNotConfigured": "Not configured. Posts are not translated or pre-checked.",
+  "adminAiKeyLabel": "Google AI Studio key",
+  "adminAiKeyHint": "Paste the key from aistudio.google.com",
+  "adminAiKeySaved": "AI key saved and verified.",
+  "adminAiKeyBody": "The key is stored on the server only. Each new post costs roughly one cent for the translation and the risk check."
 }

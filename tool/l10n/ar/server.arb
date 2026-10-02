@@ -122,5 +122,12 @@
   "serverProblem": "واجه الخادم مشكلة. يرجى المحاولة مرة أخرى.",
   "serverRequestFailed": "فشل الطلب ({status}).",
   "serverTimeout": "استغرق الخادم وقتًا طويلًا للرد. تحقق من اتصالك وحاول مرة أخرى.",
-  "serverOffline": "يبدو أنك غير متصل بالإنترنت. تحقق من اتصالك وحاول مرة أخرى."
+  "serverOffline": "يبدو أنك غير متصل بالإنترنت. تحقق من اتصالك وحاول مرة أخرى.",
+  "serverThisPostIsAwaitingReview": "هذا المنشور بانتظار المراجعة.",
+  "serverApproveOrRejectThisPostFirst": "وافق على هذا المنشور أو ارفضه أولًا.",
+  "serverCouldNotApproveThePost": "تعذّرت الموافقة على المنشور.",
+  "serverCouldNotRejectThePost": "تعذّر رفض المنشور.",
+  "serverThatStatusIsNotPublic": "هذه الحالة غير متاحة للعامة.",
+  "serverNotAGoogleKey": "لا يبدو هذا مفتاح Google AI Studio.",
+  "serverGoogleRejectedTheKey": "رفض Google AI Studio المفتاح."
 }

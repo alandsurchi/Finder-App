@@ -18,6 +18,7 @@ import 'package:finder/core/utils/hero_tags.dart';
 import 'package:finder/features/profile/presentation/blocked_users_controller.dart';
 import 'package:finder/widgets/cards/similar_card.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/features/posts/presentation/post_review_banner.dart';
 import 'package:finder/features/auth/presentation/auth_state_provider.dart';
 import 'package:finder/providers/my_posts_provider.dart';
 import 'package:finder/providers/user_provider.dart';
@@ -82,12 +83,26 @@ class ItemDetailsScreen extends ConsumerWidget {
                         StatusBadge.signal(kind, withIcon: true),
                         if (item.hasReward)
                           StatusBadge.reward(l10n.postRewardAmount('\$${item.reward}')),
-                        if (item.isResolved) StatusBadge.resolved(),
+                        if (StatusBadge.forStatus(item) != null) StatusBadge.forStatus(item)!,
                         if (item.isVerified) StatusBadge.verified(small: false),
                         if (item.ownerIsAdmin) adminBadge(small: false),
                       ],
                     ),
                   ),
+
+                  if (isOwner && !item.isActive && !item.isResolved) ...[
+                    const SizedBox(height: BeaconSpace.md),
+                    PostReviewBanner.forPost(
+                      item,
+                      onEdit: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => EditPostScreen(post: item)),
+                        );
+                        ref.invalidate(postByIdProvider(item.id));
+                      },
+                    )!,
+                  ],
 
                   const SizedBox(height: BeaconSpace.md),
 
@@ -298,15 +313,17 @@ class ItemDetailsScreen extends ConsumerWidget {
             onPressed: () => _toggleSaved(context, ref, item),
           ),
         if (!isOwner) const SizedBox(width: BeaconSpace.sm),
-        Builder(
-          builder: (btnCtx) => AppIconButton(
-            icon: Icons.ios_share_rounded,
-            tooltip: l10n.commonShare,
-            variant: AppIconButtonVariant.glass,
-            onPressed: () => _share(btnCtx, ref, item),
+        if (item.isPublic) ...[
+          Builder(
+            builder: (btnCtx) => AppIconButton(
+              icon: Icons.ios_share_rounded,
+              tooltip: l10n.commonShare,
+              variant: AppIconButtonVariant.glass,
+              onPressed: () => _share(btnCtx, ref, item),
+            ),
           ),
-        ),
-        const SizedBox(width: BeaconSpace.sm),
+          const SizedBox(width: BeaconSpace.sm),
+        ],
         AppIconButton(
           icon: Icons.more_vert_rounded,
           tooltip: l10n.postMoreActions,
@@ -403,25 +420,27 @@ class ItemDetailsScreen extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SheetOption(
-              icon: Icons.ios_share_rounded,
-              label: l10n.commonShare,
-              subtitle: l10n.postShareSubtitle,
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                _share(context, ref, item);
-              },
-            ),
-            SheetOption(
-              icon: Icons.link_rounded,
-              label: l10n.postCopyLink,
-              onTap: () {
-                Navigator.pop(sheetCtx);
-                _copyLink(context, ref, item);
-              },
-            ),
+            if (item.isPublic) ...[
+              SheetOption(
+                icon: Icons.ios_share_rounded,
+                label: l10n.commonShare,
+                subtitle: l10n.postShareSubtitle,
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _share(context, ref, item);
+                },
+              ),
+              SheetOption(
+                icon: Icons.link_rounded,
+                label: l10n.postCopyLink,
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _copyLink(context, ref, item);
+                },
+              ),
+            ],
             if (isOwner) ...[
-              if (!item.isResolved)
+              if (!item.isResolved && !item.isExpired)
                 SheetOption(
                   icon: Icons.edit_outlined,
                   label: l10n.postEditPost,
@@ -434,18 +453,19 @@ class ItemDetailsScreen extends ConsumerWidget {
                     ref.invalidate(postByIdProvider(item.id));
                   },
                 ),
-              SheetOption(
-                icon: item.isResolved
-                    ? Icons.replay_rounded
-                    : Icons.assignment_turned_in_outlined,
-                label: item.isResolved ? l10n.postReopenPost : l10n.commonMarkAsReturned,
-                onTap: () {
-                  Navigator.pop(sheetCtx);
-                  item.isResolved
-                      ? _reopen(context, ref, item)
-                      : _resolve(context, ref, item);
-                },
-              ),
+              if (!item.isUnderReview)
+                SheetOption(
+                  icon: item.isActive
+                      ? Icons.assignment_turned_in_outlined
+                      : Icons.replay_rounded,
+                  label: item.isActive ? l10n.commonMarkAsReturned : l10n.postReopenPost,
+                  onTap: () {
+                    Navigator.pop(sheetCtx);
+                    item.isActive
+                        ? _resolve(context, ref, item)
+                        : _reopen(context, ref, item);
+                  },
+                ),
               SheetOption(
                 icon: Icons.delete_outline_rounded,
                 label: l10n.postDeletePost,

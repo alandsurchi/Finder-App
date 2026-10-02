@@ -1,10 +1,14 @@
 {
   "@@locale": "en",
-
   "navPost": "Post",
   "navTab": "{label} tab",
-  "@navTab": {"placeholders": {"label": {"type": "String"}}},
-
+  "@navTab": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "categoryAllItems": "All Items",
   "categoryAll": "All",
   "categoryNearby": "Nearby",
@@ -26,7 +30,6 @@
   "categoryVisibilityPublic": "Public",
   "categoryVisibilityFriendsOnly": "Friends Only",
   "categoryVisibilityPrivate": "Private",
-
   "filterTitle": "Filters",
   "filterSubtitle": "Narrow down what you are looking for",
   "filterReset": "Reset",
@@ -49,18 +52,34 @@
   "filterLastWeek": "Last Week",
   "filterLastMonth": "Last Month",
   "filterDate": "{day} {month}, {year}",
-  "@filterDate": {"placeholders": {"day": {"type": "int"}, "month": {"type": "String"}, "year": {"type": "int"}}},
-
+  "@filterDate": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
   "searchSubtitle": "Find lost and found items near you",
   "searchHint": "Search items, places…",
   "searchClear": "Clear search",
   "searchResultsCount": "{count, plural, =1{1 result} other{{count} results}}",
-  "@searchResultsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@searchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "searchClearFilters": "Clear filters",
   "searchResetFilters": "Reset filters",
   "searchNoResultsTitle": "No matching items found",
   "searchNoResultsSubtitle": "Try a different keyword or adjust your filters.",
-
   "homeReportLost": "Report lost",
   "homeReportLostSubtitle": "Ask the community",
   "homeReportFound": "Report found",
@@ -79,8 +98,13 @@
   "homeGoodEvening": "Good evening",
   "homeGuest": "Guest",
   "homeNotificationsUnread": "Notifications, {count} unread",
-  "@homeNotificationsUnread": {"placeholders": {"count": {"type": "int"}}},
-
+  "@homeNotificationsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "mapPickLocation": "Pick a location",
   "mapSearchHint": "Search a place or address",
   "mapSearching": "Searching…",
@@ -93,20 +117,45 @@
   "mapErrBlocked": "Location access is blocked. Allow it in your phone settings to use your current location.",
   "mapErrDenied": "Location permission was not granted.",
   "mapErrNoFix": "Could not get a GPS fix. Move somewhere with a clearer view of the sky and try again.",
-
   "shareKindTitle": "{kind}: {title}",
-  "@shareKindTitle": {"placeholders": {"kind": {"type": "String"}, "title": {"type": "String"}}},
+  "@shareKindTitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "shareFindMe": "Find me on Finder · member id {id}",
-  "@shareFindMe": {"placeholders": {"id": {"type": "String"}}},
+  "@shareFindMe": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "shareProfileSubject": "{name} on Finder",
-  "@shareProfileSubject": {"placeholders": {"name": {"type": "String"}}},
-
+  "@shareProfileSubject": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "postItemDetailsTitle": "Item Details",
   "postItemDetails": "Item details",
   "postNoDescription": "No description provided yet.",
   "postReward": "REWARD",
   "postRewardAmount": "REWARD {amount}",
-  "@postRewardAmount": {"placeholders": {"amount": {"type": "String"}}},
+  "@postRewardAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "postIFoundThis": "I found this item",
   "postThisIsMine": "This is mine",
   "postReturnedOwnerNote": "Marked as returned. It no longer shows on Home, but stays in Search so people can see the outcome.",
@@ -130,9 +179,21 @@
   "postActiveAgain": "Post is active again.",
   "postDeleteTitle": "Delete post?",
   "postDeleteBody": "\"{title}\" will be removed for everyone. This cannot be undone.",
-  "@postDeleteBody": {"placeholders": {"title": {"type": "String"}}},
+  "@postDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "postDeleteBodyConfirm": "Are you sure you want to delete \"{title}\"? This cannot be undone.",
-  "@postDeleteBodyConfirm": {"placeholders": {"title": {"type": "String"}}},
+  "@postDeleteBodyConfirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "postDeleted": "Post deleted.",
   "postReportReasonSpam": "Spam or scam",
   "postReportReasonInappropriate": "Inappropriate content",
@@ -143,10 +204,22 @@
   "postReported": "Thanks, the post has been reported.",
   "postThisMember": "this member",
   "postBlockTitle": "Block {name}?",
-  "@postBlockTitle": {"placeholders": {"name": {"type": "String"}}},
+  "@postBlockTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "postBlockBody": "You will no longer see each other's posts or messages. You can undo this in Privacy & safety.",
   "postBlocked": "{name} has been blocked.",
-  "@postBlocked": {"placeholders": {"name": {"type": "String"}}},
+  "@postBlocked": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "postCategory": "Category",
   "postLostOn": "Lost on",
   "postFoundOn": "Found on",
@@ -159,11 +232,32 @@
   "postProfileNotAvailable": "Profile not available",
   "postVerifiedMember": "Verified member",
   "postMemberSince": "Member since {date}",
-  "@postMemberSince": {"placeholders": {"date": {"type": "String"}}},
+  "@postMemberSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "postPostsCount": "{count, plural, =1{1 post} other{{count} posts}}",
-  "@postPostsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@postPostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "postMonthYear": "{month} {year}",
-  "@postMonthYear": {"placeholders": {"month": {"type": "String"}, "year": {"type": "int"}}},
+  "@postMonthYear": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
   "postPhone": "Phone",
   "postCouldNotOpenDialer": "Could not open the phone dialer.",
   "postChatWithOwner": "Chat with owner",
@@ -191,26 +285,52 @@
   "postMessageOwner": "Message the owner",
   "postMessageFinder": "Message the finder",
   "postItemSemantics": "{status} item, {title}",
-  "@postItemSemantics": {"placeholders": {"status": {"type": "String"}, "title": {"type": "String"}}},
+  "@postItemSemantics": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "postLocationNotSet": "Location not set",
-
   "postNewPost": "New post",
   "postHeaderLost": "Tell the community what you lost.",
   "postHeaderFound": "Help return what you found.",
   "postReadyToPost": "Ready to post",
   "postDetailsAdded": "{count} of 5 details added",
-  "@postDetailsAdded": {"placeholders": {"count": {"type": "int"}}},
+  "@postDetailsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "postPhotos": "Photos",
   "postPhoto": "Photo",
   "postStep": "Step {number}",
-  "@postStep": {"placeholders": {"number": {"type": "int"}}},
+  "@postStep": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "postPhotosHint": "Clear photos help others identify the item.",
   "postCamera": "Camera",
   "postGallery": "Gallery",
   "postRemovePhoto": "Remove photo",
   "postUploadingPhoto": "Uploading photo",
   "postAddPhotoFrom": "Add photo from {source}",
-  "@postAddPhotoFrom": {"placeholders": {"source": {"type": "String"}}},
+  "@postAddPhotoFrom": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
   "postItemName": "Item name",
   "postItemNameHint": "e.g. Blue backpack",
   "postItemNameHintEdit": "e.g. Black wallet",
@@ -219,7 +339,13 @@
   "postDescription": "Description",
   "postDescriptionHint": "e.g. Last seen near the fountain at Central Park. It has a small scratch on the front…",
   "postDescriptionHelper": "{count}/500 · at least 10 characters",
-  "@postDescriptionHelper": {"placeholders": {"count": {"type": "int"}}},
+  "@postDescriptionHelper": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "postDescriptionHintEdit": "Describe the item in detail…",
   "postDescriptionHelperEdit": "At least 10 characters",
   "postRewardOptional": "Reward (optional)",
@@ -252,7 +378,13 @@
   "postSaveDraft": "Save draft",
   "postSaveChanges": "Save changes",
   "postLocationSetTo": "Location set to {label}.",
-  "@postLocationSetTo": {"placeholders": {"label": {"type": "String"}}},
+  "@postLocationSetTo": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "postEnterLocation": "Enter location",
   "postEnterLocationHint": "City, street or area",
   "postErrTitleRequired": "Please enter the item name before posting.",
@@ -274,28 +406,67 @@
   "postIFoundSomething": "I found something",
   "postAskCommunityHelp": "Ask the community for help",
   "postHelpReturnHome": "Help return it home",
-
   "postMyPosts": "My posts",
   "postOpenReturnedCount": "{open} open · {returned} returned",
-  "@postOpenReturnedCount": {"placeholders": {"open": {"type": "int"}, "returned": {"type": "int"}}},
+  "@postOpenReturnedCount": {
+    "placeholders": {
+      "open": {
+        "type": "int"
+      },
+      "returned": {
+        "type": "int"
+      }
+    }
+  },
   "postNoOpenPosts": "No open posts",
   "postNoReturnedYet": "No returned items yet",
   "postCreateYourFirst": "Create your first post to get started.",
   "postReturnedAppearHere": "Posts you mark as returned will appear here.",
   "postMarkReturnedTitle": "Mark as returned?",
   "postMarkReturnedBody": "Mark \"{title}\" as returned? It leaves the Home feed but stays visible in Search.",
-  "@postMarkReturnedBody": {"placeholders": {"title": {"type": "String"}}},
+  "@postMarkReturnedBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "postErrLoad": "Unable to load your posts.",
   "postErrDelete": "Unable to delete the post.",
   "postErrResolve": "Unable to resolve the post.",
   "postErrReopen": "Unable to reopen the post.",
   "postErrSave": "Unable to save the post.",
-
   "postSavedItems": "Saved items",
   "postSavedSubtitle": "Keep track of items you're helping to return or find.",
   "postSavedCount": "{count} saved · items you are helping to return or find",
-  "@postSavedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@postSavedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "postLoadingSaved": "Loading saved items...",
   "postNoSavedTitle": "No saved items yet",
-  "postNoSavedSubtitle": "Tap the bookmark on any post to keep it here."
+  "postNoSavedSubtitle": "Tap the bookmark on any post to keep it here.",
+  "postSentForReview": "Sent for review. We'll tell you when it's live.",
+  "postWaitingForReview": "Waiting for review",
+  "postWaitingForReviewBody": "An admin checks every post before it goes public, usually within a few hours.",
+  "postRejectedTitle": "Not approved",
+  "postRejectedReason": "Reason: {reason}",
+  "@postRejectedReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "postEditAndResubmit": "Edit & resubmit",
+  "postBadgeRejected": "NOT APPROVED",
+  "postBadgeExpired": "ARCHIVED",
+  "postExpiredTitle": "Archived",
+  "postExpiredBody": "This post was archived after 90 days. Reopen it if it is still relevant.",
+  "postTranslatedNote": "Translated automatically",
+  "postSeeOriginal": "See original",
+  "postSeeTranslation": "See translation"
 }

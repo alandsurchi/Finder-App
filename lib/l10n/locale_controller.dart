@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../providers/chat_provider.dart';
+import '../providers/my_posts_provider.dart';
+import '../providers/post_provider.dart';
 import 'l10n.dart';
 
 const _kLocaleKey = 'app_language';
@@ -21,6 +24,11 @@ class LocaleController extends Notifier<Locale?> {
 
   Future<void> set(AppLanguage? language) async {
     state = language?.locale;
+    L10n.use(resolveLocale(state, WidgetsBinding.instance.platformDispatcher.locales));
+    // Post text is served in the app language: fetch it again.
+    ref.invalidate(postsStreamProvider);
+    ref.invalidate(conversationsStreamProvider);
+    ref.read(myPostsProvider.notifier).load();
     final prefs = await SharedPreferences.getInstance();
     if (language == null) {
       await prefs.remove(_kLocaleKey);

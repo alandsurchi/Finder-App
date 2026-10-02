@@ -129,5 +129,12 @@
     }
   },
   "serverTimeout": "The server took too long to respond. Check your connection and try again.",
-  "serverOffline": "You seem to be offline. Check your connection and try again."
+  "serverOffline": "You seem to be offline. Check your connection and try again.",
+  "serverThisPostIsAwaitingReview": "This post is awaiting review.",
+  "serverApproveOrRejectThisPostFirst": "Approve or reject this post first.",
+  "serverCouldNotApproveThePost": "Could not approve the post.",
+  "serverCouldNotRejectThePost": "Could not reject the post.",
+  "serverThatStatusIsNotPublic": "That status is not public.",
+  "serverNotAGoogleKey": "That does not look like a Google AI Studio key.",
+  "serverGoogleRejectedTheKey": "Google AI Studio rejected the key."
 }

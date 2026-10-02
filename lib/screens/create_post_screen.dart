@@ -761,7 +761,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       // Details opens on top of Home, so Back lands on the feed, not here.
       ref.read(createPrefillProvider.notifier).state = null;
       ref.read(homeTabProvider.notifier).state = HomeTabs.home;
-      ActionFeedback.showSuccess(context, context.l10n.postLive);
+      ActionFeedback.showSuccess(context, context.l10n.postSentForReview);
       Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: created);
     } catch (e) {
       if (!mounted) return;

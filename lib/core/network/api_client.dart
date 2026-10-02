@@ -58,6 +58,8 @@ class ApiClient {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      // Posts come back in the app language when a translation exists.
+      'Accept-Language': L10n.locale.languageCode,
     };
     if (_token != null) headers['Authorization'] = 'Bearer $_token';
     return headers;

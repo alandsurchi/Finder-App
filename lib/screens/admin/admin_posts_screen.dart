@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/features/admin/admin_console_service.dart';
 import 'package:finder/l10n/l10n.dart';
 import 'package:finder/models/item_model.dart';
@@ -15,20 +16,20 @@ import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/identity_marks.dart';
 import 'package:finder/widgets/ui/ui.dart';
 
-/// Admin: every post with moderation actions.
+/// Admin: the approval queue first, then every post with moderation actions.
 class AdminPostsScreen extends ConsumerStatefulWidget {
   final String initialStatus;
-  const AdminPostsScreen({super.key, this.initialStatus = 'all'});
+  const AdminPostsScreen({super.key, this.initialStatus = 'pending'});
 
   @override
   ConsumerState<AdminPostsScreen> createState() => _AdminPostsScreenState();
 }
 
 class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
-  static const _statuses = ['all', 'active', 'resolved', 'reported'];
+  static const _statuses = ['pending', 'all', 'active', 'resolved', 'rejected', 'reported'];
   final _search = TextEditingController();
   Timer? _debounce;
-  late int _tab = _statuses.indexOf(widget.initialStatus).clamp(0, 3);
+  late int _tab = _statuses.indexOf(widget.initialStatus).clamp(0, _statuses.length - 1);
   String _query = '';
 
   String get _key => '${_statuses[_tab]}|$_query';
@@ -59,6 +60,8 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final posts = ref.watch(adminPostsProvider(_key));
+    final pendingCount = ref.watch(adminStatsProvider).value?.pendingPosts;
+    final isQueue = _statuses[_tab] == 'pending';
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -74,15 +77,22 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                     onChanged: _onQuery,
                   ),
                   const SizedBox(height: BeaconSpace.md),
-                  SegmentedPills(
-                    options: [
-                      l10n.adminFilterAll,
-                      l10n.adminFilterOpen,
-                      l10n.commonReturned,
-                      l10n.adminFilterReported,
-                    ],
-                    selectedIndex: _tab,
-                    onChanged: (i) => setState(() => _tab = i),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SegmentedPills(
+                      options: [
+                        pendingCount == null || pendingCount == 0
+                            ? l10n.adminFilterPending
+                            : l10n.adminFilterPendingCount(pendingCount),
+                        l10n.adminFilterAll,
+                        l10n.adminFilterOpen,
+                        l10n.commonReturned,
+                        l10n.adminFilterRejected,
+                        l10n.adminFilterReported,
+                      ],
+                      selectedIndex: _tab,
+                      onChanged: (i) => setState(() => _tab = i),
+                    ),
                   ),
                 ],
               ),
@@ -95,7 +105,10 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                 data: (items) {
                   if (items.isEmpty) {
                     return EmptyWidget(
-                        icon: Icons.inventory_2_outlined, title: l10n.adminNoPostsHere);
+                      icon: isQueue ? Icons.rule_folder_outlined : Icons.inventory_2_outlined,
+                      title: isQueue ? l10n.adminNothingToApprove : l10n.adminNoPostsHere,
+                      subtitle: isQueue ? l10n.adminNothingToApproveBody : null,
+                    );
                   }
                   return RefreshIndicator(
                     onRefresh: () async => _refresh(),
@@ -109,13 +122,29 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                         return ItemCard(
                           item: item,
                           layout: ItemCardLayout.row,
-                          onTap: () => _showActions(item),
-                          subtitle: NameWithMarks(
-                            name: item.ownerName ?? l10n.commonFinderUser,
-                            verified: item.isVerified,
-                            admin: item.ownerIsAdmin,
-                            style: Theme.of(context).textTheme.labelSmall,
-                            markSize: 14,
+                          onTap: () => item.isPending ? _review(item) : _showActions(item),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              NameWithMarks(
+                                name: item.ownerName ?? l10n.commonFinderUser,
+                                verified: item.isVerified,
+                                admin: item.ownerIsAdmin,
+                                style: Theme.of(context).textTheme.labelSmall,
+                                markSize: 14,
+                              ),
+                              if (item.isPending || item.isRejected) ...[
+                                const SizedBox(height: BeaconSpace.xs),
+                                Wrap(
+                                  spacing: BeaconSpace.xs,
+                                  runSpacing: BeaconSpace.xs,
+                                  children: [
+                                    StatusBadge.forStatus(item, small: true)!,
+                                    if (item.isPending) _RiskPill(risk: item.aiRisk, small: true),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
                         );
                       },
@@ -130,6 +159,150 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
     );
   }
 
+  String _statusLabel(ItemModel item, AppLocalizations l10n) {
+    if (item.isPending) return l10n.adminStatusPending;
+    if (item.isRejected) return l10n.adminStatusRejected;
+    if (item.isExpired) return l10n.adminStatusExpired;
+    return item.isResolved ? l10n.adminStatusReturned : l10n.adminStatusOpen;
+  }
+
+  // ── Approval sheet ─────────────────────────────────────────────────────────
+
+  void _review(ItemModel item) {
+    final l10n = context.l10n;
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    final appLang = Localizations.localeOf(context).languageCode;
+    final showOriginal = item.isTranslated && item.sourceLang != null && item.sourceLang != appLang;
+    AppBottomSheet.show<void>(
+      context,
+      builder: (sheetCtx) => AppBottomSheet(
+        title: l10n.adminReviewTitle,
+        subtitle: l10n.adminPostSheetSubtitle(
+          item.ownerName ?? l10n.commonFinderUser,
+          _statusLabel(item, l10n),
+        ),
+        actions: [
+          AppButton.danger(
+            label: l10n.adminReject,
+            icon: Icons.block_rounded,
+            onPressed: () async {
+              Navigator.pop(sheetCtx);
+              final reason = await _askRejectReason();
+              if (reason == null || reason.isEmpty || !mounted) return;
+              await _act(
+                () => ref.read(adminConsoleServiceProvider).rejectPost(item.id, reason),
+                l10n.adminPostRejected,
+              );
+            },
+          ),
+          AppButton(
+            label: l10n.adminApprove,
+            icon: Icons.check_rounded,
+            onPressed: () async {
+              Navigator.pop(sheetCtx);
+              await _act(
+                () => ref.read(adminConsoleServiceProvider).approvePost(item.id),
+                l10n.adminPostApproved,
+              );
+            },
+          ),
+        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (item.hasImage)
+              ClipRRect(
+                borderRadius: BeaconRadius.rLg,
+                child: ItemImage(url: item.imagePath, height: 200, width: double.infinity, fit: BoxFit.cover),
+              ),
+            if (item.hasImage) const SizedBox(height: BeaconSpace.md),
+            Wrap(
+              spacing: BeaconSpace.xs,
+              runSpacing: BeaconSpace.xs,
+              children: [
+                StatusBadge.fromItem(item, small: true),
+                StatusBadge.neutral(AppCategories.label(l10n, item.category), small: true),
+                if (item.hasReward) StatusBadge.reward(l10n.postRewardAmount('\$${item.reward}'), small: true),
+              ],
+            ),
+            const SizedBox(height: BeaconSpace.md),
+            Text(item.title, style: text.titleMedium),
+            const SizedBox(height: BeaconSpace.xs),
+            Text(item.description, style: text.bodyMedium),
+            if (showOriginal) ...[
+              const SizedBox(height: BeaconSpace.sm),
+              Text(l10n.adminOriginalText(item.sourceLang!.toUpperCase()),
+                  style: text.labelSmall?.copyWith(color: t.onSurfaceMuted)),
+              Text(item.originalTitle, style: text.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+              Text(item.originalDescription, style: text.bodySmall),
+            ],
+            if (item.location.isNotEmpty) ...[
+              const SizedBox(height: BeaconSpace.sm),
+              Row(children: [
+                Icon(Icons.place_outlined, size: 14, color: t.onSurfaceMuted),
+                const SizedBox(width: BeaconSpace.xs),
+                Expanded(child: Text(item.location, style: text.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis)),
+              ]),
+            ],
+            const SizedBox(height: BeaconSpace.lg),
+            _RiskMeter(risk: item.aiRisk, reasons: item.aiReasons),
+            const SizedBox(height: BeaconSpace.md),
+            AppButton.ghost(
+              label: l10n.adminOpenThePost,
+              icon: Icons.open_in_new_rounded,
+              expand: false,
+              onPressed: () {
+                Navigator.pop(sheetCtx);
+                Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: item);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _askRejectReason() {
+    final l10n = context.l10n;
+    final ctrl = TextEditingController();
+    return AppBottomSheet.show<String>(
+      context,
+      builder: (ctx) => AppBottomSheet(
+        title: l10n.adminRejectPostTitle,
+        subtitle: l10n.adminRejectPostSubtitle,
+        actions: [
+          AppButton.ghost(label: l10n.commonCancel, onPressed: () => Navigator.pop(ctx)),
+          AppButton.danger(
+            label: l10n.adminReject,
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+          ),
+        ],
+        child: AppTextField(
+          controller: ctrl,
+          label: l10n.adminReasonLabel,
+          hint: l10n.adminRejectPostHint,
+          autofocus: true,
+          maxLines: 3,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _act(Future<void> Function() action, String success) async {
+    try {
+      await action();
+      if (!mounted) return;
+      ActionFeedback.showSuccess(context, success);
+    } catch (e) {
+      if (mounted) ActionFeedback.showError(context, describeError(e));
+    }
+    if (mounted) _refresh();
+  }
+
+  // ── Actions for live / returned / rejected posts ───────────────────────────
+
   void _showActions(ItemModel item) {
     final l10n = context.l10n;
     AppBottomSheet.show<void>(
@@ -138,12 +311,20 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
         title: item.title,
         subtitle: l10n.adminPostSheetSubtitle(
           item.ownerName ?? l10n.commonFinderUser,
-          item.isResolved ? l10n.adminStatusReturned : l10n.adminStatusOpen,
+          _statusLabel(item, l10n),
         ),
         scrollable: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (item.isRejected && (item.rejectionReason ?? '').isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: BeaconSpace.md),
+                child: Text(
+                  l10n.postRejectedReason(item.rejectionReason!),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
             SheetOption(
               icon: Icons.open_in_new_rounded,
               label: l10n.adminOpenThePost,
@@ -152,16 +333,17 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
                 Navigator.pushNamed(context, AppRoutes.itemDetails, arguments: item);
               },
             ),
-            SheetOption(
-              icon: item.isResolved ? Icons.replay_rounded : Icons.assignment_turned_in_outlined,
-              label: item.isResolved ? l10n.adminReopenThePost : l10n.commonMarkAsReturned,
-              onTap: () => _run(
-                sheetCtx,
-                () => ref.read(adminConsoleServiceProvider).setPostStatus(
-                    item.id, item.isResolved ? 'active' : 'resolved'),
-                item.isResolved ? l10n.adminPostReopened : l10n.commonMarkedAsReturned,
+            if (!item.isUnderReview)
+              SheetOption(
+                icon: item.isActive ? Icons.assignment_turned_in_outlined : Icons.replay_rounded,
+                label: item.isActive ? l10n.commonMarkAsReturned : l10n.adminReopenThePost,
+                onTap: () => _run(
+                  sheetCtx,
+                  () => ref.read(adminConsoleServiceProvider).setPostStatus(
+                      item.id, item.isActive ? 'resolved' : 'active'),
+                  item.isActive ? l10n.commonMarkedAsReturned : l10n.adminPostReopened,
+                ),
               ),
-            ),
             SheetOption(
               icon: Icons.delete_outline_rounded,
               label: l10n.adminRemoveThePost,
@@ -224,5 +406,92 @@ class _AdminPostsScreenState extends ConsumerState<AdminPostsScreen> {
     } catch (e) {
       if (mounted) ActionFeedback.showError(context, describeError(e));
     }
+  }
+}
+
+/// Colour rule for the AI score: green under 30, amber to 69, red from 70.
+Color riskColor(AppColorTokens t, int? risk) {
+  if (risk == null) return t.onSurfaceMuted;
+  if (risk < 30) return t.found;
+  if (risk < 70) return t.accentDeep;
+  return t.lost;
+}
+
+class _RiskPill extends StatelessWidget {
+  final int? risk;
+  final bool small;
+  const _RiskPill({required this.risk, this.small = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final t = AppColorTokens.of(context);
+    return StatusBadge.custom(
+      label: risk == null ? l10n.adminRiskUnavailable : l10n.adminRiskLabel(risk!),
+      color: riskColor(t, risk),
+      small: small,
+    );
+  }
+}
+
+class _RiskMeter extends StatelessWidget {
+  final int? risk;
+  final List<String> reasons;
+  const _RiskMeter({required this.risk, required this.reasons});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final t = AppColorTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    final color = riskColor(t, risk);
+    final verdict = risk == null
+        ? l10n.adminRiskUnavailable
+        : risk! < 30
+            ? l10n.adminRiskLow
+            : risk! < 70
+                ? l10n.adminRiskMedium
+                : l10n.adminRiskHigh;
+    return SurfaceCard(
+      tone: SurfaceTone.low,
+      border: false,
+      padding: const EdgeInsets.all(BeaconSpace.md),
+      radius: BeaconRadius.lg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome_outlined, size: 16, color: color),
+              const SizedBox(width: BeaconSpace.xs),
+              Text(
+                risk == null ? l10n.adminRiskUnavailable : l10n.adminRiskLabel(risk!),
+                style: text.labelLarge?.copyWith(color: color),
+              ),
+              const Spacer(),
+              Text(verdict, style: text.labelSmall?.copyWith(color: t.onSurfaceVar)),
+            ],
+          ),
+          const SizedBox(height: BeaconSpace.sm),
+          ClipRRect(
+            borderRadius: BeaconRadius.rPill,
+            child: LinearProgressIndicator(
+              value: (risk ?? 0) / 100,
+              minHeight: 6,
+              color: color,
+              backgroundColor: t.surfaceHigh,
+            ),
+          ),
+          if (reasons.isNotEmpty) ...[
+            const SizedBox(height: BeaconSpace.sm),
+            Wrap(
+              spacing: BeaconSpace.xs,
+              runSpacing: BeaconSpace.xs,
+              children: [for (final r in reasons) StatusBadge.neutral(r, small: true)],
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

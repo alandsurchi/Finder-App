@@ -42,8 +42,9 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
     _isLostItem = p.isLost;
     _category =
         _categories.contains(p.category) ? p.category : _categories.last;
-    _titleCtrl = TextEditingController(text: p.title);
-    _descCtrl = TextEditingController(text: p.description);
+    // Always edit what the owner wrote, never a translation.
+    _titleCtrl = TextEditingController(text: p.originalTitle);
+    _descCtrl = TextEditingController(text: p.originalDescription);
     _locationCtrl = TextEditingController(text: p.location);
     _lostOnCtrl = TextEditingController(text: p.lostOn ?? '');
     _rewardCtrl = TextEditingController(text: p.reward ?? '');

@@ -8,7 +8,7 @@ import '../../models/item_model.dart';
 /// Overview numbers for the console home.
 class AdminStats {
   final int users, bannedUsers, verifiedUsers;
-  final int posts, openPosts, returnedPosts;
+  final int posts, openPosts, returnedPosts, pendingPosts, rejectedPosts;
   final int pendingReports, pendingVerifications, messagesToday;
 
   const AdminStats({
@@ -18,6 +18,8 @@ class AdminStats {
     required this.posts,
     required this.openPosts,
     required this.returnedPosts,
+    this.pendingPosts = 0,
+    this.rejectedPosts = 0,
     required this.pendingReports,
     required this.pendingVerifications,
     required this.messagesToday,
@@ -32,11 +34,27 @@ class AdminStats {
       posts: n('posts'),
       openPosts: n('openPosts'),
       returnedPosts: n('returnedPosts'),
+      pendingPosts: n('pendingPosts'),
+      rejectedPosts: n('rejectedPosts'),
       pendingReports: n('pendingReports'),
       pendingVerifications: n('pendingVerifications'),
       messagesToday: n('messagesToday'),
     );
   }
+}
+
+/// Whether the Gemini key is installed (never the key itself).
+class AiKeyInfo {
+  final bool configured, enabled;
+  final String source, model, keyHint;
+  const AiKeyInfo({required this.configured, required this.enabled, required this.source, required this.model, required this.keyHint});
+  factory AiKeyInfo.fromApi(Map<String, dynamic> m) => AiKeyInfo(
+        configured: m['configured'] == true,
+        enabled: m['enabled'] == true,
+        source: m['source']?.toString() ?? 'none',
+        model: m['model']?.toString() ?? '',
+        keyHint: m['keyHint']?.toString() ?? '',
+      );
 }
 
 /// A user as the console sees them.
@@ -154,6 +172,14 @@ class AdminConsoleService {
 
   Future<void> setPostStatus(String id, String status) =>
       _api.post('/admin/posts/$id/status', {'status': status});
+  Future<ItemModel> approvePost(String id) async =>
+      ItemModel.fromApi(Map<String, dynamic>.from(await _api.post('/admin/posts/$id/approve', {}) as Map));
+  Future<ItemModel> rejectPost(String id, String reason) async =>
+      ItemModel.fromApi(Map<String, dynamic>.from(await _api.post('/admin/posts/$id/reject', {'reason': reason}) as Map));
+  Future<AiKeyInfo> aiKeyInfo() async =>
+      AiKeyInfo.fromApi(Map<String, dynamic>.from(await _api.get('/admin/ai-key') as Map));
+  Future<AiKeyInfo> setAiKey(String key) async =>
+      AiKeyInfo.fromApi(Map<String, dynamic>.from(await _api.post('/admin/ai-key', {'key': key}) as Map));
   Future<void> deletePost(String id, {String reason = ''}) =>
       _api.deleteWithBody('/admin/posts/$id', {'reason': reason});
 

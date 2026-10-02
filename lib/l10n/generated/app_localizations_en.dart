@@ -1178,6 +1178,102 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiCouldNotLoad => 'Could not load';
 
   @override
+  String get adminStatToApprove => 'To approve';
+
+  @override
+  String get adminStatRejected => 'Rejected';
+
+  @override
+  String adminFilterPendingCount(int count) {
+    return 'Pending ($count)';
+  }
+
+  @override
+  String get adminNothingToApprove => 'Nothing to approve';
+
+  @override
+  String get adminNothingToApproveBody =>
+      'New posts show up here before anyone else can see them.';
+
+  @override
+  String get adminReviewTitle => 'Review this post';
+
+  @override
+  String adminRiskLabel(int score) {
+    return 'AI risk $score';
+  }
+
+  @override
+  String get adminRiskUnavailable => 'AI check unavailable';
+
+  @override
+  String get adminRiskLow => 'Looks fine';
+
+  @override
+  String get adminRiskMedium => 'Check carefully';
+
+  @override
+  String get adminRiskHigh => 'Likely reject';
+
+  @override
+  String adminOriginalText(String lang) {
+    return 'Original ($lang)';
+  }
+
+  @override
+  String get adminRejectPostTitle => 'Reject this post?';
+
+  @override
+  String get adminRejectPostSubtitle =>
+      'The reason is sent to the owner so they can fix it and resubmit.';
+
+  @override
+  String get adminRejectPostHint => 'e.g. The photo does not show the item.';
+
+  @override
+  String get adminPostApproved => 'Post approved. It is live now.';
+
+  @override
+  String get adminPostRejected => 'Post rejected. The owner has been told.';
+
+  @override
+  String get adminStatusPending => 'pending';
+
+  @override
+  String get adminStatusRejected => 'rejected';
+
+  @override
+  String get adminStatusExpired => 'archived';
+
+  @override
+  String get adminAiTitle => 'AI assistant';
+
+  @override
+  String get adminAiSubtitle => 'Gemini key for translations and the pre-check';
+
+  @override
+  String adminAiConfigured(String model) {
+    return 'Configured · $model';
+  }
+
+  @override
+  String get adminAiNotConfigured =>
+      'Not configured. Posts are not translated or pre-checked.';
+
+  @override
+  String get adminAiKeyLabel => 'Google AI Studio key';
+
+  @override
+  String get adminAiKeyHint => 'Paste the key from aistudio.google.com';
+
+  @override
+  String get adminAiKeySaved => 'AI key saved and verified.';
+
+  @override
+  String get adminAiKeyBody =>
+      'The key is stored on the server only. Each new post costs roughly one cent for the translation and the risk check.';
+
+  @override
   String get chatConversationTitle => 'Conversation';
 
   @override
@@ -3307,6 +3403,50 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap the bookmark on any post to keep it here.';
 
   @override
+  String get postSentForReview =>
+      'Sent for review. We\'ll tell you when it\'s live.';
+
+  @override
+  String get postWaitingForReview => 'Waiting for review';
+
+  @override
+  String get postWaitingForReviewBody =>
+      'An admin checks every post before it goes public, usually within a few hours.';
+
+  @override
+  String get postRejectedTitle => 'Not approved';
+
+  @override
+  String postRejectedReason(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get postEditAndResubmit => 'Edit & resubmit';
+
+  @override
+  String get postBadgeRejected => 'NOT APPROVED';
+
+  @override
+  String get postBadgeExpired => 'ARCHIVED';
+
+  @override
+  String get postExpiredTitle => 'Archived';
+
+  @override
+  String get postExpiredBody =>
+      'This post was archived after 90 days. Reopen it if it is still relevant.';
+
+  @override
+  String get postTranslatedNote => 'Translated automatically';
+
+  @override
+  String get postSeeOriginal => 'See original';
+
+  @override
+  String get postSeeTranslation => 'See translation';
+
+  @override
   String get repoUnableLogin => 'Unable to login';
 
   @override
@@ -3851,4 +3991,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get serverOffline =>
       'You seem to be offline. Check your connection and try again.';
+
+  @override
+  String get serverThisPostIsAwaitingReview => 'This post is awaiting review.';
+
+  @override
+  String get serverApproveOrRejectThisPostFirst =>
+      'Approve or reject this post first.';
+
+  @override
+  String get serverCouldNotApproveThePost => 'Could not approve the post.';
+
+  @override
+  String get serverCouldNotRejectThePost => 'Could not reject the post.';
+
+  @override
+  String get serverThatStatusIsNotPublic => 'That status is not public.';
+
+  @override
+  String get serverNotAGoogleKey =>
+      'That does not look like a Google AI Studio key.';
+
+  @override
+  String get serverGoogleRejectedTheKey => 'Google AI Studio rejected the key.';
 }

@@ -4,6 +4,7 @@ import 'package:finder/features/admin/admin_console_service.dart';
 import 'package:finder/l10n/l10n.dart';
 import 'package:finder/providers/my_posts_provider.dart' show describeError;
 import 'package:finder/screens/admin/admin_posts_screen.dart';
+import 'package:finder/screens/admin/ai_key_sheet.dart';
 import 'package:finder/screens/admin/admin_reports_screen.dart';
 import 'package:finder/screens/admin/admin_users_screen.dart';
 import 'package:finder/screens/admin/verification_queue_screen.dart';
@@ -73,8 +74,8 @@ class AdminConsoleScreen extends ConsumerWidget {
                           icon: Icons.inventory_2_outlined,
                           title: l10n.commonPosts,
                           subtitle: l10n.adminPostsTileSubtitle,
-                          trailing: _count(stats.value?.posts, t),
-                          onTap: () => open(const AdminPostsScreen()),
+                          trailing: _count(stats.value?.pendingPosts, t, highlight: true),
+                          onTap: () => open(const AdminPostsScreen(initialStatus: 'pending')),
                         ),
                         SettingsTile(
                           icon: Icons.flag_outlined,
@@ -91,6 +92,12 @@ class AdminConsoleScreen extends ConsumerWidget {
                           trailing: _count(stats.value?.pendingVerifications, t,
                               highlight: true),
                           onTap: () => open(const VerificationQueueScreen()),
+                        ),
+                        SettingsTile(
+                          icon: Icons.auto_awesome_outlined,
+                          title: l10n.adminAiTitle,
+                          subtitle: l10n.adminAiSubtitle,
+                          onTap: () => showAiKeySheet(context, ref),
                         ),
                       ],
                     ),
@@ -124,6 +131,8 @@ class _StatsGrid extends StatelessWidget {
     final cells = [
       (l10n.adminStatMembers, stats.users, Icons.people_alt_outlined, t.primary),
       (l10n.adminVerifiedLabel, stats.verifiedUsers, Icons.verified_rounded, t.primary),
+      (l10n.adminStatToApprove, stats.pendingPosts, Icons.rule_folder_outlined, t.accent),
+      (l10n.adminStatRejected, stats.rejectedPosts, Icons.block_rounded, t.error),
       (l10n.adminStatOpenPosts, stats.openPosts, Icons.inventory_2_outlined, t.lost),
       (l10n.commonReturned, stats.returnedPosts, Icons.assignment_turned_in_rounded, t.found),
       (l10n.adminReportsTitle, stats.pendingReports, Icons.flag_outlined, t.accent),

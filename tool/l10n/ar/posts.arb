@@ -262,5 +262,18 @@
   "postSavedCount": "{count} محفوظ · عناصر تساعد في إعادتها أو العثور عليها",
   "postLoadingSaved": "جارٍ تحميل العناصر المحفوظة...",
   "postNoSavedTitle": "لا توجد عناصر محفوظة بعد",
-  "postNoSavedSubtitle": "انقر على أيقونة الحفظ في أي منشور لإبقائه هنا."
+  "postNoSavedSubtitle": "انقر على أيقونة الحفظ في أي منشور لإبقائه هنا.",
+  "postSentForReview": "تم الإرسال للمراجعة. سنخبرك عندما يُنشر.",
+  "postWaitingForReview": "بانتظار المراجعة",
+  "postWaitingForReviewBody": "يراجع مشرف كل منشور قبل نشره، عادةً خلال ساعات قليلة.",
+  "postRejectedTitle": "لم تتم الموافقة",
+  "postRejectedReason": "السبب: {reason}",
+  "postEditAndResubmit": "تعديل وإعادة الإرسال",
+  "postBadgeRejected": "غير مقبول",
+  "postBadgeExpired": "مؤرشف",
+  "postExpiredTitle": "مؤرشف",
+  "postExpiredBody": "تمت أرشفة هذا المنشور بعد 90 يومًا. أعد فتحه إذا كان لا يزال قائمًا.",
+  "postTranslatedNote": "تمت الترجمة تلقائيًا",
+  "postSeeOriginal": "عرض النص الأصلي",
+  "postSeeTranslation": "عرض الترجمة"
 }

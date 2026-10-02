@@ -25,7 +25,7 @@ extension SignalKindX on SignalKind {
 
 enum BadgeStyle { filled, soft, glass }
 
-enum _BadgeText { lost, found, returned, verified }
+enum _BadgeText { lost, found, returned, verified, pending, rejected, expired }
 
 /// One source of truth for LOST / FOUND / REWARD / RESOLVED pills.
 class StatusBadge extends StatelessWidget {
@@ -110,6 +110,57 @@ class StatusBadge extends StatelessWidget {
     );
   }
 
+  /// Waiting for an admin to approve it (owner and admins only).
+  factory StatusBadge.pending({Key? key, bool small = false}) {
+    return StatusBadge._(
+      key: key,
+      label: 'PENDING',
+      text: _BadgeText.pending,
+      icon: Icons.hourglass_top_rounded,
+      small: small,
+      style: BadgeStyle.soft,
+      bg: (t) => t.accentContainer,
+      fg: (t) => t.accentDeep,
+    );
+  }
+
+  /// An admin sent it back with a reason.
+  factory StatusBadge.rejected({Key? key, bool small = false}) {
+    return StatusBadge._(
+      key: key,
+      label: 'NOT APPROVED',
+      text: _BadgeText.rejected,
+      icon: Icons.block_rounded,
+      small: small,
+      style: BadgeStyle.soft,
+      bg: (t) => t.errorSurface,
+      fg: (t) => t.error,
+    );
+  }
+
+  /// Archived after 90 days without being resolved.
+  factory StatusBadge.expired({Key? key, bool small = false}) {
+    return StatusBadge._(
+      key: key,
+      label: 'ARCHIVED',
+      text: _BadgeText.expired,
+      icon: Icons.inventory_outlined,
+      small: small,
+      style: BadgeStyle.soft,
+      bg: (t) => t.surfaceHigh,
+      fg: (t) => t.onSurfaceVar,
+    );
+  }
+
+  /// The right status pill for a post, or null when it is simply live.
+  static StatusBadge? forStatus(ItemModel item, {bool small = false}) {
+    if (item.isPending) return StatusBadge.pending(small: small);
+    if (item.isRejected) return StatusBadge.rejected(small: small);
+    if (item.isExpired) return StatusBadge.expired(small: small);
+    if (item.isResolved) return StatusBadge.resolved(small: small);
+    return null;
+  }
+
   factory StatusBadge.verified({Key? key, bool small = true}) {
     return StatusBadge._(
       key: key,
@@ -189,6 +240,9 @@ class StatusBadge extends StatelessWidget {
               _BadgeText.found => context.l10n.commonFound.toUpperCase(),
               _BadgeText.returned => context.l10n.commonReturned.toUpperCase(),
               _BadgeText.verified => context.l10n.adminVerifiedLabel.toUpperCase(),
+              _BadgeText.pending => context.l10n.adminBadgePending.toUpperCase(),
+              _BadgeText.rejected => context.l10n.postBadgeRejected.toUpperCase(),
+              _BadgeText.expired => context.l10n.postBadgeExpired.toUpperCase(),
               null => label,
             },
             style: (small ? text.labelSmall : text.labelMedium)?.copyWith(

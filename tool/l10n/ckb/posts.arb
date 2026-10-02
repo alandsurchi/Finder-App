@@ -262,5 +262,18 @@
   "postSavedCount": "{count} پاشەکەوتکراو · ئەو شتانەی یارمەتی دەدەیت بگەڕێنەوە یان بدۆزرێنەوە",
   "postLoadingSaved": "بارکردنی شتە پاشەکەوتکراوەکان...",
   "postNoSavedTitle": "هێشتا هیچ شتێک پاشەکەوت نەکراوە",
-  "postNoSavedSubtitle": "دەست لە نیشانەی پاشەکەوت بدە لەسەر هەر پۆستێک تا لێرە بمێنێتەوە."
+  "postNoSavedSubtitle": "دەست لە نیشانەی پاشەکەوت بدە لەسەر هەر پۆستێک تا لێرە بمێنێتەوە.",
+  "postSentForReview": "بۆ پێداچوونەوە نێردرا. کاتێک بڵاوبووەوە ئاگادارت دەکەینەوە.",
+  "postWaitingForReview": "چاوەڕێی پێداچوونەوە",
+  "postWaitingForReviewBody": "بەڕێوەبەرێک هەموو پۆستێک پێش بڵاوبوونەوە دەپشکنێت، زۆربەی جار لە ماوەی چەند کاتژمێرێکدا.",
+  "postRejectedTitle": "پەسەند نەکرا",
+  "postRejectedReason": "هۆکار: {reason}",
+  "postEditAndResubmit": "دەستکاری و دووبارە ناردن",
+  "postBadgeRejected": "پەسەند نەکراوە",
+  "postBadgeExpired": "ئەرشیفکراو",
+  "postExpiredTitle": "ئەرشیفکراو",
+  "postExpiredBody": "ئەم پۆستە دوای ٩٠ ڕۆژ ئەرشیف کرا. ئەگەر هێشتا گرنگە دووبارە بیکەرەوە.",
+  "postTranslatedNote": "بە شێوەی ئۆتۆماتیکی وەرگێڕدراوە",
+  "postSeeOriginal": "بینینی دەقی ڕەسەن",
+  "postSeeTranslation": "بینینی وەرگێڕان"
 }

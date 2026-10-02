@@ -573,6 +573,62 @@
   "uiShowPassword": "Show password",
   "uiHidePassword": "Hide password",
   "uiCouldNotLoad": "Could not load",
+  "adminStatToApprove": "To approve",
+  "adminStatRejected": "Rejected",
+  "adminFilterPendingCount": "Pending ({count})",
+  "@adminFilterPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminNothingToApprove": "Nothing to approve",
+  "adminNothingToApproveBody": "New posts show up here before anyone else can see them.",
+  "adminReviewTitle": "Review this post",
+  "adminRiskLabel": "AI risk {score}",
+  "@adminRiskLabel": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "adminRiskUnavailable": "AI check unavailable",
+  "adminRiskLow": "Looks fine",
+  "adminRiskMedium": "Check carefully",
+  "adminRiskHigh": "Likely reject",
+  "adminOriginalText": "Original ({lang})",
+  "@adminOriginalText": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "adminRejectPostTitle": "Reject this post?",
+  "adminRejectPostSubtitle": "The reason is sent to the owner so they can fix it and resubmit.",
+  "adminRejectPostHint": "e.g. The photo does not show the item.",
+  "adminPostApproved": "Post approved. It is live now.",
+  "adminPostRejected": "Post rejected. The owner has been told.",
+  "adminStatusPending": "pending",
+  "adminStatusRejected": "rejected",
+  "adminStatusExpired": "archived",
+  "adminAiTitle": "AI assistant",
+  "adminAiSubtitle": "Gemini key for translations and the pre-check",
+  "adminAiConfigured": "Configured · {model}",
+  "@adminAiConfigured": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "adminAiNotConfigured": "Not configured. Posts are not translated or pre-checked.",
+  "adminAiKeyLabel": "Google AI Studio key",
+  "adminAiKeyHint": "Paste the key from aistudio.google.com",
+  "adminAiKeySaved": "AI key saved and verified.",
+  "adminAiKeyBody": "The key is stored on the server only. Each new post costs roughly one cent for the translation and the risk check.",
   "chatConversationTitle": "Conversation",
   "chatNotFoundTitle": "Conversation not found",
   "chatNotFoundSubtitle": "Open a chat from a post or from Messages.",
@@ -1644,6 +1700,26 @@
   "postLoadingSaved": "Loading saved items...",
   "postNoSavedTitle": "No saved items yet",
   "postNoSavedSubtitle": "Tap the bookmark on any post to keep it here.",
+  "postSentForReview": "Sent for review. We'll tell you when it's live.",
+  "postWaitingForReview": "Waiting for review",
+  "postWaitingForReviewBody": "An admin checks every post before it goes public, usually within a few hours.",
+  "postRejectedTitle": "Not approved",
+  "postRejectedReason": "Reason: {reason}",
+  "@postRejectedReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "postEditAndResubmit": "Edit & resubmit",
+  "postBadgeRejected": "NOT APPROVED",
+  "postBadgeExpired": "ARCHIVED",
+  "postExpiredTitle": "Archived",
+  "postExpiredBody": "This post was archived after 90 days. Reopen it if it is still relevant.",
+  "postTranslatedNote": "Translated automatically",
+  "postSeeOriginal": "See original",
+  "postSeeTranslation": "See translation",
   "repoUnableLogin": "Unable to login",
   "repoUnableLoginGoogle": "Unable to login with Google",
   "repoUnableLogout": "Unable to logout",
@@ -1821,5 +1897,12 @@
     }
   },
   "serverTimeout": "The server took too long to respond. Check your connection and try again.",
-  "serverOffline": "You seem to be offline. Check your connection and try again."
+  "serverOffline": "You seem to be offline. Check your connection and try again.",
+  "serverThisPostIsAwaitingReview": "This post is awaiting review.",
+  "serverApproveOrRejectThisPostFirst": "Approve or reject this post first.",
+  "serverCouldNotApproveThePost": "Could not approve the post.",
+  "serverCouldNotRejectThePost": "Could not reject the post.",
+  "serverThatStatusIsNotPublic": "That status is not public.",
+  "serverNotAGoogleKey": "That does not look like a Google AI Studio key.",
+  "serverGoogleRejectedTheKey": "Google AI Studio rejected the key."
 }

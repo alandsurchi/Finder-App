@@ -1183,6 +1183,103 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get uiCouldNotLoad => 'بار نەکرا';
 
   @override
+  String get adminStatToApprove => 'چاوەڕێی پەسەندکردن';
+
+  @override
+  String get adminStatRejected => 'ڕەتکراوە';
+
+  @override
+  String adminFilterPendingCount(int count) {
+    return 'چاوەڕوان ($count)';
+  }
+
+  @override
+  String get adminNothingToApprove => 'هیچ شتێک بۆ پەسەندکردن نییە';
+
+  @override
+  String get adminNothingToApproveBody =>
+      'پۆستە نوێیەکان لێرە دەردەکەون پێش ئەوەی کەسی تر بیانبینێت.';
+
+  @override
+  String get adminReviewTitle => 'پێداچوونەوە بەم پۆستە';
+
+  @override
+  String adminRiskLabel(int score) {
+    return 'مەترسی AI $score';
+  }
+
+  @override
+  String get adminRiskUnavailable => 'پشکنینی AI بەردەست نییە';
+
+  @override
+  String get adminRiskLow => 'باش دیارە';
+
+  @override
+  String get adminRiskMedium => 'بە وردی بپشکنە';
+
+  @override
+  String get adminRiskHigh => 'لەوانەیە ڕەت بکرێتەوە';
+
+  @override
+  String adminOriginalText(String lang) {
+    return 'دەقی ڕەسەن ($lang)';
+  }
+
+  @override
+  String get adminRejectPostTitle => 'ئەم پۆستە ڕەت بکرێتەوە؟';
+
+  @override
+  String get adminRejectPostSubtitle =>
+      'هۆکارەکە بۆ خاوەنەکە دەنێردرێت تا چاکی بکات و دووبارە بینێرێت.';
+
+  @override
+  String get adminRejectPostHint => 'نموونە: وێنەکە شتەکە پیشان نادات.';
+
+  @override
+  String get adminPostApproved => 'پۆستەکە پەسەند کرا. ئێستا بڵاوە.';
+
+  @override
+  String get adminPostRejected =>
+      'پۆستەکە ڕەتکرایەوە. خاوەنەکە ئاگادار کرایەوە.';
+
+  @override
+  String get adminStatusPending => 'چاوەڕوان';
+
+  @override
+  String get adminStatusRejected => 'ڕەتکراوە';
+
+  @override
+  String get adminStatusExpired => 'ئەرشیفکراو';
+
+  @override
+  String get adminAiTitle => 'یاریدەدەری AI';
+
+  @override
+  String get adminAiSubtitle => 'کلیلی Gemini بۆ وەرگێڕان و پێش‌پشکنین';
+
+  @override
+  String adminAiConfigured(String model) {
+    return 'ڕێکخراوە · $model';
+  }
+
+  @override
+  String get adminAiNotConfigured =>
+      'ڕێک نەخراوە. پۆستەکان وەرناگێڕدرێن و پێش‌پشکنین ناکرێن.';
+
+  @override
+  String get adminAiKeyLabel => 'کلیلی Google AI Studio';
+
+  @override
+  String get adminAiKeyHint => 'کلیلەکە لە aistudio.google.com بلکێنە';
+
+  @override
+  String get adminAiKeySaved => 'کلیلی AI پاشەکەوت کرا و پشتڕاستکرایەوە.';
+
+  @override
+  String get adminAiKeyBody =>
+      'کلیلەکە تەنها لەسەر ڕاژەکار هەڵدەگیرێت. هەر پۆستێکی نوێ نزیکەی یەک سەنت تێدەچێت بۆ وەرگێڕان و پشکنینی مەترسی.';
+
+  @override
   String get chatConversationTitle => 'گفتوگۆ';
 
   @override
@@ -3319,6 +3416,50 @@ class AppLocalizationsCkb extends AppLocalizations {
       'دەست لە نیشانەی پاشەکەوت بدە لەسەر هەر پۆستێک تا لێرە بمێنێتەوە.';
 
   @override
+  String get postSentForReview =>
+      'بۆ پێداچوونەوە نێردرا. کاتێک بڵاوبووەوە ئاگادارت دەکەینەوە.';
+
+  @override
+  String get postWaitingForReview => 'چاوەڕێی پێداچوونەوە';
+
+  @override
+  String get postWaitingForReviewBody =>
+      'بەڕێوەبەرێک هەموو پۆستێک پێش بڵاوبوونەوە دەپشکنێت، زۆربەی جار لە ماوەی چەند کاتژمێرێکدا.';
+
+  @override
+  String get postRejectedTitle => 'پەسەند نەکرا';
+
+  @override
+  String postRejectedReason(String reason) {
+    return 'هۆکار: $reason';
+  }
+
+  @override
+  String get postEditAndResubmit => 'دەستکاری و دووبارە ناردن';
+
+  @override
+  String get postBadgeRejected => 'پەسەند نەکراوە';
+
+  @override
+  String get postBadgeExpired => 'ئەرشیفکراو';
+
+  @override
+  String get postExpiredTitle => 'ئەرشیفکراو';
+
+  @override
+  String get postExpiredBody =>
+      'ئەم پۆستە دوای ٩٠ ڕۆژ ئەرشیف کرا. ئەگەر هێشتا گرنگە دووبارە بیکەرەوە.';
+
+  @override
+  String get postTranslatedNote => 'بە شێوەی ئۆتۆماتیکی وەرگێڕدراوە';
+
+  @override
+  String get postSeeOriginal => 'بینینی دەقی ڕەسەن';
+
+  @override
+  String get postSeeTranslation => 'بینینی وەرگێڕان';
+
+  @override
   String get repoUnableLogin => 'چوونەژوورەوە سەرکەوتوو نەبوو';
 
   @override
@@ -3888,4 +4029,29 @@ class AppLocalizationsCkb extends AppLocalizations {
   @override
   String get serverOffline =>
       'وا دیارە ئۆفلاینیت. پەیوەندییەکەت بپشکنە و دووبارە هەوڵ بدەرەوە.';
+
+  @override
+  String get serverThisPostIsAwaitingReview =>
+      'ئەم پۆستە چاوەڕێی پێداچوونەوەیە.';
+
+  @override
+  String get serverApproveOrRejectThisPostFirst =>
+      'سەرەتا ئەم پۆستە پەسەند بکە یان ڕەتی بکەرەوە.';
+
+  @override
+  String get serverCouldNotApproveThePost => 'پۆستەکە پەسەند نەکرا.';
+
+  @override
+  String get serverCouldNotRejectThePost => 'پۆستەکە ڕەت نەکرایەوە.';
+
+  @override
+  String get serverThatStatusIsNotPublic => 'ئەو دۆخە گشتی نییە.';
+
+  @override
+  String get serverNotAGoogleKey =>
+      'ئەمە وەک کلیلی Google AI Studio دیار نییە.';
+
+  @override
+  String get serverGoogleRejectedTheKey =>
+      'Google AI Studio کلیلەکەی ڕەتکردەوە.';
 }

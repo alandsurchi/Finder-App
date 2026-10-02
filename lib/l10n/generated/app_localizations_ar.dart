@@ -1177,6 +1177,103 @@ class AppLocalizationsAr extends AppLocalizations {
   String get uiCouldNotLoad => 'تعذّر التحميل';
 
   @override
+  String get adminStatToApprove => 'بانتظار الموافقة';
+
+  @override
+  String get adminStatRejected => 'مرفوضة';
+
+  @override
+  String adminFilterPendingCount(int count) {
+    return 'قيد الانتظار ($count)';
+  }
+
+  @override
+  String get adminNothingToApprove => 'لا شيء بانتظار الموافقة';
+
+  @override
+  String get adminNothingToApproveBody =>
+      'تظهر المنشورات الجديدة هنا قبل أن يراها أي شخص آخر.';
+
+  @override
+  String get adminReviewTitle => 'مراجعة هذا المنشور';
+
+  @override
+  String adminRiskLabel(int score) {
+    return 'خطر الذكاء الاصطناعي $score';
+  }
+
+  @override
+  String get adminRiskUnavailable => 'فحص الذكاء الاصطناعي غير متاح';
+
+  @override
+  String get adminRiskLow => 'يبدو سليمًا';
+
+  @override
+  String get adminRiskMedium => 'راجع بعناية';
+
+  @override
+  String get adminRiskHigh => 'يُرجّح رفضه';
+
+  @override
+  String adminOriginalText(String lang) {
+    return 'النص الأصلي ($lang)';
+  }
+
+  @override
+  String get adminRejectPostTitle => 'رفض هذا المنشور؟';
+
+  @override
+  String get adminRejectPostSubtitle =>
+      'يُرسل السبب إلى المالك ليتمكن من تصحيحه وإعادة الإرسال.';
+
+  @override
+  String get adminRejectPostHint => 'مثال: الصورة لا تُظهر الغرض.';
+
+  @override
+  String get adminPostApproved =>
+      'تمت الموافقة على المنشور. أصبح منشورًا الآن.';
+
+  @override
+  String get adminPostRejected => 'تم رفض المنشور. تم إبلاغ المالك.';
+
+  @override
+  String get adminStatusPending => 'قيد الانتظار';
+
+  @override
+  String get adminStatusRejected => 'مرفوض';
+
+  @override
+  String get adminStatusExpired => 'مؤرشف';
+
+  @override
+  String get adminAiTitle => 'مساعد الذكاء الاصطناعي';
+
+  @override
+  String get adminAiSubtitle => 'مفتاح Gemini للترجمة والفحص المسبق';
+
+  @override
+  String adminAiConfigured(String model) {
+    return 'مُفعّل · $model';
+  }
+
+  @override
+  String get adminAiNotConfigured =>
+      'غير مُفعّل. لا تتم ترجمة المنشورات أو فحصها مسبقًا.';
+
+  @override
+  String get adminAiKeyLabel => 'مفتاح Google AI Studio';
+
+  @override
+  String get adminAiKeyHint => 'الصق المفتاح من aistudio.google.com';
+
+  @override
+  String get adminAiKeySaved => 'تم حفظ مفتاح الذكاء الاصطناعي والتحقق منه.';
+
+  @override
+  String get adminAiKeyBody =>
+      'يُخزَّن المفتاح على الخادم فقط. يكلّف كل منشور جديد نحو سنت واحد للترجمة وفحص الخطر.';
+
+  @override
   String get chatConversationTitle => 'المحادثة';
 
   @override
@@ -3314,6 +3411,49 @@ class AppLocalizationsAr extends AppLocalizations {
       'انقر على أيقونة الحفظ في أي منشور لإبقائه هنا.';
 
   @override
+  String get postSentForReview => 'تم الإرسال للمراجعة. سنخبرك عندما يُنشر.';
+
+  @override
+  String get postWaitingForReview => 'بانتظار المراجعة';
+
+  @override
+  String get postWaitingForReviewBody =>
+      'يراجع مشرف كل منشور قبل نشره، عادةً خلال ساعات قليلة.';
+
+  @override
+  String get postRejectedTitle => 'لم تتم الموافقة';
+
+  @override
+  String postRejectedReason(String reason) {
+    return 'السبب: $reason';
+  }
+
+  @override
+  String get postEditAndResubmit => 'تعديل وإعادة الإرسال';
+
+  @override
+  String get postBadgeRejected => 'غير مقبول';
+
+  @override
+  String get postBadgeExpired => 'مؤرشف';
+
+  @override
+  String get postExpiredTitle => 'مؤرشف';
+
+  @override
+  String get postExpiredBody =>
+      'تمت أرشفة هذا المنشور بعد 90 يومًا. أعد فتحه إذا كان لا يزال قائمًا.';
+
+  @override
+  String get postTranslatedNote => 'تمت الترجمة تلقائيًا';
+
+  @override
+  String get postSeeOriginal => 'عرض النص الأصلي';
+
+  @override
+  String get postSeeTranslation => 'عرض الترجمة';
+
+  @override
   String get repoUnableLogin => 'تعذّر تسجيل الدخول';
 
   @override
@@ -3848,4 +3988,26 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get serverOffline =>
       'يبدو أنك غير متصل بالإنترنت. تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get serverThisPostIsAwaitingReview => 'هذا المنشور بانتظار المراجعة.';
+
+  @override
+  String get serverApproveOrRejectThisPostFirst =>
+      'وافق على هذا المنشور أو ارفضه أولًا.';
+
+  @override
+  String get serverCouldNotApproveThePost => 'تعذّرت الموافقة على المنشور.';
+
+  @override
+  String get serverCouldNotRejectThePost => 'تعذّر رفض المنشور.';
+
+  @override
+  String get serverThatStatusIsNotPublic => 'هذه الحالة غير متاحة للعامة.';
+
+  @override
+  String get serverNotAGoogleKey => 'لا يبدو هذا مفتاح Google AI Studio.';
+
+  @override
+  String get serverGoogleRejectedTheKey => 'رفض Google AI Studio المفتاح.';
 }

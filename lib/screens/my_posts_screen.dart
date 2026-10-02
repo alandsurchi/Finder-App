@@ -9,6 +9,7 @@ import 'package:finder/widgets/state/empty_widget.dart';
 import 'package:finder/widgets/state/error_widget.dart';
 import 'package:finder/widgets/state/loading_widget.dart';
 import 'package:finder/widgets/ui/ui.dart';
+import 'package:finder/features/posts/presentation/post_review_banner.dart';
 import 'package:finder/widgets/common/action_feedback.dart';
 import 'package:finder/screens/edit_post_screen.dart';
 import 'package:finder/l10n/l10n.dart';
@@ -136,7 +137,8 @@ class _PostManageCard extends ConsumerWidget {
     final t = AppColorTokens.of(context);
     final l10n = context.l10n;
 
-    return ItemCard(
+    final banner = PostReviewBanner.forPost(post, onEdit: () => _edit(context, ref));
+    final card = ItemCard(
       item: post,
       layout: ItemCardLayout.row,
       heroTag: HeroTags.item(HeroTags.myPosts, post.id),
@@ -150,24 +152,15 @@ class _PostManageCard extends ConsumerWidget {
         spacing: BeaconSpace.sm,
         runSpacing: BeaconSpace.sm,
         children: [
-          if (!post.isResolved)
+          if (!post.isResolved && !post.isExpired)
             AppButton.tonal(
               label: l10n.commonEdit,
               icon: Icons.edit_outlined,
               size: AppButtonSize.small,
               expand: false,
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EditPostScreen(post: post),
-                  ),
-                );
-                // Refresh list after returning from edit
-                ref.read(myPostsProvider.notifier).load();
-              },
+              onPressed: () => _edit(context, ref),
             ),
-          if (!post.isResolved)
+          if (post.isActive)
             AppButton.secondary(
               label: l10n.commonReturned,
               icon: Icons.check_circle_outline_rounded,
@@ -175,7 +168,7 @@ class _PostManageCard extends ConsumerWidget {
               expand: false,
               onPressed: () => _confirmResolve(context, ref, post),
             )
-          else
+          else if (post.isResolved || post.isExpired)
             AppButton.tonal(
               label: l10n.commonReopen,
               icon: Icons.replay_rounded,
@@ -204,6 +197,20 @@ class _PostManageCard extends ConsumerWidget {
         ],
       ),
     );
+    if (banner == null) return card;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [banner, const SizedBox(height: BeaconSpace.sm), card],
+    );
+  }
+
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EditPostScreen(post: post)),
+    );
+    // Refresh list after returning from edit
+    ref.read(myPostsProvider.notifier).load();
   }
 
   void _confirmResolve(

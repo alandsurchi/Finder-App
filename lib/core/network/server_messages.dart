@@ -126,6 +126,13 @@ String localizeServerMessage(String raw) {
     'Your account and data have been deleted.' => s.serverYourAccountAndDataHaveBeenDeleted,
     'Your identity is already verified.' => s.serverYourIdentityIsAlreadyVerified,
     'This request was already handled.' => s.serverThisRequestWasAlreadyHandled,
+    'This post is awaiting review.' => s.serverThisPostIsAwaitingReview,
+    'Approve or reject this post first.' => s.serverApproveOrRejectThisPostFirst,
+    'Could not approve the post.' => s.serverCouldNotApproveThePost,
+    'Could not reject the post.' => s.serverCouldNotRejectThePost,
+    'That status is not public.' => s.serverThatStatusIsNotPublic,
+    'That does not look like a Google AI Studio key.' => s.serverNotAGoogleKey,
+    'Google AI Studio rejected the key.' => s.serverGoogleRejectedTheKey,
     _ => raw,
   };
 }

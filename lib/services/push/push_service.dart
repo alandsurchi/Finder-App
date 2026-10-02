@@ -12,6 +12,7 @@ import '../../features/notifications/presentation/notification_navigator.dart';
 import '../../features/notifications/presentation/notifications_controller.dart';
 import '../../l10n/l10n.dart';
 import '../../providers/chat_provider.dart';
+import '../../providers/my_posts_provider.dart';
 import '../../providers/post_provider.dart';
 import '../../features/profile/presentation/profile_controller.dart';
 import '../../features/profile/presentation/verification_controller.dart';
@@ -232,6 +233,12 @@ class PushService {
       _ref
           .read(notificationsControllerProvider.notifier)
           .loadNotifications(silent: true);
+    }
+
+    if (type.startsWith('post_') && api.isAuthenticated) {
+      // Approved / rejected / archived: My posts and the feed change.
+      refreshPostLists(_ref);
+      _ref.read(myPostsProvider.notifier).load();
     }
 
     if (type == 'verification' && api.isAuthenticated) {

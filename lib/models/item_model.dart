@@ -31,6 +31,18 @@ class ItemModel {
   final String ownerAvatarUrl;
   final double? ownerTrustScore;
   final bool isResolved;
+  /// pending | active | resolved | rejected | expired (see the review flow).
+  final String status;
+  /// Text as the owner wrote it; [title]/[description] may be translations.
+  final String originalTitle;
+  final String originalDescription;
+  /// Language the owner wrote in (en | ar | ckb | other), null when unknown.
+  final String? sourceLang;
+  /// Why an admin rejected the post; only set while [isRejected].
+  final String? rejectionReason;
+  /// Admin-only AI pre-check (0-100) and its reasons; null when not checked.
+  final int? aiRisk;
+  final List<String> aiReasons;
   /// Public link to this post (`/p/<id>` on the API host); empty offline.
   final String shareUrl;
 
@@ -55,8 +67,29 @@ class ItemModel {
     this.ownerAvatarUrl = '',
     this.ownerTrustScore,
     this.isResolved = false,
+    String? status,
+    String? originalTitle,
+    String? originalDescription,
+    this.sourceLang,
+    this.rejectionReason,
+    this.aiRisk,
+    this.aiReasons = const [],
     this.shareUrl = '',
-  }) : createdAt = createdAt ?? Timestamp.now();
+  })  : createdAt = createdAt ?? Timestamp.now(),
+        status = status ?? (isResolved ? 'resolved' : 'active'),
+        originalTitle = originalTitle ?? title,
+        originalDescription = originalDescription ?? description;
+
+  bool get isPending => status == 'pending';
+  bool get isRejected => status == 'rejected';
+  bool get isExpired => status == 'expired';
+  bool get isActive => status == 'active';
+  /// Visible to other members (live or returned).
+  bool get isPublic => status == 'active' || status == 'resolved';
+  /// The post is still in the review flow (not yet live).
+  bool get isUnderReview => isPending || isRejected;
+  /// The text shown is a translation of what the owner wrote.
+  bool get isTranslated => title != originalTitle || description != originalDescription;
 
   bool get hasReward => reward != null && reward!.trim().isNotEmpty;
   bool get hasImage => imagePath.trim().isNotEmpty;
@@ -90,6 +123,15 @@ class ItemModel {
       isVerified: map['ownerVerified'] == true,
       ownerIsAdmin: map['ownerIsAdmin'] == true,
       isResolved: map['status']?.toString() == 'resolved',
+      status: map['status']?.toString() ?? 'active',
+      originalTitle: map['originalTitle']?.toString(),
+      originalDescription: map['originalDescription']?.toString(),
+      sourceLang: map['sourceLang']?.toString(),
+      rejectionReason: map['rejectionReason']?.toString(),
+      aiRisk: (map['aiRisk'] as num?)?.toInt(),
+      aiReasons: (map['aiReasons'] is List)
+          ? (map['aiReasons'] as List).map((e) => e.toString()).toList()
+          : const [],
       shareUrl: map['shareUrl']?.toString() ?? '',
       createdAt: Timestamp.fromMillisecondsSinceEpoch(createdAtMs),
     );
@@ -182,6 +224,9 @@ class ItemModel {
     String? ownerAvatarUrl,
     double? ownerTrustScore,
     bool? isResolved,
+    String? status,
+    String? rejectionReason,
+    bool clearRejectionReason = false,
     String? shareUrl,
   }) {
     return ItemModel(
@@ -204,7 +249,14 @@ class ItemModel {
       ownerName: ownerName ?? this.ownerName,
       ownerAvatarUrl: ownerAvatarUrl ?? this.ownerAvatarUrl,
       ownerTrustScore: ownerTrustScore ?? this.ownerTrustScore,
-      isResolved: isResolved ?? this.isResolved,
+      isResolved: isResolved ?? (status != null ? status == 'resolved' : this.isResolved),
+      status: status ?? (isResolved == null ? this.status : (isResolved ? 'resolved' : 'active')),
+      originalTitle: title == null ? originalTitle : null,
+      originalDescription: description == null ? originalDescription : null,
+      sourceLang: sourceLang,
+      rejectionReason: clearRejectionReason ? null : (rejectionReason ?? this.rejectionReason),
+      aiRisk: aiRisk,
+      aiReasons: aiReasons,
       shareUrl: shareUrl ?? this.shareUrl,
     );
   }
@@ -231,7 +283,9 @@ class ItemModel {
         other.longitude == longitude &&
         other.ownerName == ownerName &&
         other.ownerAvatarUrl == ownerAvatarUrl &&
-        other.isResolved == isResolved;
+        other.isResolved == isResolved &&
+        other.status == status &&
+        other.rejectionReason == rejectionReason;
   }
 
   @override
@@ -253,6 +307,8 @@ class ItemModel {
         ownerName,
         ownerAvatarUrl,
         isResolved,
+        status,
+        rejectionReason,
       );
 
   factory ItemModel.empty() {

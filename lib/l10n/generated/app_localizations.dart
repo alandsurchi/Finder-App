@@ -2110,6 +2110,174 @@ abstract class AppLocalizations {
   /// **'Could not load'**
   String get uiCouldNotLoad;
 
+  /// No description provided for @adminStatToApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'To approve'**
+  String get adminStatToApprove;
+
+  /// No description provided for @adminStatRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get adminStatRejected;
+
+  /// No description provided for @adminFilterPendingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending ({count})'**
+  String adminFilterPendingCount(int count);
+
+  /// No description provided for @adminNothingToApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to approve'**
+  String get adminNothingToApprove;
+
+  /// No description provided for @adminNothingToApproveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'New posts show up here before anyone else can see them.'**
+  String get adminNothingToApproveBody;
+
+  /// No description provided for @adminReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review this post'**
+  String get adminReviewTitle;
+
+  /// No description provided for @adminRiskLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AI risk {score}'**
+  String adminRiskLabel(int score);
+
+  /// No description provided for @adminRiskUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'AI check unavailable'**
+  String get adminRiskUnavailable;
+
+  /// No description provided for @adminRiskLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Looks fine'**
+  String get adminRiskLow;
+
+  /// No description provided for @adminRiskMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Check carefully'**
+  String get adminRiskMedium;
+
+  /// No description provided for @adminRiskHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Likely reject'**
+  String get adminRiskHigh;
+
+  /// No description provided for @adminOriginalText.
+  ///
+  /// In en, this message translates to:
+  /// **'Original ({lang})'**
+  String adminOriginalText(String lang);
+
+  /// No description provided for @adminRejectPostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject this post?'**
+  String get adminRejectPostTitle;
+
+  /// No description provided for @adminRejectPostSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The reason is sent to the owner so they can fix it and resubmit.'**
+  String get adminRejectPostSubtitle;
+
+  /// No description provided for @adminRejectPostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. The photo does not show the item.'**
+  String get adminRejectPostHint;
+
+  /// No description provided for @adminPostApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Post approved. It is live now.'**
+  String get adminPostApproved;
+
+  /// No description provided for @adminPostRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Post rejected. The owner has been told.'**
+  String get adminPostRejected;
+
+  /// No description provided for @adminStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'pending'**
+  String get adminStatusPending;
+
+  /// No description provided for @adminStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'rejected'**
+  String get adminStatusRejected;
+
+  /// No description provided for @adminStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'archived'**
+  String get adminStatusExpired;
+
+  /// No description provided for @adminAiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI assistant'**
+  String get adminAiTitle;
+
+  /// No description provided for @adminAiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini key for translations and the pre-check'**
+  String get adminAiSubtitle;
+
+  /// No description provided for @adminAiConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Configured · {model}'**
+  String adminAiConfigured(String model);
+
+  /// No description provided for @adminAiNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured. Posts are not translated or pre-checked.'**
+  String get adminAiNotConfigured;
+
+  /// No description provided for @adminAiKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Google AI Studio key'**
+  String get adminAiKeyLabel;
+
+  /// No description provided for @adminAiKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the key from aistudio.google.com'**
+  String get adminAiKeyHint;
+
+  /// No description provided for @adminAiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'AI key saved and verified.'**
+  String get adminAiKeySaved;
+
+  /// No description provided for @adminAiKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The key is stored on the server only. Each new post costs roughly one cent for the translation and the risk check.'**
+  String get adminAiKeyBody;
+
   /// No description provided for @chatConversationTitle.
   ///
   /// In en, this message translates to:
@@ -5872,6 +6040,84 @@ abstract class AppLocalizations {
   /// **'Tap the bookmark on any post to keep it here.'**
   String get postNoSavedSubtitle;
 
+  /// No description provided for @postSentForReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent for review. We\'ll tell you when it\'s live.'**
+  String get postSentForReview;
+
+  /// No description provided for @postWaitingForReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for review'**
+  String get postWaitingForReview;
+
+  /// No description provided for @postWaitingForReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An admin checks every post before it goes public, usually within a few hours.'**
+  String get postWaitingForReviewBody;
+
+  /// No description provided for @postRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not approved'**
+  String get postRejectedTitle;
+
+  /// No description provided for @postRejectedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason: {reason}'**
+  String postRejectedReason(String reason);
+
+  /// No description provided for @postEditAndResubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit & resubmit'**
+  String get postEditAndResubmit;
+
+  /// No description provided for @postBadgeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT APPROVED'**
+  String get postBadgeRejected;
+
+  /// No description provided for @postBadgeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'ARCHIVED'**
+  String get postBadgeExpired;
+
+  /// No description provided for @postExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get postExpiredTitle;
+
+  /// No description provided for @postExpiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This post was archived after 90 days. Reopen it if it is still relevant.'**
+  String get postExpiredBody;
+
+  /// No description provided for @postTranslatedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated automatically'**
+  String get postTranslatedNote;
+
+  /// No description provided for @postSeeOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'See original'**
+  String get postSeeOriginal;
+
+  /// No description provided for @postSeeTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'See translation'**
+  String get postSeeTranslation;
+
   /// No description provided for @repoUnableLogin.
   ///
   /// In en, this message translates to:
@@ -6855,6 +7101,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You seem to be offline. Check your connection and try again.'**
   String get serverOffline;
+
+  /// No description provided for @serverThisPostIsAwaitingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'This post is awaiting review.'**
+  String get serverThisPostIsAwaitingReview;
+
+  /// No description provided for @serverApproveOrRejectThisPostFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve or reject this post first.'**
+  String get serverApproveOrRejectThisPostFirst;
+
+  /// No description provided for @serverCouldNotApproveThePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not approve the post.'**
+  String get serverCouldNotApproveThePost;
+
+  /// No description provided for @serverCouldNotRejectThePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reject the post.'**
+  String get serverCouldNotRejectThePost;
+
+  /// No description provided for @serverThatStatusIsNotPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'That status is not public.'**
+  String get serverThatStatusIsNotPublic;
+
+  /// No description provided for @serverNotAGoogleKey.
+  ///
+  /// In en, this message translates to:
+  /// **'That does not look like a Google AI Studio key.'**
+  String get serverNotAGoogleKey;
+
+  /// No description provided for @serverGoogleRejectedTheKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Google AI Studio rejected the key.'**
+  String get serverGoogleRejectedTheKey;
 }
 
 class _AppLocalizationsDelegate

@@ -122,5 +122,12 @@
   "serverProblem": "ڕاژەکار تووشی کێشە بوو. تکایە دووبارە هەوڵ بدەرەوە.",
   "serverRequestFailed": "داواکاری سەرکەوتوو نەبوو ({status}).",
   "serverTimeout": "ڕاژەکار زۆری پێچوو بۆ وەڵامدانەوە. پەیوەندییەکەت بپشکنە و دووبارە هەوڵ بدەرەوە.",
-  "serverOffline": "وا دیارە ئۆفلاینیت. پەیوەندییەکەت بپشکنە و دووبارە هەوڵ بدەرەوە."
+  "serverOffline": "وا دیارە ئۆفلاینیت. پەیوەندییەکەت بپشکنە و دووبارە هەوڵ بدەرەوە.",
+  "serverThisPostIsAwaitingReview": "ئەم پۆستە چاوەڕێی پێداچوونەوەیە.",
+  "serverApproveOrRejectThisPostFirst": "سەرەتا ئەم پۆستە پەسەند بکە یان ڕەتی بکەرەوە.",
+  "serverCouldNotApproveThePost": "پۆستەکە پەسەند نەکرا.",
+  "serverCouldNotRejectThePost": "پۆستەکە ڕەت نەکرایەوە.",
+  "serverThatStatusIsNotPublic": "ئەو دۆخە گشتی نییە.",
+  "serverNotAGoogleKey": "ئەمە وەک کلیلی Google AI Studio دیار نییە.",
+  "serverGoogleRejectedTheKey": "Google AI Studio کلیلەکەی ڕەتکردەوە."
 }
