@@ -22,6 +22,8 @@ import 'package:finder/core/constants/app_categories.dart';
 import 'package:finder/l10n/l10n.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:finder/features/onboarding/welcome_sheet.dart';
 import 'package:finder/models/item_model.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -35,6 +37,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// Tabs are built on first visit and then kept alive, so scroll positions
   /// and the Post form survive tab switches and nothing is painted twice.
   final Set<int> _built = {HomeTabs.home};
+
+  @override
+  void initState() {
+    super.initState();
+    // First entry after sign-in: say what Finder is and where the guide lives.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) showWelcomeIfNeeded(context);
+    });
+  }
 
   Widget _page(int i) {
     switch (i) {
@@ -303,10 +314,12 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
           AppIconButton(
             icon: Icons.map_outlined,
             tooltip: context.l10n.mapNearbyTitle,
-            variant: AppIconButtonVariant.ghost,
+            variant: AppIconButtonVariant.glass,
+            size: 48,
             onPressed: () {
-              ref.read(analyticsProvider).logEvent(AnalyticsEvents.nearbyOpened);
+              // Navigate first: analytics is best-effort and must never block a tap.
               Navigator.push(context, MaterialPageRoute(builder: (_) => const NearbyMapScreen()));
+              ref.read(analyticsProvider).logEvent(AnalyticsEvents.nearbyOpened);
             },
           ),
           const SizedBox(width: BeaconSpace.xs),
