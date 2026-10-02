@@ -30,7 +30,7 @@ void main() {
     await tester.pumpWidget(_host(locale: const Locale('en'), onReady: showWelcomeIfNeeded));
     await tester.pumpAndSettle();
     expect(find.text('Welcome to Finder'), findsOneWidget);
-    expect(find.text('Open Help & Support'), findsOneWidget);
+    expect(find.text('See the guides'), findsOneWidget);
 
     await tester.tap(find.text('Got it'));
     await tester.pumpAndSettle();

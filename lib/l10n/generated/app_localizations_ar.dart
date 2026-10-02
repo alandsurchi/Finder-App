@@ -2709,7 +2709,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get welcomeGotIt => 'فهمت';
 
   @override
-  String get welcomeOpenHelp => 'افتح المساعدة والدعم';
+  String get welcomeOpenHelp => 'عرض الأدلة';
 
   @override
   String get helpTileSubtitle => 'أدلة ونصائح أمان وتواصل';

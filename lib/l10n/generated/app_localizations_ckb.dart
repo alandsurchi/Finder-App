@@ -2720,7 +2720,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get welcomeGotIt => 'تێگەیشتم';
 
   @override
-  String get welcomeOpenHelp => 'یارمەتی و پشتیوانی بکەرەوە';
+  String get welcomeOpenHelp => 'ڕێنماییەکان ببینە';
 
   @override
   String get helpTileSubtitle => 'ڕێنمایی، ئامۆژگاری سەلامەتی و پەیوەندی';

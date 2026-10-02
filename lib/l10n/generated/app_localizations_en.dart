@@ -2706,7 +2706,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeGotIt => 'Got it';
 
   @override
-  String get welcomeOpenHelp => 'Open Help & Support';
+  String get welcomeOpenHelp => 'See the guides';
 
   @override
   String get helpTileSubtitle => 'Guides, safety tips and contact';

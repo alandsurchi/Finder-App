@@ -4771,7 +4771,7 @@ abstract class AppLocalizations {
   /// No description provided for @welcomeOpenHelp.
   ///
   /// In en, this message translates to:
-  /// **'Open Help & Support'**
+  /// **'See the guides'**
   String get welcomeOpenHelp;
 
   /// No description provided for @helpTileSubtitle.
